@@ -1019,11 +1019,18 @@ function PrimaryWorkArea({ activeNav, session, t }) {
                     >
                       <div className="scanner-thumb-media">
                         {imagePreview ? (
-                          <img
-                            alt=""
-                            src={file.previewUrl}
-                            onLoad={(event) => updateThumbnailAnalysis(file, event.currentTarget)}
-                          />
+                          <>
+                            <span
+                              className="scanner-thumb-page"
+                              style={{ backgroundImage: `url("${file.previewUrl}")` }}
+                            />
+                            <img
+                              alt=""
+                              className="scanner-analysis-image"
+                              src={file.previewUrl}
+                              onLoad={(event) => updateThumbnailAnalysis(file, event.currentTarget)}
+                            />
+                          </>
                         ) : (
                           <div className="scanner-thumb-fallback">
                             <Archive size={26} aria-hidden="true" />
