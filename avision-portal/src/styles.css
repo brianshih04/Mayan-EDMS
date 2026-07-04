@@ -192,6 +192,92 @@ input:focus {
   gap: 12px;
 }
 
+.login-form,
+.account-list {
+  display: grid;
+  gap: 14px;
+}
+
+.login-form label {
+  display: grid;
+  gap: 8px;
+  color: #40504c;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.login-form .primary-login {
+  width: 100%;
+}
+
+.login-error {
+  margin: 0;
+  border-radius: 8px;
+  background: #ffe1dd;
+  color: #9b2618;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 10px 12px;
+}
+
+.account-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.account-chip {
+  border: 1px solid #d5d9d3;
+  border-radius: 8px;
+  background: #fff;
+  color: #182321;
+  min-height: 56px;
+  padding: 10px 12px;
+  text-align: left;
+  transition: border-color 140ms ease, box-shadow 140ms ease, transform 140ms ease;
+}
+
+.account-chip:hover,
+.account-chip.active {
+  border-color: var(--accent, var(--teal));
+  box-shadow: 0 10px 24px rgba(20, 35, 32, 0.08);
+  transform: translateY(-1px);
+}
+
+.account-chip.teal {
+  --accent: var(--teal);
+}
+
+.account-chip.blue {
+  --accent: var(--blue);
+}
+
+.account-chip.amber {
+  --accent: var(--amber);
+}
+
+.account-chip.slate {
+  --accent: var(--slate);
+}
+
+.account-chip.violet {
+  --accent: var(--violet);
+}
+
+.account-chip span,
+.account-chip small {
+  display: block;
+}
+
+.account-chip span {
+  font-weight: 800;
+}
+
+.account-chip small {
+  color: #66726e;
+  margin-top: 2px;
+}
+
 .role-tile {
   min-height: 76px;
   border: 1px solid #d5d9d3;
@@ -385,31 +471,6 @@ input:focus {
 .user-card span {
   color: #b8d1cb;
   font-size: 13px;
-}
-
-.role-switcher {
-  display: grid;
-  gap: 8px;
-  color: #d7e9e5;
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.role-switcher select {
-  width: 100%;
-  min-height: 44px;
-  border-color: rgba(255, 255, 255, 0.2);
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
-}
-
-.role-switcher select:focus {
-  border-color: #f6d365;
-  box-shadow: 0 0 0 4px rgba(246, 211, 101, 0.16);
-}
-
-.role-switcher option {
-  color: #182321;
 }
 
 .nav-list {
@@ -829,6 +890,7 @@ input:focus {
   }
 
   .role-picker,
+  .account-grid,
   .metadata-grid,
   .stats-grid,
   .nav-list {

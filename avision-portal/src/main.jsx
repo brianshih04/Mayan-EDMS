@@ -30,10 +30,13 @@ const locales = {
     appSubtitle: '依角色簡化 Mayan-EDMS 工作流程',
     language: '語言',
     signIn: '登入',
+    loginTitle: '工作入口登入',
     signOut: '登出',
     username: '使用者',
     password: '密碼',
-    demoHint: '目前是角色式前台原型；先用下方帳號體驗不同 UI。',
+    demoHint: '請使用帳號密碼登入，系統會依照帳號角色進入對應畫面。',
+    demoPassword: '測試密碼皆為 avision123',
+    loginError: '帳號或密碼不正確',
     openMayan: '開啟 Mayan 後台',
     connected: 'Mayan 已連線',
     watchFolder: 'Watch folder',
@@ -59,15 +62,14 @@ const locales = {
     secondaryAction: '查看資料夾',
     searchPlaceholder: '搜尋文件、客戶、案件號或標籤',
     role: '角色',
-    switchRole: '切換角色',
     queue: '工作清單',
     task: '任務',
     owner: '負責人',
     status: '狀態',
     due: '期限',
     nextAction: '下一步',
-    sampleUsers: '測試帳號',
-    loginAs: '以此角色登入',
+    sampleUsers: '可測試帳號',
+    loginAs: '登入工作入口',
     dashboard: '工作台',
     operations: '作業',
     review: '審核',
@@ -90,10 +92,13 @@ const locales = {
     appSubtitle: 'Role-based workflows on top of Mayan-EDMS',
     language: 'Language',
     signIn: 'Sign in',
+    loginTitle: 'Workspace sign in',
     signOut: 'Sign out',
     username: 'User',
     password: 'Password',
-    demoHint: 'This is the role-based portal prototype. Use the demo users below to preview each UI.',
+    demoHint: 'Sign in with a username and password. The portal opens the UI assigned to that user role.',
+    demoPassword: 'Demo password: avision123',
+    loginError: 'Incorrect username or password',
     openMayan: 'Open Mayan Admin',
     connected: 'Mayan connected',
     watchFolder: 'Watch folder',
@@ -119,15 +124,14 @@ const locales = {
     secondaryAction: 'View folder',
     searchPlaceholder: 'Search documents, customers, case IDs, or tags',
     role: 'Role',
-    switchRole: 'Switch role',
     queue: 'Queue',
     task: 'Task',
     owner: 'Owner',
     status: 'Status',
     due: 'Due',
     nextAction: 'Next action',
-    sampleUsers: 'Demo users',
-    loginAs: 'Sign in as role',
+    sampleUsers: 'Demo accounts',
+    loginAs: 'Sign in',
     dashboard: 'Dashboard',
     operations: 'Operations',
     review: 'Review',
@@ -150,10 +154,13 @@ const locales = {
     appSubtitle: 'Mayan-EDMS を役割別に簡略化',
     language: '言語',
     signIn: 'ログイン',
+    loginTitle: 'ワークスペースログイン',
     signOut: 'ログアウト',
     username: 'ユーザー',
     password: 'パスワード',
-    demoHint: '役割別 UI のプロトタイプです。下のユーザーで画面を確認できます。',
+    demoHint: 'ユーザー名とパスワードでログインすると、役割に応じた画面を表示します。',
+    demoPassword: 'デモパスワード: avision123',
+    loginError: 'ユーザー名またはパスワードが正しくありません',
     openMayan: 'Mayan 管理画面',
     connected: 'Mayan 接続済み',
     watchFolder: 'Watch folder',
@@ -179,15 +186,14 @@ const locales = {
     secondaryAction: 'フォルダー表示',
     searchPlaceholder: '文書、顧客、案件番号、タグを検索',
     role: '役割',
-    switchRole: '役割を切替',
     queue: '作業一覧',
     task: 'タスク',
     owner: '担当',
     status: '状態',
     due: '期限',
     nextAction: '次の操作',
-    sampleUsers: 'デモユーザー',
-    loginAs: 'この役割でログイン',
+    sampleUsers: 'デモアカウント',
+    loginAs: 'ログイン',
     dashboard: 'ダッシュボード',
     operations: '操作',
     review: '承認',
@@ -210,10 +216,13 @@ const locales = {
     appSubtitle: '基于 Mayan-EDMS 的角色化工作流',
     language: '语言',
     signIn: '登录',
+    loginTitle: '工作入口登录',
     signOut: '登出',
     username: '用户',
     password: '密码',
-    demoHint: '目前是角色式前台原型；可用下方账号预览不同 UI。',
+    demoHint: '请使用账号密码登录，系统会依照账号角色进入对应画面。',
+    demoPassword: '测试密码均为 avision123',
+    loginError: '账号或密码不正确',
     openMayan: '打开 Mayan 后台',
     connected: 'Mayan 已连接',
     watchFolder: 'Watch folder',
@@ -239,15 +248,14 @@ const locales = {
     secondaryAction: '查看文件夹',
     searchPlaceholder: '搜索文档、客户、案件号或标签',
     role: '角色',
-    switchRole: '切换角色',
     queue: '工作清单',
     task: '任务',
     owner: '负责人',
     status: '状态',
     due: '期限',
     nextAction: '下一步',
-    sampleUsers: '测试账号',
-    loginAs: '以此角色登录',
+    sampleUsers: '可测试账号',
+    loginAs: '登录工作入口',
     dashboard: '工作台',
     operations: '作业',
     review: '审核',
@@ -268,11 +276,11 @@ const locales = {
 };
 
 const demoUsers = [
-  { username: 'scanner', role: 'scanner', name: 'Scan Station 01' },
-  { username: 'records', role: 'classifier', name: 'Records Desk' },
-  { username: 'reviewer', role: 'reviewer', name: 'Team Lead' },
-  { username: 'viewer', role: 'viewer', name: 'Document User' },
-  { username: 'admin', role: 'admin', name: 'System Admin' }
+  { username: 'scanner', password: 'avision123', role: 'scanner', name: 'Scan Station 01' },
+  { username: 'records', password: 'avision123', role: 'classifier', name: 'Records Desk' },
+  { username: 'reviewer', password: 'avision123', role: 'reviewer', name: 'Team Lead' },
+  { username: 'viewer', password: 'avision123', role: 'viewer', name: 'Document User' },
+  { username: 'admin', password: 'avision123', role: 'admin', name: 'System Admin' }
 ];
 
 const roleAccent = {
@@ -394,17 +402,10 @@ function App() {
   }
 
   function login(user) {
-    const next = { ...user };
+    const { password, ...next } = user;
     localStorage.setItem('portal.session', JSON.stringify(next));
     setSession(next);
     setActiveNav(roleNav[next.role][0]);
-  }
-
-  function changeRole(role) {
-    const nextUser = demoUsers.find((user) => user.role === role);
-    if (!nextUser) return;
-
-    login(nextUser);
   }
 
   function logout() {
@@ -430,7 +431,6 @@ function App() {
       onLanguageChange={changeLanguage}
       onLogout={logout}
       onNav={setActiveNav}
-      onRoleChange={changeRole}
       session={session}
       t={t}
     />
@@ -438,9 +438,26 @@ function App() {
 }
 
 function LoginScreen({ language, onLanguageChange, onLogin, t }) {
-  const [selectedRole, setSelectedRole] = useState(demoUsers[0].role);
-  const selectedUser = demoUsers.find((user) => user.role === selectedRole) || demoUsers[0];
-  const selectedTasks = tasks[selectedUser.role].slice(0, 2);
+  const [username, setUsername] = useState('scanner');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const previewUser = demoUsers.find((user) => user.username === username.trim()) || demoUsers[0];
+  const previewTasks = tasks[previewUser.role].slice(0, 2);
+
+  function submitLogin(event) {
+    event.preventDefault();
+    const matchedUser = demoUsers.find(
+      (user) => user.username === username.trim() && user.password === password
+    );
+
+    if (!matchedUser) {
+      setError(t('loginError'));
+      return;
+    }
+
+    setError('');
+    onLogin(matchedUser);
+  }
 
   return (
     <main className="login-page">
@@ -473,7 +490,7 @@ function LoginScreen({ language, onLanguageChange, onLogin, t }) {
         <div className="login-panel-header">
           <div>
             <p className="eyebrow">{t('signIn')}</p>
-            <h2>{t('sampleUsers')}</h2>
+            <h2>{t('loginTitle')}</h2>
           </div>
           <div className="language-row">
             <Languages size={18} aria-hidden="true" />
@@ -486,44 +503,69 @@ function LoginScreen({ language, onLanguageChange, onLogin, t }) {
           </div>
         </div>
 
-        <p className="hint">{t('demoHint')}</p>
-        <div className="role-picker">
-          {demoUsers.map((user) => (
-            <button
-              className={selectedRole === user.role ? `role-tile selected ${roleAccent[user.role]}` : `role-tile ${roleAccent[user.role]}`}
-              key={user.role}
-              onClick={() => setSelectedRole(user.role)}
-              type="button"
-            >
-              <span className="role-dot" aria-hidden="true" />
-              <span>{t(user.role)}</span>
-              <small>{user.username}</small>
-            </button>
-          ))}
-        </div>
+        <form className="login-form" onSubmit={submitLogin}>
+          <p className="hint">{t('demoHint')}</p>
+          <label>
+            <span>{t('username')}</span>
+            <input
+              autoComplete="username"
+              value={username}
+              onChange={(event) => setUsername(event.target.value)}
+            />
+          </label>
+          <label>
+            <span>{t('password')}</span>
+            <input
+              autoComplete="current-password"
+              type="password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+            />
+          </label>
+          {error ? <p className="login-error">{error}</p> : null}
+          <button className="primary-login" type="submit">
+            <UserRound size={18} aria-hidden="true" />
+            {t('loginAs')}
+          </button>
+        </form>
 
-        <div className={`role-preview ${roleAccent[selectedUser.role]}`}>
-          <div>
-            <p className="eyebrow">{selectedUser.name}</p>
-            <h3>{t(selectedUser.role)}</h3>
-          </div>
-          <div className="preview-tasks">
-            {selectedTasks.map((task) => (
-              <span key={task.id}>{task.id} · {task.label}</span>
+        <div className="account-list">
+          <p className="hint">{t('demoPassword')}</p>
+          <div className="account-grid">
+            {demoUsers.map((user) => (
+              <button
+                className={username === user.username ? `account-chip active ${roleAccent[user.role]}` : `account-chip ${roleAccent[user.role]}`}
+                key={user.username}
+                onClick={() => {
+                  setUsername(user.username);
+                  setError('');
+                }}
+                type="button"
+              >
+                <span>{user.username}</span>
+                <small>{t(user.role)}</small>
+              </button>
             ))}
           </div>
         </div>
 
-        <button className="primary-login" onClick={() => onLogin(selectedUser)} type="button">
-          <UserRound size={18} aria-hidden="true" />
-          {t('loginAs')}
-        </button>
+        <div className={`role-preview ${roleAccent[previewUser.role]}`}>
+          <div>
+            <p className="eyebrow">{previewUser.name}</p>
+            <h3>{t(previewUser.role)}</h3>
+          </div>
+          <div className="preview-tasks">
+            {previewTasks.map((task) => (
+              <span key={task.id}>{task.id} · {task.label}</span>
+            ))}
+          </div>
+        </div>
       </section>
     </main>
   );
 }
 
-function Shell({ activeNav, language, onLanguageChange, onLogout, onNav, onRoleChange, session, t }) {
+function Shell({ activeNav, language, onLanguageChange, onLogout, onNav, session, t }) {
   const navItems = roleNav[session.role];
   const roleTasks = tasks[session.role];
   const rolePanel = panels[session.role];
@@ -546,17 +588,6 @@ function Shell({ activeNav, language, onLanguageChange, onLogout, onNav, onRoleC
             <span>{t(session.role)}</span>
           </div>
         </div>
-
-        <label className="role-switcher">
-          <span>{t('switchRole')}</span>
-          <select value={session.role} onChange={(event) => onRoleChange(event.target.value)}>
-            {demoUsers.map((user) => (
-              <option key={user.role} value={user.role}>
-                {t(user.role)} · {user.username}
-              </option>
-            ))}
-          </select>
-        </label>
 
         <nav className="nav-list" aria-label="Primary">
           {navItems.map((item) => {
