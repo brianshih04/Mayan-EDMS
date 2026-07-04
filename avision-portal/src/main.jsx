@@ -59,6 +59,7 @@ const locales = {
     secondaryAction: '查看資料夾',
     searchPlaceholder: '搜尋文件、客戶、案件號或標籤',
     role: '角色',
+    switchRole: '切換角色',
     queue: '工作清單',
     task: '任務',
     owner: '負責人',
@@ -118,6 +119,7 @@ const locales = {
     secondaryAction: 'View folder',
     searchPlaceholder: 'Search documents, customers, case IDs, or tags',
     role: 'Role',
+    switchRole: 'Switch role',
     queue: 'Queue',
     task: 'Task',
     owner: 'Owner',
@@ -177,6 +179,7 @@ const locales = {
     secondaryAction: 'フォルダー表示',
     searchPlaceholder: '文書、顧客、案件番号、タグを検索',
     role: '役割',
+    switchRole: '役割を切替',
     queue: '作業一覧',
     task: 'タスク',
     owner: '担当',
@@ -236,6 +239,7 @@ const locales = {
     secondaryAction: '查看文件夹',
     searchPlaceholder: '搜索文档、客户、案件号或标签',
     role: '角色',
+    switchRole: '切换角色',
     queue: '工作清单',
     task: '任务',
     owner: '负责人',
@@ -396,6 +400,13 @@ function App() {
     setActiveNav(roleNav[next.role][0]);
   }
 
+  function changeRole(role) {
+    const nextUser = demoUsers.find((user) => user.role === role);
+    if (!nextUser) return;
+
+    login(nextUser);
+  }
+
   function logout() {
     localStorage.removeItem('portal.session');
     setSession(null);
@@ -419,6 +430,7 @@ function App() {
       onLanguageChange={changeLanguage}
       onLogout={logout}
       onNav={setActiveNav}
+      onRoleChange={changeRole}
       session={session}
       t={t}
     />
@@ -511,7 +523,7 @@ function LoginScreen({ language, onLanguageChange, onLogin, t }) {
   );
 }
 
-function Shell({ activeNav, language, onLanguageChange, onLogout, onNav, session, t }) {
+function Shell({ activeNav, language, onLanguageChange, onLogout, onNav, onRoleChange, session, t }) {
   const navItems = roleNav[session.role];
   const roleTasks = tasks[session.role];
   const rolePanel = panels[session.role];
@@ -534,6 +546,17 @@ function Shell({ activeNav, language, onLanguageChange, onLogout, onNav, session
             <span>{t(session.role)}</span>
           </div>
         </div>
+
+        <label className="role-switcher">
+          <span>{t('switchRole')}</span>
+          <select value={session.role} onChange={(event) => onRoleChange(event.target.value)}>
+            {demoUsers.map((user) => (
+              <option key={user.role} value={user.role}>
+                {t(user.role)} · {user.username}
+              </option>
+            ))}
+          </select>
+        </label>
 
         <nav className="nav-list" aria-label="Primary">
           {navItems.map((item) => {
