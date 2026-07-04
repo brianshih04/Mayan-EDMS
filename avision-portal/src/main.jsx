@@ -369,6 +369,93 @@ const panels = {
   }
 };
 
+const workflowContent = {
+  scanInbox: {
+    step: '1 / 3',
+    title: '掃描批次匯入',
+    description: '確認掃描軟體輸出到 E:\\watch_folder，建立批次後送入 Mayan watch folder。',
+    checklist: ['掃描解析度 300 DPI', '輸出格式 PDF 或 TIFF', '檔名包含日期與批次號', '確認沒有空白頁'],
+    fields: [
+      ['批次名稱', '2026-07-05-Scan-01'],
+      ['來源設備', 'Avision Scanner'],
+      ['目的資料夾', 'E:\\watch_folder'],
+      ['掃描人員', 'Scan Station 01']
+    ],
+    primary: '建立匯入批次',
+    secondary: '開啟 watch folder'
+  },
+  batchCheck: {
+    step: '2 / 3',
+    title: '批次品質檢查',
+    description: '檢查頁數、方向、可讀性與重掃項目，確認後再交給分類人員。',
+    checklist: ['頁數與紙本相符', '沒有歪斜或裁切', '條碼/印章清楚', '低對比頁面已標記'],
+    fields: [
+      ['批次編號', 'S-1028'],
+      ['文件數量', '18'],
+      ['需要重掃', '3'],
+      ['送出狀態', 'Ready']
+    ],
+    primary: '送出給分類',
+    secondary: '標記重掃'
+  },
+  classify: {
+    step: '1 / 2',
+    title: '文件分類',
+    description: '依照文件內容選擇 document type，讓後續 metadata 與 OCR 規則能正確套用。',
+    checklist: ['確認文件首頁', '選擇 document type', '套用保存期限', '分派到正確 cabinet'],
+    fields: [
+      ['Document type', 'Invoice'],
+      ['Cabinet', 'Finance / Vendor'],
+      ['OCR language', '繁體中文 + English'],
+      ['Retention', '7 years']
+    ],
+    primary: '套用分類',
+    secondary: '查看原始文件'
+  },
+  metadata: {
+    step: '2 / 2',
+    title: '資料欄位補齊',
+    description: '補齊客戶、案件、日期與金額等欄位，讓查詢和審核能依條件篩選。',
+    checklist: ['客戶名稱一致', '案件號格式正確', '日期與文件相符', '必要欄位皆完成'],
+    fields: [
+      ['Customer', 'Avision'],
+      ['Case ID', 'AV-9341'],
+      ['Document date', '2026-07-05'],
+      ['Amount', 'Auto suggested']
+    ],
+    primary: '儲存 metadata',
+    secondary: '送審'
+  },
+  approvals: {
+    step: 'Decision',
+    title: '審核與核准',
+    description: '只顯示需要主管決策的文件，保留核准、退回與審核註記。',
+    checklist: ['文件類型正確', 'metadata 完整', '權限符合規範', '重複文件已排除'],
+    fields: [
+      ['審核批次', 'R-3301'],
+      ['風險等級', 'Normal'],
+      ['申請人', 'Records Desk'],
+      ['審核註記', 'Ready for approval']
+    ],
+    primary: '核准文件',
+    secondary: '退回修改'
+  },
+  system: {
+    step: 'Admin',
+    title: '系統連線與同步',
+    description: '確認 Mayan、Cloudflare tunnel、watch folder 與角色同步狀態。',
+    checklist: ['Mayan tunnel online', 'Portal tunnel online', 'watch folder 可寫入', '角色權限已同步'],
+    fields: [
+      ['Mayan URL', 'mayan-emds.avision-gb10.org'],
+      ['Portal URL', 'mayan-portal.avision-gb10.org'],
+      ['Watch folder', 'E:\\watch_folder'],
+      ['Auth mode', 'Demo credential mapping']
+    ],
+    primary: '重新檢查狀態',
+    secondary: '開啟 Mayan 後台'
+  }
+};
+
 const navIcons = {
   scanInbox: ScanLine,
   batchCheck: ClipboardCheck,
@@ -703,7 +790,7 @@ function PrimaryWorkArea({ activeNav, session, t }) {
     );
   }
 
-  if (activeNav === 'userAdmin' || activeNav === 'system') {
+  if (activeNav === 'userAdmin') {
     return (
       <section className="work-panel admin-surface">
         <div className="permission-map">
@@ -722,39 +809,54 @@ function PrimaryWorkArea({ activeNav, session, t }) {
     );
   }
 
+  const workflow = workflowContent[activeNav] || workflowContent.scanInbox;
+
   return (
     <section className="work-panel">
-      <div className="stepper" aria-label="Workflow steps">
-        <span className="step active">1</span>
-        <span className="step-line" />
-        <span className="step">2</span>
-        <span className="step-line" />
-        <span className="step">3</span>
+      <div className="workflow-header">
+        <div>
+          <p className="eyebrow">{workflow.step}</p>
+          <h2>{workflow.title}</h2>
+          <p>{workflow.description}</p>
+        </div>
+        <span className={`workflow-badge ${roleAccent[session.role]}`}>{t(session.role)}</span>
       </div>
-      <div className="intake-box">
+
+      <div className="intake-box compact">
         <UploadCloud size={42} aria-hidden="true" />
         <div>
-          <h2>{t('dropTitle')}</h2>
-          <p>{t('dropText')}</p>
+          <h3>{activeNav === 'system' ? t('connected') : t(activeNav)}</h3>
+          <p>{activeNav === 'scanInbox' ? t('dropText') : workflow.description}</p>
         </div>
       </div>
+
+      <div className="checklist-grid">
+        {workflow.checklist.map((item) => (
+          <div className="check-item" key={item}>
+            <CheckCircle2 size={17} aria-hidden="true" />
+            <span>{item}</span>
+          </div>
+        ))}
+      </div>
+
+      <div className="metadata-grid">
+        {workflow.fields.map(([label, value]) => (
+          <label key={label}>
+            <span>{label}</span>
+            <input defaultValue={value} />
+          </label>
+        ))}
+      </div>
+
       <div className="action-row">
         <button className="strong-action" type="button">
           <CheckCircle2 size={18} aria-hidden="true" />
-          {t('primaryAction')}
+          {workflow.primary}
         </button>
         <button className="subtle-action" type="button">
           <FolderInput size={18} aria-hidden="true" />
-          {t('secondaryAction')}
+          {workflow.secondary}
         </button>
-      </div>
-      <div className="metadata-grid">
-        {['Document type', 'Customer', 'Case ID', 'Retention'].map((label) => (
-          <label key={label}>
-            <span>{label}</span>
-            <input defaultValue={session.role === 'scanner' ? '' : 'Auto suggested'} />
-          </label>
-        ))}
       </div>
     </section>
   );
