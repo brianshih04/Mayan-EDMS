@@ -271,6 +271,14 @@ const demoUsers = [
   { username: 'admin', role: 'admin', name: 'System Admin' }
 ];
 
+const roleAccent = {
+  scanner: 'teal',
+  classifier: 'blue',
+  reviewer: 'amber',
+  viewer: 'slate',
+  admin: 'violet'
+};
+
 const roleNav = {
   scanner: ['scanInbox', 'batchCheck'],
   classifier: ['classify', 'metadata', 'searchDocs'],
@@ -420,41 +428,78 @@ function App() {
 function LoginScreen({ language, onLanguageChange, onLogin, t }) {
   const [selectedRole, setSelectedRole] = useState(demoUsers[0].role);
   const selectedUser = demoUsers.find((user) => user.role === selectedRole) || demoUsers[0];
+  const selectedTasks = tasks[selectedUser.role].slice(0, 2);
 
   return (
     <main className="login-page">
       <section className="login-brand">
-        <img src="/avision-mark.svg" alt="Avision" className="brand-mark" />
-        <div>
-          <h1>{t('appName')}</h1>
-          <p>{t('appSubtitle')}</p>
+        <div className="hero-content">
+          <img src="/avision-mark.svg" alt="Avision" className="brand-mark" />
+          <div>
+            <p className="hero-kicker">Avision EDMS</p>
+            <h1>{t('appName')}</h1>
+            <p>{t('appSubtitle')}</p>
+          </div>
+        </div>
+        <div className="hero-metrics" aria-label="System status">
+          <div>
+            <strong>24/7</strong>
+            <span>{t('connected')}</span>
+          </div>
+          <div>
+            <strong>4</strong>
+            <span>{t('language')}</span>
+          </div>
+          <div>
+            <strong>5</strong>
+            <span>{t('role')}</span>
+          </div>
         </div>
       </section>
 
       <section className="login-panel" aria-label={t('signIn')}>
-        <div className="language-row">
-          <Languages size={18} aria-hidden="true" />
-          <select value={language} onChange={(event) => onLanguageChange(event.target.value)}>
-            <option value="zh-TW">繁體中文</option>
-            <option value="en">English</option>
-            <option value="ja">日本語</option>
-            <option value="zh-CN">简体中文</option>
-          </select>
+        <div className="login-panel-header">
+          <div>
+            <p className="eyebrow">{t('signIn')}</p>
+            <h2>{t('sampleUsers')}</h2>
+          </div>
+          <div className="language-row">
+            <Languages size={18} aria-hidden="true" />
+            <select value={language} onChange={(event) => onLanguageChange(event.target.value)}>
+              <option value="zh-TW">繁體中文</option>
+              <option value="en">English</option>
+              <option value="ja">日本語</option>
+              <option value="zh-CN">简体中文</option>
+            </select>
+          </div>
         </div>
 
         <p className="hint">{t('demoHint')}</p>
         <div className="role-picker">
           {demoUsers.map((user) => (
             <button
-              className={selectedRole === user.role ? 'role-tile selected' : 'role-tile'}
+              className={selectedRole === user.role ? `role-tile selected ${roleAccent[user.role]}` : `role-tile ${roleAccent[user.role]}`}
               key={user.role}
               onClick={() => setSelectedRole(user.role)}
               type="button"
             >
+              <span className="role-dot" aria-hidden="true" />
               <span>{t(user.role)}</span>
               <small>{user.username}</small>
             </button>
           ))}
+        </div>
+
+        <div className={`role-preview ${roleAccent[selectedUser.role]}`}>
+          <div>
+            <p className="eyebrow">{selectedUser.name}</p>
+            <h3>{t(selectedUser.role)}</h3>
+          </div>
+          <div className="preview-tasks">
+            {selectedTasks.map((task) => (
+              <span key={task.id}>{task.id} · {task.label}</span>
+            ))}
+          </div>
         </div>
 
         <button className="primary-login" onClick={() => onLogin(selectedUser)} type="button">
@@ -478,6 +523,14 @@ function Shell({ activeNav, language, onLanguageChange, onLogout, onNav, session
           <img src="/avision-mark.svg" alt="Avision" className="sidebar-mark" />
           <div>
             <strong>{t('appName')}</strong>
+            <span>{t(session.role)}</span>
+          </div>
+        </div>
+
+        <div className={`user-card ${roleAccent[session.role]}`}>
+          <div className="avatar" aria-hidden="true">{session.name.slice(0, 1)}</div>
+          <div>
+            <strong>{session.name}</strong>
             <span>{t(session.role)}</span>
           </div>
         </div>
@@ -518,7 +571,7 @@ function Shell({ activeNav, language, onLanguageChange, onLogout, onNav, session
               <option value="ja">日本語</option>
               <option value="zh-CN">简中</option>
             </select>
-            <button className="icon-text" type="button">
+            <button className="icon-text notification-button" type="button">
               <Bell size={18} aria-hidden="true" />
               {rolePanel.stats[2][1]}
             </button>
@@ -529,7 +582,7 @@ function Shell({ activeNav, language, onLanguageChange, onLogout, onNav, session
           </div>
         </header>
 
-        <section className="role-summary">
+        <section className={`role-summary ${roleAccent[session.role]}`}>
           <div className="summary-copy">
             <p className="eyebrow">{session.name}</p>
             <h2>{t(session.role)}</h2>
@@ -543,6 +596,23 @@ function Shell({ activeNav, language, onLanguageChange, onLogout, onNav, session
               </div>
             ))}
           </div>
+        </section>
+
+        <section className="quick-actions" aria-label={t('nextAction')}>
+          {navItems.map((item) => {
+            const Icon = navIcons[item];
+            return (
+              <button
+                className={activeNav === item ? 'quick-card active' : 'quick-card'}
+                key={item}
+                onClick={() => onNav(item)}
+                type="button"
+              >
+                <Icon size={22} aria-hidden="true" />
+                <span>{t(item)}</span>
+              </button>
+            );
+          })}
         </section>
 
         <section className="content-grid">
@@ -600,6 +670,13 @@ function PrimaryWorkArea({ activeNav, session, t }) {
 
   return (
     <section className="work-panel">
+      <div className="stepper" aria-label="Workflow steps">
+        <span className="step active">1</span>
+        <span className="step-line" />
+        <span className="step">2</span>
+        <span className="step-line" />
+        <span className="step">3</span>
+      </div>
       <div className="intake-box">
         <UploadCloud size={42} aria-hidden="true" />
         <div>
@@ -618,7 +695,7 @@ function PrimaryWorkArea({ activeNav, session, t }) {
         </button>
       </div>
       <div className="metadata-grid">
-        {['Document Type', 'Customer', 'Case ID', 'Retention'].map((label) => (
+        {['Document type', 'Customer', 'Case ID', 'Retention'].map((label) => (
           <label key={label}>
             <span>{label}</span>
             <input defaultValue={session.role === 'scanner' ? '' : 'Auto suggested'} />
@@ -636,6 +713,7 @@ function QueuePanel({ roleTasks, t }) {
         <LayoutDashboard size={20} aria-hidden="true" />
         <h2>{t('queue')}</h2>
       </div>
+      <p className="queue-helper">{t('nextAction')}</p>
       <div className="task-list">
         {roleTasks.map((task) => (
           <article className="task-row" key={task.id}>
