@@ -10,6 +10,7 @@
 - 新增 `GET /api/scanner/watch-folder`，讀取 `E:\watch_folder` 實際檔案清單。
 - 新增 `POST /api/scanner/batches`，建立 scanner 匯入批次 manifest。
 - Scanner 畫面顯示 live watch folder、檔案大小、修改時間、空狀態與錯誤狀態。
+- Scanner 畫面新增檔案預覽與影像空白頁輔助偵測。
 
 ## 0.1.0 - 2026-07-05
 

@@ -118,6 +118,7 @@ npm run preview
 Scanner API 目前在 `vite.config.js` 內以 Vite middleware 提供，方便 Cloudflare tunnel 直接轉發到 `localhost:5174`：
 
 - `GET /api/scanner/watch-folder`
+- `GET /api/scanner/files/:fileName`
 - `POST /api/scanner/batches`
 
 預設讀取：
@@ -140,6 +141,12 @@ E:\Mayan-EDMS-Docker\data\portal\batches\SCAN-*.json
 ```
 
 可用 `AVISION_PORTAL_STATE_DIR` 改變狀態目錄。
+
+Scanner 預覽限制：
+
+- JPG、JPEG、PNG、BMP 可直接顯示並用瀏覽器 canvas 做空白頁輔助偵測。
+- PDF 可內嵌預覽，但尚未做逐頁空白偵測。
+- TIFF 需要後續加入轉圖服務，瀏覽器通常無法直接顯示。
 
 ## 本機 Mayan 設定
 

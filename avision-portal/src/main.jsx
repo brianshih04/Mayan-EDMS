@@ -471,6 +471,45 @@ function formatDateTime(value) {
   }).format(new Date(value));
 }
 
+function analyzeImageForBlankPage(image) {
+  const canvas = document.createElement('canvas');
+  const size = 180;
+  canvas.width = size;
+  canvas.height = size;
+  const context = canvas.getContext('2d', { willReadFrequently: true });
+
+  context.drawImage(image, 0, 0, size, size);
+  const { data } = context.getImageData(0, 0, size, size);
+  let whitePixels = 0;
+  let inkPixels = 0;
+  let contrastTotal = 0;
+  const totalPixels = size * size;
+
+  for (let index = 0; index < data.length; index += 4) {
+    const red = data[index];
+    const green = data[index + 1];
+    const blue = data[index + 2];
+    const brightness = (red + green + blue) / 3;
+    const contrast = Math.max(red, green, blue) - Math.min(red, green, blue);
+
+    if (brightness > 245 && contrast < 10) whitePixels += 1;
+    if (brightness < 235 || contrast > 18) inkPixels += 1;
+    contrastTotal += contrast;
+  }
+
+  const whiteRatio = whitePixels / totalPixels;
+  const inkRatio = inkPixels / totalPixels;
+  const averageContrast = contrastTotal / totalPixels;
+  const likelyBlank = whiteRatio > 0.96 && inkRatio < 0.025 && averageContrast < 7;
+
+  return {
+    averageContrast,
+    inkRatio,
+    likelyBlank,
+    whiteRatio
+  };
+}
+
 const navIcons = {
   scanInbox: ScanLine,
   batchCheck: ClipboardCheck,
@@ -788,6 +827,8 @@ function PrimaryWorkArea({ activeNav, session, t }) {
   const [scannerError, setScannerError] = useState('');
   const [scannerBatch, setScannerBatch] = useState(null);
   const [scannerCreating, setScannerCreating] = useState(false);
+  const [selectedScannerFile, setSelectedScannerFile] = useState(null);
+  const [blankAnalysis, setBlankAnalysis] = useState(null);
 
   async function loadScannerFiles() {
     setScannerLoading(true);
@@ -803,6 +844,10 @@ function PrimaryWorkArea({ activeNav, session, t }) {
 
       setWatchFolder(payload.watchFolder);
       setScannerFiles(payload.files);
+      setSelectedScannerFile((current) => {
+        if (payload.files.some((file) => file.name === current?.name)) return current;
+        return payload.files[0] || null;
+      });
     } catch (error) {
       setScannerError(error.message);
     } finally {
@@ -843,6 +888,10 @@ function PrimaryWorkArea({ activeNav, session, t }) {
       loadScannerFiles();
     }
   }, [scannerMode]);
+
+  useEffect(() => {
+    setBlankAnalysis(null);
+  }, [selectedScannerFile?.name]);
 
   if (activeNav === 'searchDocs') {
     return (
@@ -927,22 +976,68 @@ function PrimaryWorkArea({ activeNav, session, t }) {
             </p>
           ) : null}
 
-          <div className="scanner-file-list">
-            {scannerFiles.length ? (
-              scannerFiles.map((file) => (
-                <article className="scanner-file-row" key={file.name}>
-                  <Archive size={18} aria-hidden="true" />
-                  <div>
-                    <strong>{file.name}</strong>
-                    <span>{file.extension} · {formatBytes(file.size)} · {formatDateTime(file.modifiedAt)}</span>
+          <div className="scanner-review-grid">
+            <div className="scanner-file-list">
+              {scannerFiles.length ? (
+                scannerFiles.map((file) => (
+                  <button
+                    className={selectedScannerFile?.name === file.name ? 'scanner-file-row active' : 'scanner-file-row'}
+                    key={file.name}
+                    onClick={() => setSelectedScannerFile(file)}
+                    type="button"
+                  >
+                    <Archive size={18} aria-hidden="true" />
+                    <div>
+                      <strong>{file.name}</strong>
+                      <span>{file.extension} · {formatBytes(file.size)} · {formatDateTime(file.modifiedAt)}</span>
+                    </div>
+                  </button>
+                ))
+              ) : (
+                <div className="scanner-empty">
+                  {scannerLoading ? '正在讀取 watch folder...' : '目前沒有可匯入的 PDF、TIFF 或影像檔。'}
+                </div>
+              )}
+            </div>
+
+            <div className="scanner-preview-panel">
+              {selectedScannerFile?.previewable ? (
+                <>
+                  <div className="scanner-preview-frame">
+                    {selectedScannerFile.extension === 'PDF' ? (
+                      <object
+                        aria-label={selectedScannerFile.name}
+                        data={selectedScannerFile.previewUrl}
+                        type="application/pdf"
+                      />
+                    ) : (
+                      <img
+                        alt={selectedScannerFile.name}
+                        src={selectedScannerFile.previewUrl}
+                        onLoad={(event) => setBlankAnalysis(analyzeImageForBlankPage(event.currentTarget))}
+                      />
+                    )}
                   </div>
-                </article>
-              ))
-            ) : (
-              <div className="scanner-empty">
-                {scannerLoading ? '正在讀取 watch folder...' : '目前沒有可匯入的 PDF、TIFF 或影像檔。'}
-              </div>
-            )}
+                  <div className="scanner-quality-card">
+                    <strong>{selectedScannerFile.name}</strong>
+                    {selectedScannerFile.extension === 'PDF' ? (
+                      <span>PDF 可預覽；空白頁偵測將在後續接 PDF 逐頁分析。</span>
+                    ) : blankAnalysis ? (
+                      <span className={blankAnalysis.likelyBlank ? 'quality-warning' : 'quality-ok'}>
+                        {blankAnalysis.likelyBlank ? '疑似空白頁，請重點確認。' : '未偵測到明顯空白頁。'}
+                        {' '}白色比例 {(blankAnalysis.whiteRatio * 100).toFixed(1)}%，墨點比例 {(blankAnalysis.inkRatio * 100).toFixed(1)}%。
+                      </span>
+                    ) : (
+                      <span>正在分析影像...</span>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <div className="scanner-preview-empty">
+                  選取 JPG、PNG、BMP 或 PDF 可在此預覽。TIFF 需要後續轉圖服務才能在瀏覽器直接顯示。
+                </div>
+              )}
+            </div>
           </div>
         </div>
       ) : null}
