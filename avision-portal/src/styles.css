@@ -808,26 +808,26 @@ button:disabled {
 
 .scanner-review-grid {
   display: grid;
-  grid-template-columns: minmax(620px, 1.35fr) minmax(320px, 0.65fr);
+  grid-template-columns: minmax(620px, 1.2fr) minmax(360px, 0.8fr);
   gap: 0;
   min-height: 420px;
 }
 
 .scanner-thumbnail-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   align-content: start;
-  gap: 14px;
+  gap: 12px;
   border-right: 1px solid #e1e8e5;
   background: #f8faf9;
-  max-height: 720px;
+  max-height: 620px;
   overflow: auto;
   padding: 14px;
 }
 
 .scanner-thumb-card {
   display: grid;
-  grid-template-rows: 300px auto;
+  grid-template-rows: 220px auto;
   border: 1px solid #dce3e0;
   border-radius: 8px;
   background: #fff;
@@ -857,7 +857,7 @@ button:disabled {
   background: #ffffff;
   min-width: 0;
   overflow: hidden;
-  padding: 10px;
+  padding: 8px;
 }
 
 .scanner-thumb-page {
@@ -1237,11 +1237,11 @@ button:disabled {
     grid-template-columns: 1fr;
     border-right: 0;
     border-bottom: 1px solid #e1e8e5;
-    max-height: 620px;
+    max-height: 520px;
   }
 
   .scanner-thumb-card {
-    grid-template-rows: 340px auto;
+    grid-template-rows: 260px auto;
   }
 
   .intake-box {
