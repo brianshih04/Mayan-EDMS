@@ -903,11 +903,16 @@ function PrimaryWorkArea({ activeNav, session, t }) {
 
   function updateThumbnailAnalysis(file, image) {
     setThumbnailAnalysis((current) => {
-      if (current[file.name]) return current;
+      if (current[file.name]?.width && current[file.name]?.height) return current;
+      const analysis = analyzeImageForBlankPage(image);
 
       return {
         ...current,
-        [file.name]: analyzeImageForBlankPage(image)
+        [file.name]: {
+          ...analysis,
+          height: image.naturalHeight,
+          width: image.naturalWidth
+        }
       };
     });
   }
@@ -1001,6 +1006,9 @@ function PrimaryWorkArea({ activeNav, session, t }) {
                 scannerFiles.map((file) => {
                   const analysis = thumbnailAnalysis[file.name];
                   const imagePreview = file.previewable && file.extension !== 'PDF';
+                  const thumbnailStyle = analysis?.width && analysis?.height
+                    ? { aspectRatio: `${analysis.width} / ${analysis.height}` }
+                    : undefined;
                   const qualityLabel = analysis
                     ? analysis.likelyBlank ? '疑似空白' : 'OK'
                     : imagePreview ? '分析中' : file.extension;
@@ -1017,7 +1025,7 @@ function PrimaryWorkArea({ activeNav, session, t }) {
                       onClick={() => setSelectedScannerFile(file)}
                       type="button"
                     >
-                      <div className="scanner-thumb-media">
+                      <div className="scanner-thumb-media" style={thumbnailStyle}>
                         {imagePreview ? (
                           <>
                             <span
