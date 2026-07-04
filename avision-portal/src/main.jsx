@@ -1004,10 +1004,15 @@ function PrimaryWorkArea({ activeNav, session, t }) {
                   const qualityLabel = analysis
                     ? analysis.likelyBlank ? '疑似空白' : 'OK'
                     : imagePreview ? '分析中' : file.extension;
+                  const thumbClasses = [
+                    'scanner-thumb-card',
+                    selectedScannerFile?.name === file.name ? 'active' : '',
+                    analysis?.likelyBlank ? 'blank-suspect' : ''
+                  ].filter(Boolean).join(' ');
 
                   return (
                     <button
-                      className={selectedScannerFile?.name === file.name ? 'scanner-thumb-card active' : 'scanner-thumb-card'}
+                      className={thumbClasses}
                       key={file.name}
                       onClick={() => setSelectedScannerFile(file)}
                       type="button"
