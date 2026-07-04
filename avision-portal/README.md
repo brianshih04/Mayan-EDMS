@@ -36,6 +36,28 @@ Mayan 後端網址：
 https://mayan-emds.avision-gb10.org
 ```
 
+Cloudflare portal 網址：
+
+```text
+https://mayan-portal.avision-gb10.org
+```
+
+## Scanner 真實功能
+
+目前 scanner 角色已開始接本機功能：
+
+- `GET /api/scanner/watch-folder`：讀取 `E:\watch_folder` 中可匯入的 PDF、TIFF 與影像檔。
+- `POST /api/scanner/batches`：依目前檔案建立本機匯入批次 manifest。
+
+預設 watch folder 是 `E:\watch_folder`。如需改路徑，可在啟動 Vite 前設定：
+
+```powershell
+$env:AVISION_WATCH_FOLDER = 'D:\your_watch_folder'
+npm run dev
+```
+
+批次 manifest 預設寫入 `E:\Mayan-EDMS-Docker\data\portal\batches`，不會寫回 watch folder。可用 `AVISION_PORTAL_STATE_DIR` 改變狀態目錄。
+
 ## 相關文件
 
 - [CHANGELOG.md](./CHANGELOG.md)：版本紀錄。

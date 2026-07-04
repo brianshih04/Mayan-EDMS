@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import {
   Archive,
@@ -456,6 +456,21 @@ const workflowContent = {
   }
 };
 
+function formatBytes(bytes) {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+}
+
+function formatDateTime(value) {
+  return new Intl.DateTimeFormat('zh-TW', {
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  }).format(new Date(value));
+}
+
 const navIcons = {
   scanInbox: ScanLine,
   batchCheck: ClipboardCheck,
@@ -766,6 +781,69 @@ function Shell({ activeNav, language, onLanguageChange, onLogout, onNav, session
 }
 
 function PrimaryWorkArea({ activeNav, session, t }) {
+  const scannerMode = activeNav === 'scanInbox' || activeNav === 'batchCheck';
+  const [scannerFiles, setScannerFiles] = useState([]);
+  const [watchFolder, setWatchFolder] = useState('E:\\watch_folder');
+  const [scannerLoading, setScannerLoading] = useState(false);
+  const [scannerError, setScannerError] = useState('');
+  const [scannerBatch, setScannerBatch] = useState(null);
+  const [scannerCreating, setScannerCreating] = useState(false);
+
+  async function loadScannerFiles() {
+    setScannerLoading(true);
+    setScannerError('');
+
+    try {
+      const response = await fetch('/api/scanner/watch-folder');
+      const payload = await response.json();
+
+      if (!response.ok) {
+        throw new Error(payload.error || 'Unable to read watch folder.');
+      }
+
+      setWatchFolder(payload.watchFolder);
+      setScannerFiles(payload.files);
+    } catch (error) {
+      setScannerError(error.message);
+    } finally {
+      setScannerLoading(false);
+    }
+  }
+
+  async function createScannerBatch() {
+    setScannerCreating(true);
+    setScannerError('');
+
+    try {
+      const response = await fetch('/api/scanner/batches', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          createdBy: session.username,
+          files: scannerFiles.map((file) => file.name)
+        })
+      });
+      const payload = await response.json();
+
+      if (!response.ok) {
+        throw new Error(payload.error || 'Unable to create scanner batch.');
+      }
+
+      setScannerBatch(payload.batch);
+      await loadScannerFiles();
+    } catch (error) {
+      setScannerError(error.message);
+    } finally {
+      setScannerCreating(false);
+    }
+  }
+
+  useEffect(() => {
+    if (scannerMode) {
+      loadScannerFiles();
+    }
+  }, [scannerMode]);
+
   if (activeNav === 'searchDocs') {
     return (
       <section className="work-panel">
@@ -830,6 +908,45 @@ function PrimaryWorkArea({ activeNav, session, t }) {
         </div>
       </div>
 
+      {scannerMode ? (
+        <div className="scanner-live-panel">
+          <div className="scanner-live-header">
+            <div>
+              <p className="eyebrow">Live watch folder</p>
+              <h3>{watchFolder}</h3>
+            </div>
+            <button className="subtle-action" onClick={loadScannerFiles} type="button">
+              {scannerLoading ? '讀取中' : '重新整理'}
+            </button>
+          </div>
+
+          {scannerError ? <p className="scanner-error">{scannerError}</p> : null}
+          {scannerBatch ? (
+            <p className="scanner-success">
+              已建立批次 {scannerBatch.id}，包含 {scannerBatch.files.length} 個檔案。
+            </p>
+          ) : null}
+
+          <div className="scanner-file-list">
+            {scannerFiles.length ? (
+              scannerFiles.map((file) => (
+                <article className="scanner-file-row" key={file.name}>
+                  <Archive size={18} aria-hidden="true" />
+                  <div>
+                    <strong>{file.name}</strong>
+                    <span>{file.extension} · {formatBytes(file.size)} · {formatDateTime(file.modifiedAt)}</span>
+                  </div>
+                </article>
+              ))
+            ) : (
+              <div className="scanner-empty">
+                {scannerLoading ? '正在讀取 watch folder...' : '目前沒有可匯入的 PDF、TIFF 或影像檔。'}
+              </div>
+            )}
+          </div>
+        </div>
+      ) : null}
+
       <div className="checklist-grid">
         {workflow.checklist.map((item) => (
           <div className="check-item" key={item}>
@@ -849,9 +966,14 @@ function PrimaryWorkArea({ activeNav, session, t }) {
       </div>
 
       <div className="action-row">
-        <button className="strong-action" type="button">
+        <button
+          className="strong-action"
+          disabled={scannerMode && (!scannerFiles.length || scannerCreating)}
+          onClick={scannerMode ? createScannerBatch : undefined}
+          type="button"
+        >
           <CheckCircle2 size={18} aria-hidden="true" />
-          {workflow.primary}
+          {scannerCreating ? '建立中' : workflow.primary}
         </button>
         <button className="subtle-action" type="button">
           <FolderInput size={18} aria-hidden="true" />

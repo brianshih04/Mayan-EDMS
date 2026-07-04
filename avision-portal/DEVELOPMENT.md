@@ -11,7 +11,7 @@ Avision EDMS Portal 是 Mayan-EDMS 的簡化前台，不取代 Mayan。Mayan 仍
 - lucide-react
 - PowerShell 啟動腳本
 
-目前尚未接入後端 API，工作清單與角色資料仍為前端 demo data。
+目前 scanner 角色已透過 Vite middleware 接入本機 watch folder API；其他角色的工作清單與角色資料仍為前端 demo data。
 
 ## 目錄結構
 
@@ -104,14 +104,42 @@ npm run preview
 
 後續 API 串接建議分階段進行：
 
-1. 登入與 session。
-2. 讀取目前使用者資訊。
-3. 依 Mayan group / role 對應 portal role。
-4. 文件搜尋。
-5. 文件清單與預覽。
-6. metadata 更新。
-7. workflow 審核動作。
-8. Watch folder / staging folder 狀態顯示。
+1. Scanner watch folder 狀態顯示與批次建立。已完成第一版。
+2. 登入與 session。
+3. 讀取目前使用者資訊。
+4. 依 Mayan group / role 對應 portal role。
+5. 文件搜尋。
+6. 文件清單與預覽。
+7. metadata 更新。
+8. workflow 審核動作。
+
+## Scanner 本機 API
+
+Scanner API 目前在 `vite.config.js` 內以 Vite middleware 提供，方便 Cloudflare tunnel 直接轉發到 `localhost:5174`：
+
+- `GET /api/scanner/watch-folder`
+- `POST /api/scanner/batches`
+
+預設讀取：
+
+```text
+E:\watch_folder
+```
+
+可用環境變數覆寫：
+
+```powershell
+$env:AVISION_WATCH_FOLDER = 'D:\your_watch_folder'
+npm run dev
+```
+
+建立批次時不會搬移或刪除原始掃描檔。manifest 預設寫入：
+
+```text
+E:\Mayan-EDMS-Docker\data\portal\batches\SCAN-*.json
+```
+
+可用 `AVISION_PORTAL_STATE_DIR` 改變狀態目錄。
 
 ## 本機 Mayan 設定
 
