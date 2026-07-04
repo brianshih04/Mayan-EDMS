@@ -829,6 +829,7 @@ function PrimaryWorkArea({ activeNav, session, t }) {
   const [scannerCreating, setScannerCreating] = useState(false);
   const [selectedScannerFile, setSelectedScannerFile] = useState(null);
   const [blankAnalysis, setBlankAnalysis] = useState(null);
+  const [thumbnailAnalysis, setThumbnailAnalysis] = useState({});
 
   async function loadScannerFiles() {
     setScannerLoading(true);
@@ -844,6 +845,13 @@ function PrimaryWorkArea({ activeNav, session, t }) {
 
       setWatchFolder(payload.watchFolder);
       setScannerFiles(payload.files);
+      setThumbnailAnalysis((current) => {
+        const next = {};
+        payload.files.forEach((file) => {
+          if (current[file.name]) next[file.name] = current[file.name];
+        });
+        return next;
+      });
       setSelectedScannerFile((current) => {
         if (payload.files.some((file) => file.name === current?.name)) return current;
         return payload.files[0] || null;
@@ -892,6 +900,17 @@ function PrimaryWorkArea({ activeNav, session, t }) {
   useEffect(() => {
     setBlankAnalysis(null);
   }, [selectedScannerFile?.name]);
+
+  function updateThumbnailAnalysis(file, image) {
+    setThumbnailAnalysis((current) => {
+      if (current[file.name]) return current;
+
+      return {
+        ...current,
+        [file.name]: analyzeImageForBlankPage(image)
+      };
+    });
+  }
 
   if (activeNav === 'searchDocs') {
     return (
@@ -977,22 +996,46 @@ function PrimaryWorkArea({ activeNav, session, t }) {
           ) : null}
 
           <div className="scanner-review-grid">
-            <div className="scanner-file-list">
+            <div className="scanner-thumbnail-grid">
               {scannerFiles.length ? (
-                scannerFiles.map((file) => (
-                  <button
-                    className={selectedScannerFile?.name === file.name ? 'scanner-file-row active' : 'scanner-file-row'}
-                    key={file.name}
-                    onClick={() => setSelectedScannerFile(file)}
-                    type="button"
-                  >
-                    <Archive size={18} aria-hidden="true" />
-                    <div>
-                      <strong>{file.name}</strong>
-                      <span>{file.extension} · {formatBytes(file.size)} · {formatDateTime(file.modifiedAt)}</span>
-                    </div>
-                  </button>
-                ))
+                scannerFiles.map((file) => {
+                  const analysis = thumbnailAnalysis[file.name];
+                  const imagePreview = file.previewable && file.extension !== 'PDF';
+                  const qualityLabel = analysis
+                    ? analysis.likelyBlank ? '疑似空白' : 'OK'
+                    : imagePreview ? '分析中' : file.extension;
+
+                  return (
+                    <button
+                      className={selectedScannerFile?.name === file.name ? 'scanner-thumb-card active' : 'scanner-thumb-card'}
+                      key={file.name}
+                      onClick={() => setSelectedScannerFile(file)}
+                      type="button"
+                    >
+                      <div className="scanner-thumb-media">
+                        {imagePreview ? (
+                          <img
+                            alt=""
+                            src={file.previewUrl}
+                            onLoad={(event) => updateThumbnailAnalysis(file, event.currentTarget)}
+                          />
+                        ) : (
+                          <div className="scanner-thumb-fallback">
+                            <Archive size={26} aria-hidden="true" />
+                            <span>{file.extension}</span>
+                          </div>
+                        )}
+                        <span className={analysis?.likelyBlank ? 'thumb-status warning' : 'thumb-status'}>
+                          {qualityLabel}
+                        </span>
+                      </div>
+                      <div className="scanner-thumb-meta">
+                        <strong>{file.name}</strong>
+                        <span>{formatBytes(file.size)} · {formatDateTime(file.modifiedAt)}</span>
+                      </div>
+                    </button>
+                  );
+                })
               ) : (
                 <div className="scanner-empty">
                   {scannerLoading ? '正在讀取 watch folder...' : '目前沒有可匯入的 PDF、TIFF 或影像檔。'}
