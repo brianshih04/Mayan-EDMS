@@ -1,0 +1,135 @@
+# 待辦事項
+
+本文件是交給後續 coding agent 的實作清單。請依優先順序逐步完成，每次修改後執行 `npm run build`，並確認 `https://mayan-portal.avision-gb10.org` 可正常開啟。
+
+## P0：穩定目前 Scanner 流程
+
+- [ ] 確認小 / 中 / 大縮圖切換在實際 Chrome UI 會立即改變大小。
+- [ ] 加入目前縮圖大小的使用者提示或 tooltip。
+- [ ] 將 scanner thumbnail 的檔名改成 hover tooltip 或右側資訊欄，不要撐高縮圖卡。
+- [ ] 調整空白頁偵測 threshold，降低誤判。
+- [ ] 增加「疑似空白」總數統計。
+- [ ] 增加只看「疑似空白」的 filter。
+- [ ] 增加 scanner 批次的 selected files 功能，不要永遠送出全部檔案。
+- [ ] 增加「忽略此頁」、「標記重掃」、「確認正常」狀態。
+- [ ] 將 page QC 狀態寫入 batch manifest。
+
+## P0：Cloudflare 與啟動穩定化
+
+- [ ] 建立正式啟動腳本，一次啟動 portal dev server 與 cloudflared tunnel。
+- [ ] 增加健康檢查腳本：
+  - `http://localhost:5174`
+  - `https://mayan-portal.avision-gb10.org`
+  - `https://mayan-portal.avision-gb10.org/api/scanner/watch-folder`
+  - `https://mayan-emds.avision-gb10.org`
+- [ ] 確認 Windows 重開機後如何自動啟動 portal 與 cloudflared。
+- [ ] 將 Cloudflare tunnel 設定備份到 repo 文件，但不要提交 credentials JSON。
+
+## P1：PDF / TIFF 縮圖與逐頁 QC
+
+- [ ] 選定後端轉圖方案。
+  - PDF：Poppler、pdf.js server-side、或 ImageMagick。
+  - TIFF：ImageMagick、Sharp/libvips、或 Windows 可用轉圖工具。
+- [ ] 建立 thumbnail cache 目錄，例如：
+
+```text
+E:\Mayan-EDMS-Docker\data\portal\thumbnails
+```
+
+- [ ] `GET /api/scanner/files/:fileName/pages` 回傳頁面清單。
+- [ ] `GET /api/scanner/files/:fileName/pages/:page/thumbnail` 回傳頁面縮圖。
+- [ ] 對 PDF/TIFF 每頁做空白頁偵測。
+- [ ] 在 scanner UI 以「頁」為單位顯示縮圖，不只是檔案為單位。
+
+## P1：正式匯入 Mayan
+
+- [ ] 研究目前 Mayan API 可用 authentication。
+- [ ] 建立 Mayan API client。
+- [ ] 設定文件類型 document type 對應。
+- [ ] 將 scanner batch 匯入 Mayan。
+- [ ] 匯入完成後回寫 batch 狀態：
+  - `queued`
+  - `importing`
+  - `imported`
+  - `failed`
+- [ ] 顯示 Mayan document id / link。
+- [ ] 失敗時保留錯誤訊息與 retry button。
+
+## P1：登入與角色權限
+
+- [ ] 以 backend session 取代 frontend demo password。
+- [ ] 串接 Mayan user 或自建 portal user table。
+- [ ] 依 Mayan group / portal role 顯示 UI。
+- [ ] 移除前端 hardcoded password。
+- [ ] 加入 session timeout。
+- [ ] Admin 可管理 user-role mapping。
+
+## P2：Records 分類人員功能
+
+- [ ] 讀取 Mayan 中待分類文件。
+- [ ] 顯示文件預覽。
+- [ ] 選擇 document type。
+- [ ] 編輯 metadata：
+  - customer
+  - case id
+  - document date
+  - amount
+  - tags
+- [ ] 儲存 metadata 到 Mayan。
+- [ ] 送審到 reviewer workflow。
+
+## P2：Reviewer 審核功能
+
+- [ ] 讀取待審核文件清單。
+- [ ] 顯示文件、metadata、歷史紀錄。
+- [ ] 核准文件。
+- [ ] 退回修改。
+- [ ] 留下審核註記。
+- [ ] 與 Mayan workflow/action 對接。
+
+## P2：Viewer 查詢功能
+
+- [ ] 串接 Mayan 搜尋 API。
+- [ ] 支援關鍵字搜尋。
+- [ ] 支援 metadata filter。
+- [ ] 文件預覽。
+- [ ] 下載原始檔。
+- [ ] 權限不足時顯示友善訊息。
+
+## P2：Admin 功能
+
+- [ ] 顯示 Mayan connection status。
+- [ ] 顯示 Cloudflare tunnel status。
+- [ ] 顯示 watch folder status。
+- [ ] 顯示 portal batch queue。
+- [ ] 管理 role navigation。
+- [ ] 管理 scanner settings：
+  - watch folder path
+  - thumbnail size default
+  - blank page threshold
+
+## P3：工程整理
+
+- [ ] 將 `src/main.jsx` 拆成多個 component。
+- [ ] 將 locales 拆成 JSON。
+- [ ] 將 scanner API 從 `vite.config.js` 移到正式 backend。
+- [ ] 增加 ESLint / Prettier。
+- [ ] 增加最基本 tests。
+- [ ] 增加 error boundary。
+- [ ] 增加 loading skeleton。
+- [ ] 建立 `.env.example`。
+
+## 每次交付前檢查
+
+- [ ] `npm run build`
+- [ ] `https://mayan-portal.avision-gb10.org` 回 `200`
+- [ ] scanner login 可進入：
+
+```text
+username: scanner
+password: avision123
+```
+
+- [ ] `GET /api/scanner/watch-folder` 回 `200`
+- [ ] 若修改 Cloudflare 設定，確認 `mayan-emds` 與 `mayan-portal` 都仍可用。
+
