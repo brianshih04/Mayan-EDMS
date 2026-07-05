@@ -830,6 +830,9 @@ function PrimaryWorkArea({ activeNav, session, t }) {
   const [selectedScannerFile, setSelectedScannerFile] = useState(null);
   const [blankAnalysis, setBlankAnalysis] = useState(null);
   const [thumbnailAnalysis, setThumbnailAnalysis] = useState({});
+  const [thumbnailSize, setThumbnailSize] = useState(
+    localStorage.getItem('portal.scannerThumbnailSize') || 'small'
+  );
 
   async function loadScannerFiles() {
     setScannerLoading(true);
@@ -917,6 +920,11 @@ function PrimaryWorkArea({ activeNav, session, t }) {
     });
   }
 
+  function changeThumbnailSize(size) {
+    setThumbnailSize(size);
+    localStorage.setItem('portal.scannerThumbnailSize', size);
+  }
+
   if (activeNav === 'searchDocs') {
     return (
       <section className="work-panel">
@@ -988,9 +996,27 @@ function PrimaryWorkArea({ activeNav, session, t }) {
               <p className="eyebrow">Live watch folder</p>
               <h3>{watchFolder}</h3>
             </div>
-            <button className="subtle-action" onClick={loadScannerFiles} type="button">
-              {scannerLoading ? '讀取中' : '重新整理'}
-            </button>
+            <div className="scanner-live-actions">
+              <div className="thumbnail-size-control" aria-label="縮圖大小">
+                {[
+                  ['small', '小'],
+                  ['medium', '中'],
+                  ['large', '大']
+                ].map(([size, label]) => (
+                  <button
+                    className={thumbnailSize === size ? 'active' : ''}
+                    key={size}
+                    onClick={() => changeThumbnailSize(size)}
+                    type="button"
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+              <button className="subtle-action" onClick={loadScannerFiles} type="button">
+                {scannerLoading ? '讀取中' : '重新整理'}
+              </button>
+            </div>
           </div>
 
           {scannerError ? <p className="scanner-error">{scannerError}</p> : null}
@@ -1001,7 +1027,7 @@ function PrimaryWorkArea({ activeNav, session, t }) {
           ) : null}
 
           <div className="scanner-review-grid">
-            <div className="scanner-mini-grid">
+            <div className={`scanner-mini-grid ${thumbnailSize}`}>
               {scannerFiles.length ? (
                 scannerFiles.map((file) => {
                   const analysis = thumbnailAnalysis[file.name];
