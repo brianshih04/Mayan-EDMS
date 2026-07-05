@@ -1001,7 +1001,7 @@ function PrimaryWorkArea({ activeNav, session, t }) {
           ) : null}
 
           <div className="scanner-review-grid">
-            <div className="scanner-thumbnail-grid">
+            <div className="scanner-mini-grid">
               {scannerFiles.length ? (
                 scannerFiles.map((file) => {
                   const analysis = thumbnailAnalysis[file.name];
@@ -1013,7 +1013,7 @@ function PrimaryWorkArea({ activeNav, session, t }) {
                     ? analysis.likelyBlank ? '疑似空白' : 'OK'
                     : imagePreview ? '分析中' : file.extension;
                   const thumbClasses = [
-                    'scanner-thumb-card',
+                    'scanner-mini-card',
                     selectedScannerFile?.name === file.name ? 'active' : '',
                     analysis?.likelyBlank ? 'blank-suspect' : ''
                   ].filter(Boolean).join(' ');
@@ -1026,11 +1026,11 @@ function PrimaryWorkArea({ activeNav, session, t }) {
                       title={file.name}
                       type="button"
                     >
-                      <div className="scanner-thumb-media" style={thumbnailStyle}>
+                      <div className="scanner-mini-media" style={thumbnailStyle}>
                         {imagePreview ? (
                           <>
                             <span
-                              className="scanner-thumb-page"
+                              className="scanner-mini-page"
                               style={{ backgroundImage: `url("${file.previewUrl}")` }}
                             />
                             <img
@@ -1046,11 +1046,11 @@ function PrimaryWorkArea({ activeNav, session, t }) {
                             <span>{file.extension}</span>
                           </div>
                         )}
-                        <span className={analysis?.likelyBlank ? 'thumb-status warning' : 'thumb-status'}>
+                        <span className={analysis?.likelyBlank ? 'mini-status warning' : 'mini-status'}>
                           {qualityLabel}
                         </span>
                       </div>
-                      <div className="scanner-thumb-meta">
+                      <div className="scanner-mini-meta">
                         <strong>{file.name}</strong>
                         <span>{formatBytes(file.size)} · {formatDateTime(file.modifiedAt)}</span>
                       </div>
