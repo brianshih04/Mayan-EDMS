@@ -456,6 +456,12 @@ const workflowContent = {
   }
 };
 
+const scannerThumbnailSizes = {
+  small: 72,
+  medium: 96,
+  large: 132
+};
+
 function formatBytes(bytes) {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
@@ -969,6 +975,7 @@ function PrimaryWorkArea({ activeNav, session, t }) {
   }
 
   const workflow = workflowContent[activeNav] || workflowContent.scanInbox;
+  const thumbnailWidth = scannerThumbnailSizes[thumbnailSize] || scannerThumbnailSizes.small;
 
   return (
     <section className="work-panel">
@@ -1004,7 +1011,7 @@ function PrimaryWorkArea({ activeNav, session, t }) {
                   ['large', '大']
                 ].map(([size, label]) => (
                   <button
-                    className={thumbnailSize === size ? 'active' : ''}
+                    className={thumbnailSize === size ? `active ${size}` : size}
                     key={size}
                     onClick={() => changeThumbnailSize(size)}
                     type="button"
@@ -1027,7 +1034,10 @@ function PrimaryWorkArea({ activeNav, session, t }) {
           ) : null}
 
           <div className="scanner-review-grid">
-            <div className={`scanner-mini-grid ${thumbnailSize}`}>
+            <div
+              className="scanner-mini-grid"
+              style={{ gridTemplateColumns: `repeat(auto-fill, ${thumbnailWidth}px)` }}
+            >
               {scannerFiles.length ? (
                 scannerFiles.map((file) => {
                   const analysis = thumbnailAnalysis[file.name];
@@ -1049,6 +1059,7 @@ function PrimaryWorkArea({ activeNav, session, t }) {
                       className={thumbClasses}
                       key={file.name}
                       onClick={() => setSelectedScannerFile(file)}
+                      style={{ width: `${thumbnailWidth}px` }}
                       title={file.name}
                       type="button"
                     >
