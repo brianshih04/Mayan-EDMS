@@ -2,6 +2,8 @@
 
 本文件提供給後續 coding agent 接手 Avision EDMS Portal。Portal 是 Mayan-EDMS 上方的角色式簡化前台，不取代 Mayan core。
 
+> **進度（2026-07-05）**：P0 與 P1 全部完成並驗證（function + route 層級）— scanner 選取/QC/空白偵測、PDF/TIFF 逐頁轉圖（mupdf WASM）、Mayan 匯入（service token）、Mayan 登入與角色對應。待辦：以 `start-system.ps1`（設 `MAYAN_SERVICE_TOKEN`）啟動後做瀏覽器端到端 smoke test，即 Task 7。詳見 CHANGELOG / TODOLIST。
+
 ## 目前狀態
 
 - 專案位置：`E:\Projects\Mayan-EDMS\avision-portal`

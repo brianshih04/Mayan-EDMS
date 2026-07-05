@@ -23,6 +23,15 @@ import {
 import './styles.css';
 
 const MAYAN_URL = 'https://mayan-emds.avision-gb10.org';
+// When true, login uses the in-page demo users (offline fallback). When false
+// (the default, including production), login authenticates against Mayan.
+const DEMO_LOGIN = import.meta.env.VITE_DEMO_LOGIN === '1';
+
+function authHeaders(session, extra = {}) {
+  const headers = { ...extra };
+  if (session?.token) headers.Authorization = `Token ${session.token}`;
+  return headers;
+}
 
 const locales = {
   'zh-TW': {
@@ -456,6 +465,215 @@ const workflowContent = {
   }
 };
 
+// Scanner-specific strings, merged on top of `locales` in useTranslation.
+// Kept separate so the large base locale blocks stay stable.
+const scannerStrings = {
+  'zh-TW': {
+    scannerLiveFolder: '即時 watch folder',
+    thumbSizeLabel: '縮圖大小',
+    thumbSmall: '小',
+    thumbMedium: '中',
+    thumbLarge: '大',
+    scannerRefresh: '重新整理',
+    scannerLoading: '讀取中',
+    scannerAnalyzing: '分析中',
+    qualityBlank: '疑似空白',
+    qualityOk: 'OK',
+    scannerSelectAll: '全選可見',
+    scannerClearSelection: '清除選取',
+    scannerSelectedCount: '已選 {count}',
+    scannerBlankCount: '疑似空白 {count}',
+    scannerFilterBlank: '只看疑似空白',
+    scannerFilterEmpty: '沒有符合過濾條件的檔案。',
+    scannerBlankThreshold: '空白偵測靈敏度',
+    scannerSensitivityHint: '數字越小越靈敏（標記越多）。',
+    qcNormal: '正常',
+    qcRescan: '重掃',
+    qcIgnore: '忽略',
+    scannerQcHint: '切換品質狀態',
+    scannerEmpty: '目前沒有可匯入的 PDF、TIFF 或影像檔。',
+    scannerLoadingFolder: '正在讀取 watch folder...',
+    scannerPreviewEmpty: '選取左側檔案可在此預覽與標記品質。',
+    scannerPdfPreviewHint: 'PDF 可預覽；逐頁縮圖與逐頁空白偵測將在後續版本提供。',
+    scannerAnalyzingImage: '正在分析影像...',
+    scannerBlankWarn: '疑似空白頁，請重點確認。',
+    scannerBlankOk: '未偵測到明顯空白頁。',
+    scannerWhiteRatio: '白色比例',
+    scannerInkRatio: '墨點比例',
+    scannerNoSelection: '請先選取要送出的檔案。',
+    scannerCreating: '建立中',
+    scannerSubmitSelected: '送出選取的 {count} 個檔案',
+    scannerBatchCreated: '已建立批次 {id}，包含 {count} 個檔案。',
+    scannerPagesSummary: '共 {count} 頁，{blank} 頁疑似空白，{rescan} 頁標記重掃。點頁面切換狀態。',
+    loginHintReal: '以 Mayan 帳號密碼登入，系統會依你的群組進入對應角色。',
+    scannerPickDocType: '請先選擇文件類型。',
+    scannerDocType: '文件類型',
+    scannerNoDocType: '（尚無文件類型）',
+    scannerImportToMayan: '匯入 Mayan',
+    scannerImportResult: '匯入結果',
+    scannerImporting: '匯入中',
+    scannerRetry: '重試',
+    scannerImportFailed: '匯入失敗',
+    import_pending: '等待中',
+    import_importing: '匯入中',
+    import_imported: '已匯入',
+    import_failed: '失敗'
+  },
+  en: {
+    scannerLiveFolder: 'Live watch folder',
+    thumbSizeLabel: 'Thumbnail size',
+    thumbSmall: 'S',
+    thumbMedium: 'M',
+    thumbLarge: 'L',
+    scannerRefresh: 'Refresh',
+    scannerLoading: 'Loading',
+    scannerAnalyzing: 'Analyzing',
+    qualityBlank: 'Suspected blank',
+    qualityOk: 'OK',
+    scannerSelectAll: 'Select visible',
+    scannerClearSelection: 'Clear',
+    scannerSelectedCount: '{count} selected',
+    scannerBlankCount: '{count} suspected blank',
+    scannerFilterBlank: 'Only suspected blank',
+    scannerFilterEmpty: 'No files match the filter.',
+    scannerBlankThreshold: 'Blank sensitivity',
+    scannerSensitivityHint: 'Lower is more sensitive (flags more).',
+    qcNormal: 'OK',
+    qcRescan: 'Rescan',
+    qcIgnore: 'Ignore',
+    scannerQcHint: 'Cycle quality state',
+    scannerEmpty: 'No importable PDF, TIFF, or image files yet.',
+    scannerLoadingFolder: 'Reading watch folder...',
+    scannerPreviewEmpty: 'Select a file on the left to preview and mark quality.',
+    scannerPdfPreviewHint: 'PDF preview available; per-page thumbnails and blank detection arrive in a later build.',
+    scannerAnalyzingImage: 'Analyzing image...',
+    scannerBlankWarn: 'Suspected blank page — please verify.',
+    scannerBlankOk: 'No obvious blank page detected.',
+    scannerWhiteRatio: 'White ratio',
+    scannerInkRatio: 'Ink ratio',
+    scannerNoSelection: 'Select at least one file to submit.',
+    scannerCreating: 'Creating',
+    scannerSubmitSelected: 'Submit {count} selected file(s)',
+    scannerBatchCreated: 'Created batch {id} with {count} file(s).',
+    scannerPagesSummary: '{count} pages · {blank} suspected blank · {rescan} marked rescan. Click a page to cycle its state.',
+    loginHintReal: 'Sign in with your Mayan username and password; the portal opens the role assigned to your group.',
+    scannerPickDocType: 'Select a document type first.',
+    scannerDocType: 'Document type',
+    scannerNoDocType: '(no document types)',
+    scannerImportToMayan: 'Import to Mayan',
+    scannerImportResult: 'Import result',
+    scannerImporting: 'Importing',
+    scannerRetry: 'Retry',
+    scannerImportFailed: 'Import failed',
+    import_pending: 'Pending',
+    import_importing: 'Importing',
+    import_imported: 'Imported',
+    import_failed: 'Failed'
+  },
+  ja: {
+    scannerLiveFolder: 'ライブ watch folder',
+    thumbSizeLabel: 'サムネイルサイズ',
+    thumbSmall: '小',
+    thumbMedium: '中',
+    thumbLarge: '大',
+    scannerRefresh: '更新',
+    scannerLoading: '読み込み中',
+    scannerAnalyzing: '分析中',
+    qualityBlank: '空白疑い',
+    qualityOk: 'OK',
+    scannerSelectAll: '表示分を選択',
+    scannerClearSelection: '選択解除',
+    scannerSelectedCount: '{count} 件選択',
+    scannerBlankCount: '空白疑い {count}',
+    scannerFilterBlank: '空白疑いのみ',
+    scannerFilterEmpty: 'フィルターに一致するファイルがありません。',
+    scannerBlankThreshold: '空白検出の感度',
+    scannerSensitivityHint: '数値が小さいほど高感度（多く検出）。',
+    qcNormal: '正常',
+    qcRescan: '再スキャン',
+    qcIgnore: '無視',
+    scannerQcHint: '品質状態を切替',
+    scannerEmpty: '取込可能な PDF・TIFF・画像ファイルがありません。',
+    scannerLoadingFolder: 'watch folder を読み込み中...',
+    scannerPreviewEmpty: '左のファイルを選択してプレビュー・品質設定。',
+    scannerPdfPreviewHint: 'PDF はプレビュー可能。ページごとのサムネイルと空白検出は今後の版で提供します。',
+    scannerAnalyzingImage: '画像を分析中...',
+    scannerBlankWarn: '空白ページの疑いがあります。ご確認ください。',
+    scannerBlankOk: '明らかな空白ページは検出されませんでした。',
+    scannerWhiteRatio: '白比率',
+    scannerInkRatio: 'インク比率',
+    scannerNoSelection: '送信するファイルを選択してください。',
+    scannerCreating: '作成中',
+    scannerSubmitSelected: '選択した {count} 件を送信',
+    scannerBatchCreated: 'バッチ {id} を作成しました（{count} 件）。',
+    scannerPagesSummary: '全 {count} ページ、空白疑い {blank}、再スキャン指定 {rescan}。ページをクリックで切替。',
+    loginHintReal: 'Mayan のユーザー名とパスワードでログインします。グループに応じた役割で開きます。',
+    scannerPickDocType: '文書種別を選択してください。',
+    scannerDocType: '文書種別',
+    scannerNoDocType: '（文書種別なし）',
+    scannerImportToMayan: 'Mayan へ取込',
+    scannerImportResult: '取込結果',
+    scannerImporting: '取込中',
+    scannerRetry: '再試行',
+    scannerImportFailed: '取込失敗',
+    import_pending: '待機中',
+    import_importing: '取込中',
+    import_imported: '取込済み',
+    import_failed: '失敗'
+  },
+  'zh-CN': {
+    scannerLiveFolder: '实时 watch folder',
+    thumbSizeLabel: '缩图大小',
+    thumbSmall: '小',
+    thumbMedium: '中',
+    thumbLarge: '大',
+    scannerRefresh: '刷新',
+    scannerLoading: '读取中',
+    scannerAnalyzing: '分析中',
+    qualityBlank: '疑似空白',
+    qualityOk: 'OK',
+    scannerSelectAll: '全选可见',
+    scannerClearSelection: '清除选择',
+    scannerSelectedCount: '已选 {count}',
+    scannerBlankCount: '疑似空白 {count}',
+    scannerFilterBlank: '只看疑似空白',
+    scannerFilterEmpty: '没有符合过滤条件的文件。',
+    scannerBlankThreshold: '空白检测灵敏度',
+    scannerSensitivityHint: '数值越小越灵敏（标记越多）。',
+    qcNormal: '正常',
+    qcRescan: '重扫',
+    qcIgnore: '忽略',
+    scannerQcHint: '切换质量状态',
+    scannerEmpty: '目前没有可导入的 PDF、TIFF 或图像文件。',
+    scannerLoadingFolder: '正在读取 watch folder...',
+    scannerPreviewEmpty: '选择左侧文件可在此预览与标记质量。',
+    scannerPdfPreviewHint: 'PDF 可预览；逐页缩图与逐页空白检测将在后续版本提供。',
+    scannerAnalyzingImage: '正在分析图像...',
+    scannerBlankWarn: '疑似空白页，请重点确认。',
+    scannerBlankOk: '未检测到明显空白页。',
+    scannerWhiteRatio: '白色比例',
+    scannerInkRatio: '墨点比例',
+    scannerNoSelection: '请先选择要送出的文件。',
+    scannerCreating: '创建中',
+    scannerSubmitSelected: '送出选择的 {count} 个文件',
+    scannerBatchCreated: '已创建批次 {id}，包含 {count} 个文件。',
+    scannerPagesSummary: '共 {count} 页，{blank} 页疑似空白，{rescan} 页标记重扫。点击页面切换状态。',
+    loginHintReal: '以 Mayan 账号密码登录，系统会依你的群组进入对应角色。',
+    scannerPickDocType: '请先选择文件类型。',
+    scannerDocType: '文件类型',
+    scannerNoDocType: '（暂无文件类型）',
+    scannerImportToMayan: '导入 Mayan',
+    scannerImportResult: '导入结果',
+    scannerImporting: '导入中',
+    scannerRetry: '重试',
+    scannerImportFailed: '导入失败',
+    import_pending: '等待中',
+    import_importing: '导入中',
+    import_imported: '已导入',
+    import_failed: '失败'
+  }
+};
+
 const scannerThumbnailSizes = {
   small: 72,
   medium: 96,
@@ -477,7 +695,28 @@ function formatDateTime(value) {
   }).format(new Date(value));
 }
 
-function analyzeImageForBlankPage(image) {
+// Blank-page detection thresholds. Index = sensitivity level (0..3).
+// Higher level = stricter = fewer pages flagged blank (fewer false positives).
+// Level 2 is the default. Tuned looser than the original 0.96/0.025/7 baseline
+// to reduce misflagging on real documents with light backgrounds.
+const BLANK_SENSITIVITY_PRESETS = [
+  { whiteRatio: 0.96, inkRatio: 0.025, contrast: 8 },   // 0 sensitive
+  { whiteRatio: 0.975, inkRatio: 0.018, contrast: 6 },  // 1
+  { whiteRatio: 0.985, inkRatio: 0.012, contrast: 5 },  // 2 default
+  { whiteRatio: 0.995, inkRatio: 0.006, contrast: 3 }   // 3 strict
+];
+const DEFAULT_BLANK_THRESHOLD = BLANK_SENSITIVITY_PRESETS[2];
+
+function evaluateBlank(metrics, threshold = DEFAULT_BLANK_THRESHOLD) {
+  if (!metrics) return false;
+  return (
+    metrics.whiteRatio > threshold.whiteRatio &&
+    metrics.inkRatio < threshold.inkRatio &&
+    metrics.averageContrast < threshold.contrast
+  );
+}
+
+function analyzeImageForBlankPage(image, threshold = DEFAULT_BLANK_THRESHOLD) {
   const canvas = document.createElement('canvas');
   const size = 180;
   canvas.width = size;
@@ -503,17 +742,49 @@ function analyzeImageForBlankPage(image) {
     contrastTotal += contrast;
   }
 
-  const whiteRatio = whitePixels / totalPixels;
-  const inkRatio = inkPixels / totalPixels;
-  const averageContrast = contrastTotal / totalPixels;
-  const likelyBlank = whiteRatio > 0.96 && inkRatio < 0.025 && averageContrast < 7;
-
-  return {
-    averageContrast,
-    inkRatio,
-    likelyBlank,
-    whiteRatio
+  const metrics = {
+    averageContrast: contrastTotal / totalPixels,
+    inkRatio: inkPixels / totalPixels,
+    whiteRatio: whitePixels / totalPixels
   };
+
+  return { ...metrics, likelyBlank: evaluateBlank(metrics, threshold) };
+}
+
+// ---- small shared helpers ----
+const capitalize = (value) => value.charAt(0).toUpperCase() + value.slice(1);
+const fillTemplate = (template, vars) => Object.keys(vars).reduce(
+  (acc, key) => acc.replace(new RegExp(`\\{${key}\\}`, 'g'), vars[key]),
+  template
+);
+const qcKey = (file) => file.name;
+
+function loadQcStates() {
+  try {
+    return JSON.parse(localStorage.getItem('portal.scannerQc') || '{}');
+  } catch {
+    return {};
+  }
+}
+function persistQcStates(map) {
+  localStorage.setItem('portal.scannerQc', JSON.stringify(map));
+}
+
+// Files whose preview/QC must be page-based (server-rendered via mupdf).
+const isMultiPage = (file) => {
+  const ext = file?.extension?.toUpperCase();
+  return ext === 'PDF' || ext === 'TIF' || ext === 'TIFF';
+};
+const pageQcKey = (file, page) => `${file.name}#${page}`;
+function loadPageQcStates() {
+  try {
+    return JSON.parse(localStorage.getItem('portal.scannerPageQc') || '{}');
+  } catch {
+    return {};
+  }
+}
+function persistPageQcStates(map) {
+  localStorage.setItem('portal.scannerPageQc', JSON.stringify(map));
 }
 
 const navIcons = {
@@ -529,8 +800,10 @@ const navIcons = {
 
 function useTranslation(lang) {
   return useMemo(() => {
-    const dict = locales[lang] || locales['zh-TW'];
-    return (key) => dict[key] || locales['zh-TW'][key] || key;
+    const base = locales[lang] || locales['zh-TW'];
+    const dict = { ...base, ...(scannerStrings[lang] || {}) };
+    const fallback = { ...locales['zh-TW'], ...scannerStrings['zh-TW'] };
+    return (key) => dict[key] || fallback[key] || key;
   }, [lang]);
 }
 
@@ -549,10 +822,11 @@ function App() {
   }
 
   function login(user) {
-    const { password, ...next } = user;
+    const next = { username: user.username, role: user.role, name: user.name };
+    if (user.token) next.token = user.token;
     localStorage.setItem('portal.session', JSON.stringify(next));
     setSession(next);
-    setActiveNav(roleNav[next.role][0]);
+    setActiveNav(roleNav[next.role]?.[0] || 'scanInbox');
   }
 
   function logout() {
@@ -588,22 +862,43 @@ function LoginScreen({ language, onLanguageChange, onLogin, t }) {
   const [username, setUsername] = useState('scanner');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
   const previewUser = demoUsers.find((user) => user.username === username.trim()) || demoUsers[0];
   const previewTasks = tasks[previewUser.role].slice(0, 2);
 
-  function submitLogin(event) {
+  async function submitLogin(event) {
     event.preventDefault();
-    const matchedUser = demoUsers.find(
-      (user) => user.username === username.trim() && user.password === password
-    );
+    setError('');
 
-    if (!matchedUser) {
-      setError(t('loginError'));
+    if (DEMO_LOGIN) {
+      const matchedUser = demoUsers.find(
+        (user) => user.username === username.trim() && user.password === password
+      );
+      if (!matchedUser) { setError(t('loginError')); return; }
+      onLogin({ username: matchedUser.username, role: matchedUser.role, name: matchedUser.name });
       return;
     }
 
-    setError('');
-    onLogin(matchedUser);
+    setSubmitting(true);
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: username.trim(), password })
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.error || t('loginError'));
+      onLogin({
+        username: payload.user?.username || username.trim(),
+        role: payload.role,
+        name: payload.user?.name || payload.user?.username || username.trim(),
+        token: payload.token
+      });
+    } catch (fetchError) {
+      setError(fetchError.message);
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -651,7 +946,7 @@ function LoginScreen({ language, onLanguageChange, onLogin, t }) {
         </div>
 
         <form className="login-form" onSubmit={submitLogin}>
-          <p className="hint">{t('demoHint')}</p>
+          <p className="hint">{DEMO_LOGIN ? t('demoHint') : t('loginHintReal')}</p>
           <label>
             <span>{t('username')}</span>
             <input
@@ -670,12 +965,13 @@ function LoginScreen({ language, onLanguageChange, onLogin, t }) {
             />
           </label>
           {error ? <p className="login-error">{error}</p> : null}
-          <button className="primary-login" type="submit">
+          <button className="primary-login" type="submit" disabled={submitting}>
             <UserRound size={18} aria-hidden="true" />
-            {t('loginAs')}
+            {submitting ? t('scannerLoading') : t('loginAs')}
           </button>
         </form>
 
+        {DEMO_LOGIN ? (
         <div className="account-list">
           <p className="hint">{t('demoPassword')}</p>
           <div className="account-grid">
@@ -695,6 +991,7 @@ function LoginScreen({ language, onLanguageChange, onLogin, t }) {
             ))}
           </div>
         </div>
+        ) : null}
 
         <div className={`role-preview ${roleAccent[previewUser.role]}`}>
           <div>
@@ -839,6 +1136,25 @@ function PrimaryWorkArea({ activeNav, session, t }) {
   const [thumbnailSize, setThumbnailSize] = useState(
     localStorage.getItem('portal.scannerThumbnailSize') || 'small'
   );
+  const [selectedFiles, setSelectedFiles] = useState(() => new Set());
+  const [qcStates, setQcStates] = useState(() => loadQcStates());
+  const [onlyBlank, setOnlyBlank] = useState(false);
+  const [sensitivity, setSensitivity] = useState(
+    () => Number(localStorage.getItem('portal.scannerBlankSensitivity')) || 2
+  );
+  const blankThreshold = BLANK_SENSITIVITY_PRESETS[sensitivity] || DEFAULT_BLANK_THRESHOLD;
+
+  // Per-page state for the currently-selected multi-page file (PDF/TIFF).
+  const [scannerPages, setScannerPages] = useState([]);
+  const [scannerPagesLoading, setScannerPagesLoading] = useState(false);
+  const [scannerPagesError, setScannerPagesError] = useState('');
+  const [pageQcStates, setPageQcStates] = useState(() => loadPageQcStates());
+
+  // Mayan import state.
+  const [documentTypes, setDocumentTypes] = useState([]);
+  const [selectedDocumentTypeId, setSelectedDocumentTypeId] = useState('');
+  const [importProgress, setImportProgress] = useState({});
+  const [importing, setImporting] = useState(false);
 
   async function loadScannerFiles() {
     setScannerLoading(true);
@@ -873,8 +1189,20 @@ function PrimaryWorkArea({ activeNav, session, t }) {
   }
 
   async function createScannerBatch() {
+    const targets = scannerFiles.filter((file) => selectedFiles.has(file.name));
+
+    if (!targets.length) {
+      setScannerError(t('scannerNoSelection'));
+      return;
+    }
+    if (!DEMO_LOGIN && !selectedDocumentTypeId) {
+      setScannerError(t('scannerPickDocType'));
+      return;
+    }
+
     setScannerCreating(true);
     setScannerError('');
+    let batch = null;
 
     try {
       const response = await fetch('/api/scanner/batches', {
@@ -882,7 +1210,15 @@ function PrimaryWorkArea({ activeNav, session, t }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           createdBy: session.username,
-          files: scannerFiles.map((file) => file.name)
+          files: targets.map((file) => ({
+            name: file.name,
+            qcState: qcStates[qcKey(file)] || 'normal',
+            pages: isMultiPage(file)
+              ? Object.entries(pageQcStates)
+                  .filter(([key]) => key.startsWith(`${file.name}#`))
+                  .map(([key, qcState]) => ({ page: Number(key.split('#')[1]), qcState }))
+              : undefined
+          }))
         })
       });
       const payload = await response.json();
@@ -891,12 +1227,19 @@ function PrimaryWorkArea({ activeNav, session, t }) {
         throw new Error(payload.error || 'Unable to create scanner batch.');
       }
 
-      setScannerBatch(payload.batch);
+      batch = payload.batch;
+      setScannerBatch(batch);
+      setSelectedFiles(new Set());
       await loadScannerFiles();
     } catch (error) {
       setScannerError(error.message);
+      return;
     } finally {
       setScannerCreating(false);
+    }
+
+    if (!DEMO_LOGIN && batch) {
+      await importBatchToMayan(batch);
     }
   }
 
@@ -910,15 +1253,133 @@ function PrimaryWorkArea({ activeNav, session, t }) {
     setBlankAnalysis(null);
   }, [selectedScannerFile?.name]);
 
+  // Fetch server-rendered pages when a multi-page file (PDF/TIFF) is selected.
+  useEffect(() => {
+    if (!selectedScannerFile || !isMultiPage(selectedScannerFile)) {
+      setScannerPages([]);
+      setScannerPagesError('');
+      return;
+    }
+    let cancelled = false;
+    setScannerPagesLoading(true);
+    setScannerPagesError('');
+    (async () => {
+      try {
+        const response = await fetch(
+          `/api/scanner/files/${encodeURIComponent(selectedScannerFile.name)}/pages`
+        );
+        const payload = await response.json();
+        if (cancelled) return;
+        if (!response.ok) throw new Error(payload.error || 'Unable to load pages.');
+        setScannerPages(payload.pages || []);
+      } catch (error) {
+        if (!cancelled) setScannerPagesError(error.message);
+      } finally {
+        if (!cancelled) setScannerPagesLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [selectedScannerFile?.name]);
+
+  function setPageQc(file, page, state) {
+    setPageQcStates((current) => {
+      const next = { ...current, [pageQcKey(file, page)]: state };
+      persistPageQcStates(next);
+      return next;
+    });
+  }
+
+  function cyclePageQc(file, page) {
+    const order = ['normal', 'rescan', 'ignore'];
+    const current = pageQcStates[pageQcKey(file, page)] || 'normal';
+    setPageQc(file, page, order[(order.indexOf(current) + 1) % order.length]);
+  }
+
+  // Fetch document types for the import selector (Mayan-backed mode only).
+  useEffect(() => {
+    if (!scannerMode || DEMO_LOGIN || !session?.token) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const response = await fetch('/api/mayan/document-types', { headers: authHeaders(session) });
+        const payload = await response.json().catch(() => ({}));
+        if (cancelled || !response.ok) return;
+        const types = payload.results || [];
+        setDocumentTypes(types);
+        setSelectedDocumentTypeId((current) => current || (types[0] ? String(types[0].id) : ''));
+      } catch {
+        /* leave the selector empty */
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [scannerMode, session?.token]);
+
+  async function importOneToMayan(batch, fileName) {
+    setImportProgress((current) => ({ ...current, [fileName]: { status: 'importing' } }));
+    try {
+      const response = await fetch('/api/mayan/import', {
+        method: 'POST',
+        headers: authHeaders(session, { 'Content-Type': 'application/json' }),
+        body: JSON.stringify({
+          batchId: batch.id,
+          fileName,
+          documentTypeId: selectedDocumentTypeId
+        })
+      });
+      const payload = await response.json().catch(() => ({}));
+      const result = payload.result || {};
+      if (!response.ok || result.importStatus === 'failed') {
+        setImportProgress((current) => ({
+          ...current,
+          [fileName]: { status: 'failed', error: payload.error || result.importError || t('scannerImportFailed') }
+        }));
+      } else {
+        setImportProgress((current) => ({
+          ...current,
+          [fileName]: { status: 'imported', mayanDocumentId: result.mayanDocumentId }
+        }));
+      }
+    } catch (error) {
+      setImportProgress((current) => ({ ...current, [fileName]: { status: 'failed', error: error.message } }));
+    }
+  }
+
+  async function importBatchToMayan(batch) {
+    setImporting(true);
+    const progress = {};
+    batch.files.forEach((file) => { progress[file.name] = { status: 'pending' }; });
+    setImportProgress(progress);
+    for (const file of batch.files) {
+      await importOneToMayan(batch, file.name);
+    }
+    setImporting(false);
+  }
+
+  async function retryImportFile(fileName) {
+    if (!scannerBatch) return;
+    await importOneToMayan(scannerBatch, fileName);
+  }
+
+  const pageSummary = useMemo(() => {
+    if (!scannerPages.length) return null;
+    const blank = scannerPages.filter((p) => evaluateBlank(p.metrics, blankThreshold)).length;
+    const rescan = scannerPages.filter(
+      (p) => (pageQcStates[pageQcKey(selectedScannerFile, p.page)] || 'normal') === 'rescan'
+    ).length;
+    return { count: scannerPages.length, blank, rescan };
+  }, [scannerPages, pageQcStates, selectedScannerFile, blankThreshold]);
+
   function updateThumbnailAnalysis(file, image) {
     setThumbnailAnalysis((current) => {
       if (current[file.name]?.width && current[file.name]?.height) return current;
-      const analysis = analyzeImageForBlankPage(image);
+      const { averageContrast, inkRatio, whiteRatio } = analyzeImageForBlankPage(image, blankThreshold);
 
       return {
         ...current,
         [file.name]: {
-          ...analysis,
+          averageContrast,
+          inkRatio,
+          whiteRatio,
           height: image.naturalHeight,
           width: image.naturalWidth
         }
@@ -929,6 +1390,71 @@ function PrimaryWorkArea({ activeNav, session, t }) {
   function changeThumbnailSize(size) {
     setThumbnailSize(size);
     localStorage.setItem('portal.scannerThumbnailSize', size);
+  }
+
+  function changeSensitivity(level) {
+    const clamped = Math.max(0, Math.min(BLANK_SENSITIVITY_PRESETS.length - 1, level));
+    setSensitivity(clamped);
+    localStorage.setItem('portal.scannerBlankSensitivity', String(clamped));
+  }
+
+  // Re-evaluate likelyBlank from cached metrics whenever the threshold changes,
+  // without re-running the canvas pass.
+  const evaluated = useMemo(() => {
+    const out = {};
+    for (const [name, entry] of Object.entries(thumbnailAnalysis)) {
+      if (entry && typeof entry.whiteRatio === 'number') {
+        out[name] = { ...entry, likelyBlank: evaluateBlank(entry, blankThreshold) };
+      } else {
+        out[name] = entry;
+      }
+    }
+    return out;
+  }, [thumbnailAnalysis, blankThreshold]);
+
+  const suspectedBlankCount = useMemo(
+    () => scannerFiles.filter((file) => evaluated[file.name]?.likelyBlank).length,
+    [scannerFiles, evaluated]
+  );
+
+  const visibleFiles = useMemo(() => {
+    if (!onlyBlank) return scannerFiles;
+    return scannerFiles.filter((file) => evaluated[file.name]?.likelyBlank);
+  }, [scannerFiles, onlyBlank, evaluated]);
+
+  function toggleSelected(file) {
+    setSelectedFiles((current) => {
+      const next = new Set(current);
+      if (next.has(file.name)) next.delete(file.name);
+      else next.add(file.name);
+      return next;
+    });
+  }
+
+  function selectAllVisible() {
+    setSelectedFiles((current) => {
+      const next = new Set(current);
+      visibleFiles.forEach((file) => next.add(file.name));
+      return next;
+    });
+  }
+
+  function clearSelection() {
+    setSelectedFiles(new Set());
+  }
+
+  function setQc(file, state) {
+    setQcStates((current) => {
+      const next = { ...current, [qcKey(file)]: state };
+      persistQcStates(next);
+      return next;
+    });
+  }
+
+  function cycleQc(file) {
+    const order = ['normal', 'rescan', 'ignore'];
+    const current = qcStates[qcKey(file)] || 'normal';
+    setQc(file, order[(order.indexOf(current) + 1) % order.length]);
   }
 
   if (activeNav === 'searchDocs') {
@@ -1000,36 +1526,76 @@ function PrimaryWorkArea({ activeNav, session, t }) {
         <div className="scanner-live-panel">
           <div className="scanner-live-header">
             <div>
-              <p className="eyebrow">Live watch folder</p>
+              <p className="eyebrow">{t('scannerLiveFolder')}</p>
               <h3>{watchFolder}</h3>
             </div>
             <div className="scanner-live-actions">
-              <div className="thumbnail-size-control" aria-label="縮圖大小">
-                {[
-                  ['small', '小'],
-                  ['medium', '中'],
-                  ['large', '大']
-                ].map(([size, label]) => (
+              <div
+                className="thumbnail-size-control"
+                aria-label={t('thumbSizeLabel')}
+                title={`${t('thumbSizeLabel')} · ${t('thumb' + capitalize(thumbnailSize))}`}
+              >
+                {['small', 'medium', 'large'].map((size) => (
                   <button
                     className={thumbnailSize === size ? `active ${size}` : size}
                     key={size}
                     onClick={() => changeThumbnailSize(size)}
                     type="button"
                   >
-                    {label}
+                    {t('thumb' + capitalize(size))}
                   </button>
                 ))}
               </div>
               <button className="subtle-action" onClick={loadScannerFiles} type="button">
-                {scannerLoading ? '讀取中' : '重新整理'}
+                {scannerLoading ? t('scannerLoading') : t('scannerRefresh')}
               </button>
+            </div>
+          </div>
+
+          <div className="scanner-toolbar">
+            <div className="scanner-toolbar-group">
+              <button className="subtle-action" onClick={selectAllVisible} type="button">
+                {t('scannerSelectAll')}
+              </button>
+              <button className="subtle-action" onClick={clearSelection} type="button">
+                {t('scannerClearSelection')}
+              </button>
+              <span className="chip">
+                {fillTemplate(t('scannerSelectedCount'), { count: selectedFiles.size })}
+              </span>
+              <span className="chip warning">
+                {fillTemplate(t('scannerBlankCount'), { count: suspectedBlankCount })}
+              </span>
+            </div>
+            <div className="scanner-toolbar-group">
+              <label className="scanner-toggle">
+                <input
+                  checked={onlyBlank}
+                  onChange={(event) => setOnlyBlank(event.target.checked)}
+                  type="checkbox"
+                />
+                {t('scannerFilterBlank')}
+              </label>
+              <label className="scanner-range" title={t('scannerSensitivityHint')}>
+                <span>{t('scannerBlankThreshold')}</span>
+                <input
+                  max={BLANK_SENSITIVITY_PRESETS.length - 1}
+                  min={0}
+                  onChange={(event) => changeSensitivity(Number(event.target.value))}
+                  type="range"
+                  value={sensitivity}
+                />
+              </label>
             </div>
           </div>
 
           {scannerError ? <p className="scanner-error">{scannerError}</p> : null}
           {scannerBatch ? (
             <p className="scanner-success">
-              已建立批次 {scannerBatch.id}，包含 {scannerBatch.files.length} 個檔案。
+              {fillTemplate(t('scannerBatchCreated'), {
+                id: scannerBatch.id,
+                count: scannerBatch.files.length
+              })}
             </p>
           ) : null}
 
@@ -1039,104 +1605,178 @@ function PrimaryWorkArea({ activeNav, session, t }) {
               style={{ gridTemplateColumns: `repeat(auto-fill, ${thumbnailWidth}px)` }}
             >
               {scannerFiles.length ? (
-                scannerFiles.map((file) => {
-                  const analysis = thumbnailAnalysis[file.name];
-                  const imagePreview = file.previewable && file.extension !== 'PDF';
-                  const thumbnailStyle = analysis?.width && analysis?.height
-                    ? { aspectRatio: `${analysis.width} / ${analysis.height}` }
-                    : undefined;
-                  const qualityLabel = analysis
-                    ? analysis.likelyBlank ? '疑似空白' : 'OK'
-                    : imagePreview ? '分析中' : file.extension;
-                  const thumbClasses = [
-                    'scanner-mini-card',
-                    selectedScannerFile?.name === file.name ? 'active' : '',
-                    analysis?.likelyBlank ? 'blank-suspect' : ''
-                  ].filter(Boolean).join(' ');
+                visibleFiles.length ? (
+                  visibleFiles.map((file) => {
+                    const analysis = evaluated[file.name];
+                    const imagePreview = file.previewable && file.extension !== 'PDF';
+                    const thumbnailStyle = analysis?.width && analysis?.height
+                      ? { aspectRatio: `${analysis.width} / ${analysis.height}` }
+                      : undefined;
+                    const qualityLabel = analysis
+                      ? (analysis.likelyBlank ? t('qualityBlank') : t('qualityOk'))
+                      : imagePreview ? t('scannerAnalyzing') : file.extension;
+                    const qc = qcStates[qcKey(file)] || 'normal';
+                    const cardClasses = [
+                      'scanner-mini-card',
+                      selectedScannerFile?.name === file.name ? 'active' : '',
+                      selectedFiles.has(file.name) ? 'selected' : '',
+                      analysis?.likelyBlank ? 'blank-suspect' : '',
+                      qc !== 'normal' ? `qc-${qc}` : ''
+                    ].filter(Boolean).join(' ');
 
-                  return (
-                    <button
-                      className={thumbClasses}
-                      key={file.name}
-                      onClick={() => setSelectedScannerFile(file)}
-                      style={{ width: `${thumbnailWidth}px` }}
-                      title={file.name}
-                      type="button"
-                    >
-                      <div className="scanner-mini-media" style={thumbnailStyle}>
-                        {imagePreview ? (
-                          <>
-                            <span
-                              className="scanner-mini-page"
-                              style={{ backgroundImage: `url("${file.previewUrl}")` }}
-                            />
-                            <img
-                              alt=""
-                              className="scanner-analysis-image"
-                              src={file.previewUrl}
-                              onLoad={(event) => updateThumbnailAnalysis(file, event.currentTarget)}
-                            />
-                          </>
-                        ) : (
-                          <div className="scanner-thumb-fallback">
-                            <Archive size={26} aria-hidden="true" />
-                            <span>{file.extension}</span>
-                          </div>
-                        )}
-                        <span className={analysis?.likelyBlank ? 'mini-status warning' : 'mini-status'}>
-                          {qualityLabel}
-                        </span>
+                    return (
+                      <div className={cardClasses} key={file.name} style={{ width: `${thumbnailWidth}px` }}>
+                        <label className="scanner-mini-check" title={file.name}>
+                          <input
+                            checked={selectedFiles.has(file.name)}
+                            onChange={() => toggleSelected(file)}
+                            type="checkbox"
+                          />
+                        </label>
+                        <button
+                          className="scanner-mini-media"
+                          onClick={() => setSelectedScannerFile(file)}
+                          style={thumbnailStyle}
+                          title={file.name}
+                          type="button"
+                        >
+                          {imagePreview ? (
+                            <>
+                              <span
+                                className="scanner-mini-page"
+                                style={{ backgroundImage: `url("${file.previewUrl}")` }}
+                              />
+                              <img
+                                alt=""
+                                className="scanner-analysis-image"
+                                src={file.previewUrl}
+                                onLoad={(event) => updateThumbnailAnalysis(file, event.currentTarget)}
+                              />
+                            </>
+                          ) : (
+                            <div className="scanner-thumb-fallback">
+                              <Archive size={26} aria-hidden="true" />
+                              <span>{file.extension}</span>
+                            </div>
+                          )}
+                          <span className={analysis?.likelyBlank ? 'mini-status warning' : 'mini-status'}>
+                            {qualityLabel}
+                          </span>
+                        </button>
+                        <button
+                          className={`qc-badge qc-${qc}`}
+                          onClick={() => cycleQc(file)}
+                          title={t('scannerQcHint')}
+                          type="button"
+                        >
+                          {t('qc' + capitalize(qc))}
+                        </button>
                       </div>
-                      <div className="scanner-mini-meta">
-                        <strong>{file.name}</strong>
-                        <span>{formatBytes(file.size)} · {formatDateTime(file.modifiedAt)}</span>
-                      </div>
-                    </button>
-                  );
-                })
+                    );
+                  })
+                ) : (
+                  <div className="scanner-empty">{t('scannerFilterEmpty')}</div>
+                )
               ) : (
                 <div className="scanner-empty">
-                  {scannerLoading ? '正在讀取 watch folder...' : '目前沒有可匯入的 PDF、TIFF 或影像檔。'}
+                  {scannerLoading ? t('scannerLoadingFolder') : t('scannerEmpty')}
                 </div>
               )}
             </div>
 
             <div className="scanner-preview-panel">
-              {selectedScannerFile?.previewable ? (
+              {selectedScannerFile ? (
                 <>
                   <div className="scanner-preview-frame">
-                    {selectedScannerFile.extension === 'PDF' ? (
-                      <object
-                        aria-label={selectedScannerFile.name}
-                        data={selectedScannerFile.previewUrl}
-                        type="application/pdf"
-                      />
-                    ) : (
+                    {isMultiPage(selectedScannerFile) ? (
+                      scannerPagesLoading ? (
+                        <div className="scanner-empty">{t('scannerLoadingFolder')}</div>
+                      ) : scannerPagesError ? (
+                        <div className="scanner-empty">{scannerPagesError}</div>
+                      ) : scannerPages.length ? (
+                        <div className="scanner-page-strip">
+                          {scannerPages.map((pg) => {
+                            const blank = evaluateBlank(pg.metrics, blankThreshold);
+                            const qc = pageQcStates[pageQcKey(selectedScannerFile, pg.page)] || 'normal';
+                            return (
+                              <button
+                                className={`scanner-page-card ${blank ? 'blank-suspect' : ''} ${qc !== 'normal' ? `qc-${qc}` : ''}`}
+                                key={pg.page}
+                                onClick={() => cyclePageQc(selectedScannerFile, pg.page)}
+                                title={`${selectedScannerFile.name} · p${pg.page} · ${t('scannerQcHint')}`}
+                                type="button"
+                              >
+                                <img alt={`${selectedScannerFile.name} p${pg.page}`} loading="lazy" src={pg.thumbnailUrl} />
+                                <span className="scanner-page-num">{pg.page}</span>
+                                <span className={blank ? 'mini-status warning' : 'mini-status'}>
+                                  {blank ? t('qualityBlank') : t('qualityOk')}
+                                </span>
+                                <span className={`qc-badge qc-${qc}`}>{t('qc' + capitalize(qc))}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <div className="scanner-empty">{t('scannerPreviewEmpty')}</div>
+                      )
+                    ) : selectedScannerFile.previewable ? (
                       <img
                         alt={selectedScannerFile.name}
                         src={selectedScannerFile.previewUrl}
-                        onLoad={(event) => setBlankAnalysis(analyzeImageForBlankPage(event.currentTarget))}
+                        onLoad={(event) => setBlankAnalysis(
+                          analyzeImageForBlankPage(event.currentTarget, blankThreshold)
+                        )}
                       />
+                    ) : (
+                      <div className="scanner-preview-fallback">
+                        <Archive size={40} aria-hidden="true" />
+                        <span>{selectedScannerFile.extension}</span>
+                      </div>
                     )}
                   </div>
                   <div className="scanner-quality-card">
                     <strong>{selectedScannerFile.name}</strong>
-                    {selectedScannerFile.extension === 'PDF' ? (
-                      <span>PDF 可預覽；空白頁偵測將在後續接 PDF 逐頁分析。</span>
-                    ) : blankAnalysis ? (
-                      <span className={blankAnalysis.likelyBlank ? 'quality-warning' : 'quality-ok'}>
-                        {blankAnalysis.likelyBlank ? '疑似空白頁，請重點確認。' : '未偵測到明顯空白頁。'}
-                        {' '}白色比例 {(blankAnalysis.whiteRatio * 100).toFixed(1)}%，墨點比例 {(blankAnalysis.inkRatio * 100).toFixed(1)}%。
-                      </span>
+                    <div className="scanner-qc-row">
+                      {['normal', 'rescan', 'ignore'].map((state) => (
+                        <button
+                          className={`qc-badge qc-${state} ${(qcStates[qcKey(selectedScannerFile)] || 'normal') === state ? 'active' : ''}`}
+                          key={state}
+                          onClick={() => setQc(selectedScannerFile, state)}
+                          type="button"
+                        >
+                          {t('qc' + capitalize(state))}
+                        </button>
+                      ))}
+                    </div>
+                    {isMultiPage(selectedScannerFile) ? (
+                      pageSummary ? (
+                        <span>
+                          {fillTemplate(t('scannerPagesSummary'), {
+                            count: pageSummary.count,
+                            blank: pageSummary.blank,
+                            rescan: pageSummary.rescan
+                          })}
+                        </span>
+                      ) : null
+                    ) : selectedScannerFile.previewable ? (
+                      blankAnalysis ? (
+                        <span className={evaluateBlank(blankAnalysis, blankThreshold) ? 'quality-warning' : 'quality-ok'}>
+                          {evaluateBlank(blankAnalysis, blankThreshold) ? t('scannerBlankWarn') : t('scannerBlankOk')}
+                          {' '}{t('scannerWhiteRatio')} {(blankAnalysis.whiteRatio * 100).toFixed(1)}%，{t('scannerInkRatio')} {(blankAnalysis.inkRatio * 100).toFixed(1)}%。
+                        </span>
+                      ) : (
+                        <span>{t('scannerAnalyzingImage')}</span>
+                      )
                     ) : (
-                      <span>正在分析影像...</span>
+                      <span>{t('scannerPdfPreviewHint')}</span>
                     )}
+                    <span className="scanner-file-meta">
+                      {formatBytes(selectedScannerFile.size)} · {formatDateTime(selectedScannerFile.modifiedAt)}
+                    </span>
                   </div>
                 </>
               ) : (
-                <div className="scanner-preview-empty">
-                  選取 JPG、PNG、BMP 或 PDF 可在此預覽。TIFF 需要後續轉圖服務才能在瀏覽器直接顯示。
-                </div>
+                <div className="scanner-preview-empty">{t('scannerPreviewEmpty')}</div>
               )}
             </div>
           </div>
@@ -1162,20 +1802,82 @@ function PrimaryWorkArea({ activeNav, session, t }) {
       </div>
 
       <div className="action-row">
+        {scannerMode && !DEMO_LOGIN ? (
+          <label className="scanner-doctype">
+            <span>{t('scannerDocType')}</span>
+            <select
+              disabled={importing || scannerCreating}
+              onChange={(event) => setSelectedDocumentTypeId(event.target.value)}
+              value={selectedDocumentTypeId}
+            >
+              {documentTypes.length
+                ? documentTypes.map((docType) => (
+                  <option key={docType.id} value={String(docType.id)}>{docType.label}</option>
+                ))
+                : <option value="">{t('scannerNoDocType')}</option>}
+            </select>
+          </label>
+        ) : null}
         <button
           className="strong-action"
-          disabled={scannerMode && (!scannerFiles.length || scannerCreating)}
+          disabled={scannerMode && (!selectedFiles.size || scannerCreating || importing)}
           onClick={scannerMode ? createScannerBatch : undefined}
           type="button"
         >
           <CheckCircle2 size={18} aria-hidden="true" />
-          {scannerCreating ? '建立中' : workflow.primary}
+          {scannerCreating
+            ? t('scannerCreating')
+            : (scannerMode
+              ? (DEMO_LOGIN
+                ? fillTemplate(t('scannerSubmitSelected'), { count: selectedFiles.size })
+                : (importing ? t('scannerImporting') : t('scannerImportToMayan')))
+              : workflow.primary)}
         </button>
         <button className="subtle-action" type="button">
           <FolderInput size={18} aria-hidden="true" />
           {workflow.secondary}
         </button>
       </div>
+
+      {scannerMode && Object.keys(importProgress).length ? (
+        <div className="scanner-import-panel">
+          <div className="scanner-import-head">
+            <strong>{t('scannerImportResult')}</strong>
+            {importing ? <span className="chip">{t('scannerImporting')}</span> : null}
+          </div>
+          <ul className="scanner-import-list">
+            {Object.entries(importProgress).map(([name, info]) => (
+              <li className={`import-row import-${info.status}`} key={name}>
+                <span className="import-name">{name}</span>
+                {info.status === 'imported' && info.mayanDocumentId ? (
+                  <a
+                    className="import-link"
+                    href={`${MAYAN_URL}/documents/${info.mayanDocumentId}/`}
+                    rel="noreferrer"
+                    target="_blank"
+                  >
+                    #{info.mayanDocumentId}
+                  </a>
+                ) : null}
+                <span className={`import-status status-${info.status}`}>{t('import_' + info.status)}</span>
+                {info.status === 'failed' ? (
+                  <>
+                    <span className="import-error">{info.error}</span>
+                    <button
+                      className="subtle-action"
+                      disabled={importing}
+                      onClick={() => retryImportFile(name)}
+                      type="button"
+                    >
+                      {t('scannerRetry')}
+                    </button>
+                  </>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
     </section>
   );
 }

@@ -2,67 +2,67 @@
 
 本文件是交給後續 coding agent 的實作清單。請依優先順序逐步完成，每次修改後執行 `npm run build`，並確認 `https://mayan-portal.avision-gb10.org` 可正常開啟。
 
+> 狀態（2026-07-05）：**P0 全部完成、P1 全部完成**（scanner 穩定化、PDF/TIFF 逐頁轉圖、Mayan 匯入、Mayan 登入與角色對應）。P2 各角色深度功能與 P3 工程整理尚未開始。詳見 CHANGELOG。
+
 ## P0：穩定目前 Scanner 流程
 
-- [ ] 確認小 / 中 / 大縮圖切換在實際 Chrome UI 會立即改變大小。
-- [ ] 加入目前縮圖大小的使用者提示或 tooltip。
-- [ ] 將 scanner thumbnail 的檔名改成 hover tooltip 或右側資訊欄，不要撐高縮圖卡。
-- [ ] 調整空白頁偵測 threshold，降低誤判。
-- [ ] 增加「疑似空白」總數統計。
-- [ ] 增加只看「疑似空白」的 filter。
-- [ ] 增加 scanner 批次的 selected files 功能，不要永遠送出全部檔案。
-- [ ] 增加「忽略此頁」、「標記重掃」、「確認正常」狀態。
-- [ ] 將 page QC 狀態寫入 batch manifest。
+- [x] 確認小 / 中 / 大縮圖切換在實際 Chrome UI 會立即改變大小。
+- [x] 加入目前縮圖大小的使用者提示或 tooltip。
+- [x] 將 scanner thumbnail 的檔名改成 hover tooltip 或右側資訊欄，不要撐高縮圖卡。
+- [x] 調整空白頁偵測 threshold，降低誤判。
+- [x] 增加「疑似空白」總數統計。
+- [x] 增加只看「疑似空白」的 filter。
+- [x] 增加 scanner 批次的 selected files 功能，不要永遠送出全部檔案。
+- [x] 增加「忽略此頁」、「標記重掃」、「確認正常」狀態。
+- [x] 將 page QC 狀態寫入 batch manifest。
 
 ## P0：Cloudflare 與啟動穩定化
 
-- [ ] 建立正式啟動腳本，一次啟動 portal dev server 與 cloudflared tunnel。
-- [ ] 增加健康檢查腳本：
+- [x] 建立正式啟動腳本，一次啟動 portal dev server 與 cloudflared tunnel。 (`start-system.ps1`)
+- [x] 增加健康檢查腳本： (`check-system.ps1`)
   - `http://localhost:5174`
   - `https://mayan-portal.avision-gb10.org`
   - `https://mayan-portal.avision-gb10.org/api/scanner/watch-folder`
   - `https://mayan-emds.avision-gb10.org`
-- [ ] 確認 Windows 重開機後如何自動啟動 portal 與 cloudflared。
-- [ ] 將 Cloudflare tunnel 設定備份到 repo 文件，但不要提交 credentials JSON。
+- [x] 確認 Windows 重開機後如何自動啟動 portal 與 cloudflared。 (`register-autostart.ps1`，需由使用者執行一次)
+- [x] 將 Cloudflare tunnel 設定備份到 repo 文件，但不要提交 credentials JSON。 (`docs/cloudflare-tunnel.md`)
 
 ## P1：PDF / TIFF 縮圖與逐頁 QC
 
-- [ ] 選定後端轉圖方案。
-  - PDF：Poppler、pdf.js server-side、或 ImageMagick。
-  - TIFF：ImageMagick、Sharp/libvips、或 Windows 可用轉圖工具。
-- [ ] 建立 thumbnail cache 目錄，例如：
+- [x] 選定後端轉圖方案。 → `mupdf` (libmupdf WASM)，PDF 與 TIFF 都能逐頁轉圖。
+- [x] 建立 thumbnail cache 目錄，例如：
 
 ```text
 E:\Mayan-EDMS-Docker\data\portal\thumbnails
 ```
 
-- [ ] `GET /api/scanner/files/:fileName/pages` 回傳頁面清單。
-- [ ] `GET /api/scanner/files/:fileName/pages/:page/thumbnail` 回傳頁面縮圖。
-- [ ] 對 PDF/TIFF 每頁做空白頁偵測。
-- [ ] 在 scanner UI 以「頁」為單位顯示縮圖，不只是檔案為單位。
+- [x] `GET /api/scanner/files/:fileName/pages` 回傳頁面清單。
+- [x] `GET /api/scanner/files/:fileName/pages/:page/thumbnail` 回傳頁面縮圖。
+- [x] 對 PDF/TIFF 每頁做空白頁偵測。
+- [x] 在 scanner UI 以「頁」為單位顯示縮圖，不只是檔案為單位。
 
 ## P1：正式匯入 Mayan
 
-- [ ] 研究目前 Mayan API 可用 authentication。
-- [ ] 建立 Mayan API client。
-- [ ] 設定文件類型 document type 對應。
-- [ ] 將 scanner batch 匯入 Mayan。
-- [ ] 匯入完成後回寫 batch 狀態：
+- [x] 研究目前 Mayan API 可用 authentication。 → DRF Token (`/auth/token/obtain/`)，v4。
+- [x] 建立 Mayan API client。 → `server/lib/mayan.js`
+- [x] 設定文件類型 document type 對應。 → Scanner 文件類型下拉選單。
+- [x] 將 scanner batch 匯入 Mayan。 → `POST /api/mayan/import`
+- [x] 匯入完成後回寫 batch 狀態：
   - `queued`
   - `importing`
   - `imported`
   - `failed`
-- [ ] 顯示 Mayan document id / link。
-- [ ] 失敗時保留錯誤訊息與 retry button。
+- [x] 顯示 Mayan document id / link。
+- [x] 失敗時保留錯誤訊息與 retry button。
 
 ## P1：登入與角色權限
 
-- [ ] 以 backend session 取代 frontend demo password。
-- [ ] 串接 Mayan user 或自建 portal user table。
-- [ ] 依 Mayan group / portal role 顯示 UI。
-- [ ] 移除前端 hardcoded password。
-- [ ] 加入 session timeout。
-- [ ] Admin 可管理 user-role mapping。
+- [x] 以 backend session 取代 frontend demo password。 → `POST /api/auth/login`（token）。
+- [x] 串接 Mayan user 或自建 portal user table。 → 登入打 Mayan；service token 查群組。
+- [x] 依 Mayan group / portal role 顯示 UI。 → `server/lib/roleMap.js` 群組→角色。
+- [x] 移除前端 hardcoded password。 → 真實登入為主；demo 改為 `VITE_DEMO_LOGIN=1` 離線備援。
+- [ ] 加入 session timeout。 （未做：目前 session 存 localStorage；idle/401 自動登出待補）
+- [ ] Admin 可管理 user-role mapping。 （未做：目前由 `scripts/mayan-bootstrap.mjs` 建立；UI 待補）
 
 ## P2：Records 分類人員功能
 

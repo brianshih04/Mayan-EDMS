@@ -176,3 +176,36 @@ Mayan:   /watch_folder
 - 管理員必要時才進 Mayan 原生後台。
 - UI 以工作流程為中心，不呈現 Mayan 的完整設定樹。
 - 新功能先做成角色可理解的操作，再接 Mayan API。
+
+## Mayan 整合（P1）
+
+Portal 後端（Vite middleware，`server/`）以 **service token** 代理所有 Mayan API：登入驗證使用者帳密、以 service token 查群組對應角色、列文件類型、上傳文件。原因是 Mayan 採 ACL 權限模型，新建使用者看不到資料，因此由 portal 後端用一組具權限的 service token 統一存取，而不替每個使用者設 ACL。
+
+### 環境變數
+
+- `MAYAN_API_URL`：Mayan REST base，預設 `http://localhost:8080/api/v4`。
+- `MAYAN_SERVICE_TOKEN`：**必填**。portal 後端用的 service token（admin 或同等權限帳號的 DRF token）。用 `scripts/mayan-bootstrap.mjs` 產生與印出。
+- `AVISION_WATCH_FOLDER`、`AVISION_PORTAL_STATE_DIR`：同前。
+
+### 一次性設定（建立群組與測試帳號）
+
+```powershell
+$env:MAYAN_ADMIN_PASSWORD='<mayan admin 密碼>'
+node avision-portal\scripts\mayan-bootstrap.mjs
+```
+
+腳本會：建立 `Scanner/Records/Reviewer/Viewer/Admin` 群組、建立測試使用者（`scanner/records/reviewer/viewer`，密碼 `Avision-Portal-2026!`）、驗證登入與上傳，最後印出 service token。把該 token 設為 `MAYAN_SERVICE_TOKEN` 再啟動 portal。
+
+### 啟動（含 service token）
+
+```powershell
+$env:MAYAN_SERVICE_TOKEN='<bootstrap 印出的 token>'
+.\start-system.ps1
+```
+
+`start-system.ps1` 會 build + preview + cloudflared，子行程繼承環境變數。
+
+### 離線 demo
+
+若 Mayan 暫時不可用，可用舊的 demo 登入：啟動時多設 `VITE_DEMO_LOGIN=1`（前端用 demo 帳號，不呼叫 Mayan）。
+
