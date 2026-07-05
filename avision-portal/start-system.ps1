@@ -45,9 +45,9 @@ if ($env:AVISION_SKIP_BUILD -ne '1') {
 $previewLog = Join-Path $LogDir 'preview.log'
 $previewErr = Join-Path $LogDir 'preview.err.log'
 Write-Host '[start-system] Starting preview server...' -ForegroundColor Cyan
-$preview = Start-Process -FilePath 'npm' -ArgumentList 'run','preview' `
+$preview = Start-Process -FilePath 'npm.cmd' -ArgumentList 'run','preview' `
     -WorkingDirectory $PSScriptRoot -WindowStyle Hidden `
-    -RedirectStandardOutput $previewLog -RedirectStandardError $previewErr -PassThrough
+    -RedirectStandardOutput $previewLog -RedirectStandardError $previewErr -PassThru
 
 # 3. Cloudflare tunnel (forwards mayan-portal + mayan-emds hostnames).
 # Skip if a cloudflared process is already running (e.g. managed separately).
@@ -63,7 +63,7 @@ if ($existingCf) {
     Write-Host '[start-system] Starting Cloudflare tunnel...' -ForegroundColor Cyan
     $cloudflared = Start-Process -FilePath 'cloudflared' `
         -ArgumentList @('tunnel', '--config', $CloudflaredConfig, 'run') `
-        -WindowStyle Hidden -RedirectStandardOutput $cfLog -RedirectStandardError $cfErr -PassThrough
+        -WindowStyle Hidden -RedirectStandardOutput $cfLog -RedirectStandardError $cfErr -PassThru
 }
 
 # Persist PIDs. cloudflaredPid is null when we reused an already-running tunnel
