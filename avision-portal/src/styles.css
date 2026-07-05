@@ -815,7 +815,7 @@ button:disabled {
 
 .scanner-thumbnail-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, 132px);
+  grid-template-columns: repeat(auto-fill, 96px);
   align-content: start;
   justify-content: start;
   gap: 12px;
@@ -828,8 +828,8 @@ button:disabled {
 
 .scanner-thumb-card {
   display: grid;
-  grid-template-rows: auto auto;
-  width: 132px;
+  grid-template-rows: auto;
+  width: 96px;
   border: 1px solid #dce3e0;
   border-radius: 8px;
   background: #fff;
@@ -903,25 +903,7 @@ button:disabled {
 }
 
 .scanner-thumb-meta {
-  padding: 7px 8px;
-}
-
-.scanner-thumb-meta strong,
-.scanner-thumb-meta span {
-  display: block;
-}
-
-.scanner-thumb-meta strong {
-  font-size: 12px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.scanner-thumb-meta span {
-  color: #66726e;
-  font-size: 11px;
-  margin-top: 2px;
+  display: none;
 }
 
 .scanner-empty,

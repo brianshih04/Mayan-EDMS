@@ -1023,6 +1023,7 @@ function PrimaryWorkArea({ activeNav, session, t }) {
                       className={thumbClasses}
                       key={file.name}
                       onClick={() => setSelectedScannerFile(file)}
+                      title={file.name}
                       type="button"
                     >
                       <div className="scanner-thumb-media" style={thumbnailStyle}>
