@@ -537,6 +537,8 @@ const scannerStrings = {
     pagesCount: '{count} 頁',
     recordsSave: '儲存分類',
     recordsSaved: '分類資料已儲存。',
+    recordsSendReview: '送審',
+    recordsSentReview: '已送交審核。',
     reviewerApprove: '核准',
     reviewerReject: '退回',
     reviewerNote: '審核註記',
@@ -618,6 +620,8 @@ const scannerStrings = {
     pagesCount: '{count} pages',
     recordsSave: 'Save classification',
     recordsSaved: 'Classification saved.',
+    recordsSendReview: 'Submit for review',
+    recordsSentReview: 'Submitted for review.',
     reviewerApprove: 'Approve',
     reviewerReject: 'Reject',
     reviewerNote: 'Review note',
@@ -699,6 +703,8 @@ const scannerStrings = {
     pagesCount: '{count} ページ',
     recordsSave: '分類を保存',
     recordsSaved: '分類を保存しました。',
+    recordsSendReview: 'レビューへ送信',
+    recordsSentReview: 'レビューへ送信しました。',
     reviewerApprove: '承認',
     reviewerReject: '差戻し',
     reviewerNote: 'レビュー注記',
@@ -780,6 +786,8 @@ const scannerStrings = {
     pagesCount: '{count} 页',
     recordsSave: '储存分类',
     recordsSaved: '分类资料已储存。',
+    recordsSendReview: '送审',
+    recordsSentReview: '已送交审核。',
     reviewerApprove: '核准',
     reviewerReject: '退回',
     reviewerNote: '审核注记',
@@ -1496,7 +1504,7 @@ function PrimaryWorkArea({ activeNav, session, t }) {
   }
 
   useEffect(() => {
-    if (activeNav === 'approvals' && !DEMO_LOGIN) {
+    if (['classify', 'metadata', 'approvals'].includes(activeNav) && !DEMO_LOGIN) {
       loadReviews();
     }
   }, [activeNav, session?.token]);
@@ -1547,7 +1555,7 @@ function PrimaryWorkArea({ activeNav, session, t }) {
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(payload.error || t('documentsLoadError'));
       setReviews((current) => ({ ...current, [selectedMayanDocument.id]: payload.review }));
-      setScannerNotice(t('reviewSaved'));
+      setScannerNotice(status === 'pending' ? t('recordsSentReview') : t('reviewSaved'));
     } catch (error) {
       setDocumentsError(error.message || t('documentsLoadError'));
     } finally {
@@ -1849,6 +1857,9 @@ function PrimaryWorkArea({ activeNav, session, t }) {
   if (['searchDocs', 'classify', 'metadata', 'approvals'].includes(activeNav)) {
     const recordsMode = activeNav === 'classify' || activeNav === 'metadata';
     const reviewerMode = activeNav === 'approvals';
+    const visibleMayanDocuments = reviewerMode
+      ? mayanDocuments.filter((document) => reviews[String(document.id)]?.status === 'pending')
+      : mayanDocuments;
     return (
       <section className="work-panel">
         <form
@@ -1873,8 +1884,8 @@ function PrimaryWorkArea({ activeNav, session, t }) {
           <div className="result-list">
             {documentsLoading ? (
               <div className="scanner-empty">{t('documentsLoading')}</div>
-            ) : mayanDocuments.length ? (
-              mayanDocuments.map((document) => (
+          ) : visibleMayanDocuments.length ? (
+            visibleMayanDocuments.map((document) => (
                 <article
                   className={selectedMayanDocument?.id === document.id ? 'result-row active' : 'result-row'}
                   key={document.id}
@@ -1900,9 +1911,9 @@ function PrimaryWorkArea({ activeNav, session, t }) {
                   </a>
                 </article>
               ))
-            ) : (
-              <div className="scanner-empty">{t('documentsEmpty')}</div>
-            )}
+          ) : (
+            <div className="scanner-empty">{t('documentsEmpty')}</div>
+          )}
           </div>
 
           <div className="document-preview-panel">
@@ -1995,6 +2006,14 @@ function PrimaryWorkArea({ activeNav, session, t }) {
                     <button className="strong-action" disabled={recordSaving} onClick={saveRecordDocument} type="button">
                       {recordSaving ? t('scannerLoading') : t('recordsSave')}
                     </button>
+                    <button className="subtle-action" disabled={reviewSaving} onClick={() => submitReview('pending')} type="button">
+                      {reviewSaving ? t('scannerLoading') : t('recordsSendReview')}
+                    </button>
+                    {reviews[String(selectedMayanDocument.id)] ? (
+                      <span className={`review-chip review-${reviews[String(selectedMayanDocument.id)].status}`}>
+                        {t('review' + capitalize(reviews[String(selectedMayanDocument.id)].status))}
+                      </span>
+                    ) : null}
                     {scannerNotice ? <p className="scanner-success">{scannerNotice}</p> : null}
                   </div>
                 ) : null}

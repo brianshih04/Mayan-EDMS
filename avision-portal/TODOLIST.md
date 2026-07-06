@@ -82,7 +82,7 @@ E:\Mayan-EDMS-Docker\data\portal\thumbnails
   - tags
 - [x] 儲存基本欄位到 Mayan。
 - [x] 儲存正式 metadata 到 Mayan。
-- [ ] 送審到 reviewer workflow。
+- [x] 送審到 reviewer 工作台（portal review state）。
 
 ## P2：Reviewer 審核功能
 
@@ -91,6 +91,7 @@ E:\Mayan-EDMS-Docker\data\portal\thumbnails
 - [x] 核准文件（portal review state）。
 - [x] 退回修改（portal review state）。
 - [x] 留下審核註記（portal review state）。
+- [x] Reviewer 清單只顯示 records 已送審的 pending 文件。
 - [ ] 與 Mayan workflow/action 對接。
 
 ## P2：Viewer 查詢功能

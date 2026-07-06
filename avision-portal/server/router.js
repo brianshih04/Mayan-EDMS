@@ -243,12 +243,13 @@ function createApiMiddleware() {
       if (request.method === 'POST' && path === '/api/reviews') {
         const token = readToken(request);
         if (!token) { sendJson(response, 401, { error: 'Not authenticated.' }); return; }
+        const body = await readRequestBody(request);
         const session = serviceToken ? await resolvePortalUserFromToken(token) : { role: '', user: {} };
-        if (session.role !== 'reviewer' && session.role !== 'admin') {
+        const canSubmitForReview = session.role === 'classifier' && body.status === 'pending';
+        if (session.role !== 'reviewer' && session.role !== 'admin' && !canSubmitForReview) {
           sendJson(response, 403, { error: 'Reviewer role is required.' });
           return;
         }
-        const body = await readRequestBody(request);
         const result = await setReview({
           actor: session.user?.username || '',
           documentId: body.documentId,
