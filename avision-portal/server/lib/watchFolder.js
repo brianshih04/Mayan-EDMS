@@ -33,6 +33,17 @@ export async function listWatchFolder() {
   return files;
 }
 
+export async function deleteWatchFolderFile(fileName) {
+  const resolved = resolveWatchFolderFile(fileName);
+  if (resolved.error) return resolved;
+
+  const stat = await fs.stat(resolved.fullPath).catch(() => null);
+  if (!stat?.isFile()) return { error: 'File not found.' };
+
+  await fs.unlink(resolved.fullPath);
+  return { deleted: true, name: decodeURIComponent(fileName || '') };
+}
+
 // Resolve a client-supplied file name to an absolute watch-folder path.
 // Returns { error } for anything that escapes the folder or is disallowed.
 export function resolveWatchFolderFile(fileName) {

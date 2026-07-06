@@ -13,6 +13,7 @@
 - [x] 增加「疑似空白」總數統計。
 - [x] 增加只看「疑似空白」的 filter。
 - [x] 增加 scanner 批次的 selected files 功能，不要永遠送出全部檔案。
+- [x] 增加「刪除選取」功能，讓使用者可移除不需要的 watch folder 原始掃描檔。
 - [x] 增加「忽略此頁」、「標記重掃」、「確認正常」狀態。
 - [x] 將 page QC 狀態寫入 batch manifest。
 
@@ -54,6 +55,7 @@ E:\Mayan-EDMS-Docker\data\portal\thumbnails
   - `failed`
 - [x] 顯示 Mayan document id / link。
 - [x] 失敗時保留錯誤訊息與 retry button。
+- [x] 匯入 Mayan 前可選擇「匯入成功後刪除原始檔」，只刪成功匯入的檔案。
 
 ## P1：登入與角色權限
 
@@ -98,6 +100,7 @@ E:\Mayan-EDMS-Docker\data\portal\thumbnails
 
 ## P2：Admin 功能
 
+- [x] Admin 可新增 Mayan 文件類型，scanner 下拉立即可用。
 - [ ] 顯示 Mayan connection status。
 - [ ] 顯示 Cloudflare tunnel status。
 - [ ] 顯示 watch folder status。
@@ -132,4 +135,3 @@ password: avision123
 
 - [ ] `GET /api/scanner/watch-folder` 回 `200`
 - [ ] 若修改 Cloudflare 設定，確認 `mayan-emds` 與 `mayan-portal` 都仍可用。
-

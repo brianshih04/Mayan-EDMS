@@ -17,6 +17,15 @@ $PidFile = Join-Path $LogDir 'system-pids.json'
 
 New-Item -ItemType Directory -Force -Path $LogDir | Out-Null
 
+if (-not $env:MAYAN_SERVICE_TOKEN) {
+    $userServiceToken = [Environment]::GetEnvironmentVariable('MAYAN_SERVICE_TOKEN', 'User')
+    if ($userServiceToken) {
+        $env:MAYAN_SERVICE_TOKEN = $userServiceToken
+    } else {
+        Write-Warning 'MAYAN_SERVICE_TOKEN is not set. Mayan document-type and import APIs will fail.'
+    }
+}
+
 function Get-StalePids {
     if (Test-Path $PidFile) {
         try { return (Get-Content $PidFile -Raw | ConvertFrom-Json) } catch { return $null }

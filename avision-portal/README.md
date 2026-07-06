@@ -44,10 +44,13 @@ https://mayan-portal.avision-gb10.org
 
 ## Scanner 真實功能
 
-目前 scanner 角色已開始接本機功能：
+目前 scanner 角色已接本機 watch folder 與 Mayan 匯入：
 
 - `GET /api/scanner/watch-folder`：讀取 `E:\watch_folder` 中可匯入的 PDF、TIFF 與影像檔。
-- `POST /api/scanner/batches`：依目前檔案建立本機匯入批次 manifest。
+- `GET /api/scanner/files/:fileName/pages`：PDF/TIFF 逐頁轉圖與空白頁偵測。
+- `DELETE /api/scanner/files/:fileName`：刪除不需要的 watch folder 原始檔。
+- `POST /api/scanner/batches`：依選取檔案建立本機匯入批次 manifest。
+- `POST /api/mayan/import`：將成功確認的檔案匯入 Mayan，並可選擇匯入成功後刪除原始檔。
 
 預設 watch folder 是 `E:\watch_folder`。如需改路徑，可在啟動 Vite 前設定：
 
@@ -57,6 +60,10 @@ npm run dev
 ```
 
 批次 manifest 預設寫入 `E:\Mayan-EDMS-Docker\data\portal\batches`，不會寫回 watch folder。可用 `AVISION_PORTAL_STATE_DIR` 改變狀態目錄。
+
+## Admin 簡化管理
+
+Admin 角色可在 Portal 直接新增 Mayan 文件類型。新增成功後，scanner 的「文件類型」下拉會立即讀到新類型。後端會重新驗證登入 token，只有 admin role 可以呼叫新增 API。
 
 ## 相關文件
 

@@ -34,6 +34,7 @@
 - 新增 Mayan REST client（`server/lib/mayan.js`）：token、目前使用者、群組、文件類型、上傳，含 429 節流重試。
 - 新增 `POST /api/mayan/import`：以 service token 將 watch folder 檔案上傳到 Mayan，回寫 batch 狀態（`queued` → `importing` → `imported` / `failed`）與 Mayan document id。
 - Scanner 加入文件類型選擇與匯入結果面板（每檔狀態、Mayan 連結、失敗重試）。
+- Scanner 可手動刪除選取的 watch folder 檔案，並可選擇「匯入成功後刪除原始檔」；只刪成功匯入的檔案，失敗檔案保留。
 - 新增 `scripts/mayan-bootstrap.mjs`：建立角色群組與測試帳號，並驗證登入/匯入流程。
 
 ### P1：登入與角色權限
@@ -41,6 +42,12 @@
 - 登入改打 Mayan（`POST /api/auth/login`），以 service token 查群組 → 對應 portal 角色；超級使用者對應 admin。
 - 保留 `VITE_DEMO_LOGIN=1` 離線 demo 登入備援。
 - 新增環境變數 `MAYAN_SERVICE_TOKEN`（portal 後端用，資料存取與匯入）。
+- 啟動腳本會從 Windows User environment 補入 `MAYAN_SERVICE_TOKEN`，並以 `--strictPort` 避免 preview server 默默改跑其他 port。
+
+### P1：Admin 簡化管理
+
+- Admin 畫面可直接新增 Mayan 文件類型，不必進入 Mayan 原生後台。
+- 新增 `POST /api/mayan/document-types`，server 端重新驗證登入 token 並限制 admin role 才能建立文件類型。
 
 
 ## 0.1.0 - 2026-07-05

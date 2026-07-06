@@ -2,16 +2,7 @@ import { serviceToken } from './config.js';
 import { getCurrentUser, getUserGroups, obtainToken } from './mayan.js';
 import { resolveRole } from './roleMap.js';
 
-// Authenticate against Mayan, then resolve a portal role from the user's groups.
-// Credentials are validated with the user's own token; group lookup uses the
-// service token (normal users lack permission to read their own groups).
-// Returns { token, user, role, groups }.
-export async function portalLogin({ username, password }) {
-  if (!serviceToken) {
-    throw new Error('Portal service token not configured (set MAYAN_SERVICE_TOKEN on the server).');
-  }
-
-  const userToken = await obtainToken({ username, password });
+export async function resolvePortalUserFromToken(userToken) {
   const mayanUser = await getCurrentUser(userToken);
 
   let groups = [];
@@ -31,7 +22,6 @@ export async function portalLogin({ username, password }) {
   const role = resolveRole(groups, { isSuperuser });
 
   return {
-    token: userToken,
     groups,
     role,
     user: {
@@ -40,5 +30,23 @@ export async function portalLogin({ username, password }) {
       name: mayanUser.name || mayanUser.username,
       email: mayanUser.email || ''
     }
+  };
+}
+
+// Authenticate against Mayan, then resolve a portal role from the user's groups.
+// Credentials are validated with the user's own token; group lookup uses the
+// service token (normal users lack permission to read their own groups).
+// Returns { token, user, role, groups }.
+export async function portalLogin({ username, password }) {
+  if (!serviceToken) {
+    throw new Error('Portal service token not configured (set MAYAN_SERVICE_TOKEN on the server).');
+  }
+
+  const userToken = await obtainToken({ username, password });
+  const resolved = await resolvePortalUserFromToken(userToken);
+
+  return {
+    token: userToken,
+    ...resolved
   };
 }

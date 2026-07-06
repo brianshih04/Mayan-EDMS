@@ -104,6 +104,23 @@ export async function listDocumentTypes(token) {
     }));
 }
 
+// POST /document_types/ -> { id, label }
+export async function createDocumentType(token, { label }) {
+  const response = await mayanRequest(token, '/document_types/', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ label })
+  });
+  const data = await parseJson(response);
+  if (!response.ok) {
+    throw buildError(response.status, data, 'Unable to create document type.');
+  }
+  return {
+    id: data?.id ?? data?.pk,
+    label: data?.label || label
+  };
+}
+
 // POST /documents/upload/ (multipart) -> { id, url, label }
 export async function uploadDocument({ token, documentTypeId, filePath, label, description, language }) {
   const buffer = await fs.readFile(filePath);
@@ -195,4 +212,3 @@ export async function ensureRoleGroups(token, groupNames) {
   }
   return { created, byName: Object.fromEntries(byName) };
 }
-

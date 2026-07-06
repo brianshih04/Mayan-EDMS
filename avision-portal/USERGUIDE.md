@@ -40,6 +40,8 @@ https://mayan-emds.avision-gb10.org
 - 掃描匯入。
 - 批次檢查。
 - 查看需要重掃的文件。
+- 刪除不需要的掃描原始檔。
+- 匯入 Mayan，並可選擇匯入成功後刪除原始檔。
 
 建議流程：
 
@@ -50,8 +52,13 @@ https://mayan-emds.avision-gb10.org
 E:\watch_folder
 ```
 
-3. 在 Portal 查看批次狀態。
-4. 確認品質後送出。
+3. 在 Portal 查看縮圖與逐頁檢查結果。
+4. 勾選要匯入的檔案。
+5. 選擇文件類型。
+6. 視需要勾選「匯入成功後刪除原始檔」。
+7. 按「匯入 Mayan」。
+
+若檔案是不需要的掃描影像，可先勾選後按「刪除選取」。系統只會刪除 `E:\watch_folder` 內允許格式的檔案。
 
 ### 分類人員
 
@@ -113,25 +120,39 @@ E:\watch_folder
 - 管理使用者與角色。
 - 查看系統狀態。
 - 開啟 Mayan 後台。
-- 調整 Mayan 文件類型、metadata、workflow、權限等進階設定。
+- 在 Portal 直接新增 Mayan 文件類型。
+- 調整 Mayan metadata、workflow、權限等進階設定。
+
+新增文件類型：
+
+1. 使用 admin 帳號登入 Portal。
+2. 開啟系統管理員畫面。
+3. 在「文件類型」區塊輸入名稱，例如 `發票`、`合約`、`報價單`。
+4. 按「新增文件類型」。
+5. 新增成功後，scanner 的文件類型下拉會立即出現新項目。
 
 ## 測試帳號
 
-目前 Portal 第一版使用 demo 角色登入，不會驗證密碼。
+目前 Portal 預設使用 Mayan 帳號密碼登入，並依 Mayan group 對應角色。
 
-可選角色：
+測試帳號：
 
 - `scanner`
 - `records`
 - `reviewer`
 - `viewer`
-- `admin`
 
-正式版會改為串接 Mayan 使用者登入與權限。
+測試密碼：
+
+```text
+Avision-Portal-2026!
+```
+
+Admin 帳號由 Mayan 管理；超級使用者或 `Admin` 群組使用者登入後會進入 admin role。
 
 ## 注意事項
 
-- Portal 目前是角色式前台原型，資料仍為 demo。
-- 文件、搜尋與審核尚未串接 Mayan REST API。
+- Portal 目前 scanner 與 admin 文件類型已串接 Mayan REST API。
+- records、reviewer、viewer 的深度功能仍在 P2 開發中。
 - Mayan 後台帳密仍由 Mayan 管理。
 - 若遇到 Mayan 登入 CSRF 錯誤，需確認 Mayan 的 `CSRF_TRUSTED_ORIGINS` 是否包含正式網域。

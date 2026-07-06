@@ -3,11 +3,11 @@ import fs from 'node:fs/promises';
 
 import { previewMimeTypes, serviceToken, watchFolderPath } from './lib/config.js';
 import { readRequestBody, readToken, sendJson } from './lib/http.js';
-import { listWatchFolder, resolveWatchFolderFile } from './lib/watchFolder.js';
+import { deleteWatchFolderFile, listWatchFolder, resolveWatchFolderFile } from './lib/watchFolder.js';
 import { createScannerBatch, readBatch, writeBatch } from './lib/batch.js';
 import { listPages, renderPage } from './lib/convert.js';
-import { listDocumentTypes, uploadDocument } from './lib/mayan.js';
-import { portalLogin } from './lib/auth.js';
+import { createDocumentType, listDocumentTypes, uploadDocument } from './lib/mayan.js';
+import { portalLogin, resolvePortalUserFromToken } from './lib/auth.js';
 
 // Aggregate a batch status from its files' import states.
 function computeBatchStatus(files) {
@@ -88,6 +88,23 @@ function createApiMiddleware() {
         if (!serviceToken) { sendJson(response, 500, { error: 'MAYAN_SERVICE_TOKEN not configured.' }); return; }
         const results = await listDocumentTypes(serviceToken);
         sendJson(response, 200, { count: results.length, results });
+        return;
+      }
+
+      if (request.method === 'POST' && path === '/api/mayan/document-types') {
+        const token = readToken(request);
+        if (!token) { sendJson(response, 401, { error: 'Not authenticated.' }); return; }
+        if (!serviceToken) { sendJson(response, 500, { error: 'MAYAN_SERVICE_TOKEN not configured.' }); return; }
+        const session = await resolvePortalUserFromToken(token);
+        if (session.role !== 'admin') {
+          sendJson(response, 403, { error: 'Admin role is required.' });
+          return;
+        }
+        const body = await readRequestBody(request);
+        const label = String(body.label || '').trim();
+        if (!label) { sendJson(response, 400, { error: 'label is required.' }); return; }
+        const result = await createDocumentType(serviceToken, { label });
+        sendJson(response, 201, { result });
         return;
       }
 
@@ -182,6 +199,17 @@ function createApiMiddleware() {
         }
 
         sendJson(response, 404, { error: 'Scanner API route not found.' });
+        return;
+      }
+
+      if (request.method === 'DELETE' && path.startsWith('/api/scanner/files/')) {
+        const encodedName = path.replace('/api/scanner/files/', '');
+        if (!encodedName || encodedName.includes('/')) {
+          sendJson(response, 400, { error: 'Invalid file route.' });
+          return;
+        }
+        const result = await deleteWatchFolderFile(encodedName);
+        sendJson(response, result.error ? 400 : 200, result);
         return;
       }
 

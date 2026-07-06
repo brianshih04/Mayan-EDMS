@@ -16,6 +16,7 @@ import {
   Settings,
   ShieldCheck,
   SlidersHorizontal,
+  Trash2,
   UploadCloud,
   UserRound,
   UsersRound
@@ -482,6 +483,10 @@ const scannerStrings = {
     scannerSelectAll: '全選可見',
     scannerClearSelection: '清除選取',
     scannerSelectedCount: '已選 {count}',
+    scannerDeleteSelected: '刪除選取',
+    scannerDeleteConfirm: '確定要刪除選取的 {count} 個檔案？這會從 watch folder 移除原始檔。',
+    scannerDeleteDone: '已刪除 {count} 個檔案。',
+    scannerDeleteFailed: '刪除失敗',
     scannerBlankCount: '疑似空白 {count}',
     scannerFilterBlank: '只看疑似空白',
     scannerFilterEmpty: '沒有符合過濾條件的檔案。',
@@ -508,8 +513,18 @@ const scannerStrings = {
     loginHintReal: '以 Mayan 帳號密碼登入，系統會依你的群組進入對應角色。',
     scannerPickDocType: '請先選擇文件類型。',
     scannerDocType: '文件類型',
+    scannerDocTypesLoading: '載入文件類型中...',
+    scannerDocTypesError: '無法載入文件類型，請重新登入或檢查 Mayan 連線。',
     scannerNoDocType: '（尚無文件類型）',
+    adminDocumentTypes: '文件類型',
+    adminDocumentTypeName: '文件類型名稱',
+    adminAddDocumentType: '新增文件類型',
+    adminDocumentTypeCreated: '已新增文件類型：{label}',
+    adminDocumentTypeHelp: '新增後會立即出現在 scanner 的文件類型下拉選單。',
     scannerImportToMayan: '匯入 Mayan',
+    scannerDeleteAfterImport: '匯入成功後刪除原始檔',
+    scannerDeleteAfterImportHint: '只刪除成功匯入 Mayan 的檔案，失敗檔案會保留。',
+    scannerOriginalDeleted: '原始檔已刪除',
     scannerImportResult: '匯入結果',
     scannerImporting: '匯入中',
     scannerRetry: '重試',
@@ -533,6 +548,10 @@ const scannerStrings = {
     scannerSelectAll: 'Select visible',
     scannerClearSelection: 'Clear',
     scannerSelectedCount: '{count} selected',
+    scannerDeleteSelected: 'Delete selected',
+    scannerDeleteConfirm: 'Delete {count} selected file(s)? This removes the originals from the watch folder.',
+    scannerDeleteDone: 'Deleted {count} file(s).',
+    scannerDeleteFailed: 'Delete failed',
     scannerBlankCount: '{count} suspected blank',
     scannerFilterBlank: 'Only suspected blank',
     scannerFilterEmpty: 'No files match the filter.',
@@ -559,8 +578,18 @@ const scannerStrings = {
     loginHintReal: 'Sign in with your Mayan username and password; the portal opens the role assigned to your group.',
     scannerPickDocType: 'Select a document type first.',
     scannerDocType: 'Document type',
+    scannerDocTypesLoading: 'Loading document types...',
+    scannerDocTypesError: 'Unable to load document types. Sign in again or check the Mayan connection.',
     scannerNoDocType: '(no document types)',
+    adminDocumentTypes: 'Document types',
+    adminDocumentTypeName: 'Document type name',
+    adminAddDocumentType: 'Add document type',
+    adminDocumentTypeCreated: 'Created document type: {label}',
+    adminDocumentTypeHelp: 'New types appear immediately in the scanner document-type selector.',
     scannerImportToMayan: 'Import to Mayan',
+    scannerDeleteAfterImport: 'Delete originals after successful import',
+    scannerDeleteAfterImportHint: 'Only successfully imported files are removed from the watch folder.',
+    scannerOriginalDeleted: 'Original deleted',
     scannerImportResult: 'Import result',
     scannerImporting: 'Importing',
     scannerRetry: 'Retry',
@@ -584,6 +613,10 @@ const scannerStrings = {
     scannerSelectAll: '表示分を選択',
     scannerClearSelection: '選択解除',
     scannerSelectedCount: '{count} 件選択',
+    scannerDeleteSelected: '選択を削除',
+    scannerDeleteConfirm: '選択した {count} 件を削除しますか？watch folder から元ファイルを削除します。',
+    scannerDeleteDone: '{count} 件を削除しました。',
+    scannerDeleteFailed: '削除に失敗しました',
     scannerBlankCount: '空白疑い {count}',
     scannerFilterBlank: '空白疑いのみ',
     scannerFilterEmpty: 'フィルターに一致するファイルがありません。',
@@ -610,8 +643,18 @@ const scannerStrings = {
     loginHintReal: 'Mayan のユーザー名とパスワードでログインします。グループに応じた役割で開きます。',
     scannerPickDocType: '文書種別を選択してください。',
     scannerDocType: '文書種別',
+    scannerDocTypesLoading: '文書種別を読み込み中...',
+    scannerDocTypesError: '文書種別を読み込めません。再ログインまたは Mayan 接続を確認してください。',
     scannerNoDocType: '（文書種別なし）',
+    adminDocumentTypes: '文書種別',
+    adminDocumentTypeName: '文書種別名',
+    adminAddDocumentType: '文書種別を追加',
+    adminDocumentTypeCreated: '文書種別を追加しました：{label}',
+    adminDocumentTypeHelp: '追加後、scanner の文書種別リストにすぐ表示されます。',
     scannerImportToMayan: 'Mayan へ取込',
+    scannerDeleteAfterImport: '取込成功後に元ファイルを削除',
+    scannerDeleteAfterImportHint: 'Mayan への取込に成功したファイルのみ watch folder から削除します。',
+    scannerOriginalDeleted: '元ファイル削除済み',
     scannerImportResult: '取込結果',
     scannerImporting: '取込中',
     scannerRetry: '再試行',
@@ -635,6 +678,10 @@ const scannerStrings = {
     scannerSelectAll: '全选可见',
     scannerClearSelection: '清除选择',
     scannerSelectedCount: '已选 {count}',
+    scannerDeleteSelected: '删除选择',
+    scannerDeleteConfirm: '确定要删除选择的 {count} 个文件？这会从 watch folder 移除原始文件。',
+    scannerDeleteDone: '已删除 {count} 个文件。',
+    scannerDeleteFailed: '删除失败',
     scannerBlankCount: '疑似空白 {count}',
     scannerFilterBlank: '只看疑似空白',
     scannerFilterEmpty: '没有符合过滤条件的文件。',
@@ -661,8 +708,18 @@ const scannerStrings = {
     loginHintReal: '以 Mayan 账号密码登录，系统会依你的群组进入对应角色。',
     scannerPickDocType: '请先选择文件类型。',
     scannerDocType: '文件类型',
+    scannerDocTypesLoading: '正在载入文件类型...',
+    scannerDocTypesError: '无法载入文件类型，请重新登录或检查 Mayan 连线。',
     scannerNoDocType: '（暂无文件类型）',
+    adminDocumentTypes: '文件类型',
+    adminDocumentTypeName: '文件类型名称',
+    adminAddDocumentType: '新增文件类型',
+    adminDocumentTypeCreated: '已新增文件类型：{label}',
+    adminDocumentTypeHelp: '新增后会立即出现在 scanner 的文件类型下拉选单。',
     scannerImportToMayan: '导入 Mayan',
+    scannerDeleteAfterImport: '导入成功后删除原始文件',
+    scannerDeleteAfterImportHint: '只删除成功导入 Mayan 的文件，失败文件会保留。',
+    scannerOriginalDeleted: '原始文件已删除',
     scannerImportResult: '导入结果',
     scannerImporting: '导入中',
     scannerRetry: '重试',
@@ -811,7 +868,18 @@ function App() {
   const [language, setLanguage] = useState(localStorage.getItem('portal.language') || 'zh-TW');
   const [session, setSession] = useState(() => {
     const raw = localStorage.getItem('portal.session');
-    return raw ? JSON.parse(raw) : null;
+    if (!raw) return null;
+    try {
+      const stored = JSON.parse(raw);
+      if (!DEMO_LOGIN && !stored?.token) {
+        localStorage.removeItem('portal.session');
+        return null;
+      }
+      return stored;
+    } catch {
+      localStorage.removeItem('portal.session');
+      return null;
+    }
   });
   const [activeNav, setActiveNav] = useState('scanInbox');
   const t = useTranslation(language);
@@ -1128,8 +1196,10 @@ function PrimaryWorkArea({ activeNav, session, t }) {
   const [watchFolder, setWatchFolder] = useState('E:\\watch_folder');
   const [scannerLoading, setScannerLoading] = useState(false);
   const [scannerError, setScannerError] = useState('');
+  const [scannerNotice, setScannerNotice] = useState('');
   const [scannerBatch, setScannerBatch] = useState(null);
   const [scannerCreating, setScannerCreating] = useState(false);
+  const [scannerDeleting, setScannerDeleting] = useState(false);
   const [selectedScannerFile, setSelectedScannerFile] = useState(null);
   const [blankAnalysis, setBlankAnalysis] = useState(null);
   const [thumbnailAnalysis, setThumbnailAnalysis] = useState({});
@@ -1152,13 +1222,19 @@ function PrimaryWorkArea({ activeNav, session, t }) {
 
   // Mayan import state.
   const [documentTypes, setDocumentTypes] = useState([]);
+  const [documentTypesLoading, setDocumentTypesLoading] = useState(false);
+  const [documentTypesError, setDocumentTypesError] = useState('');
   const [selectedDocumentTypeId, setSelectedDocumentTypeId] = useState('');
+  const [newDocumentTypeLabel, setNewDocumentTypeLabel] = useState('');
+  const [documentTypeCreating, setDocumentTypeCreating] = useState(false);
+  const [deleteAfterImport, setDeleteAfterImport] = useState(false);
   const [importProgress, setImportProgress] = useState({});
   const [importing, setImporting] = useState(false);
 
   async function loadScannerFiles() {
     setScannerLoading(true);
     setScannerError('');
+    setScannerNotice('');
 
     try {
       const response = await fetch('/api/scanner/watch-folder');
@@ -1190,6 +1266,7 @@ function PrimaryWorkArea({ activeNav, session, t }) {
 
   async function createScannerBatch() {
     const targets = scannerFiles.filter((file) => selectedFiles.has(file.name));
+    setScannerNotice('');
 
     if (!targets.length) {
       setScannerError(t('scannerNoSelection'));
@@ -1295,24 +1372,42 @@ function PrimaryWorkArea({ activeNav, session, t }) {
     setPageQc(file, page, order[(order.indexOf(current) + 1) % order.length]);
   }
 
-  // Fetch document types for the import selector (Mayan-backed mode only).
+  async function loadDocumentTypes({ silent = false } = {}) {
+    if (!session?.token) {
+      setDocumentTypes([]);
+      setSelectedDocumentTypeId('');
+      setDocumentTypesError(t('scannerDocTypesError'));
+      return;
+    }
+    if (!silent) setDocumentTypesLoading(true);
+    setDocumentTypesError('');
+    try {
+      const response = await fetch('/api/mayan/document-types', { headers: authHeaders(session) });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.error || t('scannerDocTypesError'));
+      const types = payload.results || [];
+      setDocumentTypes(types);
+      setSelectedDocumentTypeId((current) => current || (types[0] ? String(types[0].id) : ''));
+      setDocumentTypesError(types.length ? '' : t('scannerNoDocType'));
+    } catch (error) {
+      setDocumentTypes([]);
+      setSelectedDocumentTypeId('');
+      setDocumentTypesError(error.message || t('scannerDocTypesError'));
+    } finally {
+      if (!silent) setDocumentTypesLoading(false);
+    }
+  }
+
+  // Fetch document types for scanner import and admin management.
   useEffect(() => {
-    if (!scannerMode || DEMO_LOGIN || !session?.token) return;
+    if (!(scannerMode || activeNav === 'userAdmin') || DEMO_LOGIN) return;
     let cancelled = false;
     (async () => {
-      try {
-        const response = await fetch('/api/mayan/document-types', { headers: authHeaders(session) });
-        const payload = await response.json().catch(() => ({}));
-        if (cancelled || !response.ok) return;
-        const types = payload.results || [];
-        setDocumentTypes(types);
-        setSelectedDocumentTypeId((current) => current || (types[0] ? String(types[0].id) : ''));
-      } catch {
-        /* leave the selector empty */
-      }
+      await loadDocumentTypes();
+      if (cancelled) return;
     })();
     return () => { cancelled = true; };
-  }, [scannerMode, session?.token]);
+  }, [scannerMode, activeNav, session?.token, t]);
 
   async function importOneToMayan(batch, fileName) {
     setImportProgress((current) => ({ ...current, [fileName]: { status: 'importing' } }));
@@ -1334,9 +1429,20 @@ function PrimaryWorkArea({ activeNav, session, t }) {
           [fileName]: { status: 'failed', error: payload.error || result.importError || t('scannerImportFailed') }
         }));
       } else {
+        let deletedOriginal = false;
+        let deleteError = '';
+        if (deleteAfterImport) {
+          try {
+            await deleteWatchFolderFile(fileName);
+            removeFilesFromScannerState([fileName]);
+            deletedOriginal = true;
+          } catch (error) {
+            deleteError = error.message || t('scannerDeleteFailed');
+          }
+        }
         setImportProgress((current) => ({
           ...current,
-          [fileName]: { status: 'imported', mayanDocumentId: result.mayanDocumentId }
+          [fileName]: { status: 'imported', mayanDocumentId: result.mayanDocumentId, deletedOriginal, deleteError }
         }));
       }
     } catch (error) {
@@ -1443,6 +1549,60 @@ function PrimaryWorkArea({ activeNav, session, t }) {
     setSelectedFiles(new Set());
   }
 
+  function removeFilesFromScannerState(names) {
+    const deletedSet = new Set(names);
+    setScannerFiles((current) => current.filter((file) => !deletedSet.has(file.name)));
+    setSelectedFiles((current) => {
+      const next = new Set(current);
+      names.forEach((name) => next.delete(name));
+      return next;
+    });
+    setThumbnailAnalysis((current) => {
+      const next = { ...current };
+      names.forEach((name) => { delete next[name]; });
+      return next;
+    });
+    setSelectedScannerFile((current) => deletedSet.has(current?.name) ? null : current);
+    setScannerPages((current) => deletedSet.has(selectedScannerFile?.name) ? [] : current);
+    if (deletedSet.has(selectedScannerFile?.name)) setBlankAnalysis(null);
+  }
+
+  async function deleteWatchFolderFile(fileName) {
+    const response = await fetch(`/api/scanner/files/${encodeURIComponent(fileName)}`, { method: 'DELETE' });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(payload.error || `${t('scannerDeleteFailed')}: ${fileName}`);
+    return payload;
+  }
+
+  async function deleteSelectedFiles() {
+    const names = Array.from(selectedFiles);
+    if (!names.length) {
+      setScannerError(t('scannerNoSelection'));
+      return;
+    }
+    const confirmed = window.confirm(fillTemplate(t('scannerDeleteConfirm'), { count: names.length }));
+    if (!confirmed) return;
+
+    setScannerDeleting(true);
+    setScannerError('');
+    setScannerNotice('');
+
+    try {
+      const deleted = [];
+      for (const name of names) {
+        await deleteWatchFolderFile(name);
+        deleted.push(name);
+      }
+
+      removeFilesFromScannerState(deleted);
+      setScannerNotice(fillTemplate(t('scannerDeleteDone'), { count: deleted.length }));
+    } catch (error) {
+      setScannerError(error.message || t('scannerDeleteFailed'));
+    } finally {
+      setScannerDeleting(false);
+    }
+  }
+
   function setQc(file, state) {
     setQcStates((current) => {
       const next = { ...current, [qcKey(file)]: state };
@@ -1481,9 +1641,76 @@ function PrimaryWorkArea({ activeNav, session, t }) {
     );
   }
 
+  async function createAdminDocumentType(event) {
+    event.preventDefault();
+    const label = newDocumentTypeLabel.trim();
+    if (!label) {
+      setDocumentTypesError(t('adminDocumentTypeName'));
+      return;
+    }
+
+    setDocumentTypeCreating(true);
+    setDocumentTypesError('');
+    setScannerNotice('');
+
+    try {
+      const response = await fetch('/api/mayan/document-types', {
+        method: 'POST',
+        headers: authHeaders(session, { 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ label })
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.error || t('scannerDocTypesError'));
+      const created = payload.result;
+      setNewDocumentTypeLabel('');
+      setScannerNotice(fillTemplate(t('adminDocumentTypeCreated'), { label: created.label || label }));
+      await loadDocumentTypes({ silent: true });
+      setSelectedDocumentTypeId(String(created.id || ''));
+    } catch (error) {
+      setDocumentTypesError(error.message || t('scannerDocTypesError'));
+    } finally {
+      setDocumentTypeCreating(false);
+    }
+  }
+
   if (activeNav === 'userAdmin') {
     return (
       <section className="work-panel admin-surface">
+        <div className="admin-document-types">
+          <div className="panel-heading">
+            <Archive size={20} aria-hidden="true" />
+            <h2>{t('adminDocumentTypes')}</h2>
+          </div>
+          <p className="note">{t('adminDocumentTypeHelp')}</p>
+          <form className="admin-doctype-form" onSubmit={createAdminDocumentType}>
+            <label>
+              <span>{t('adminDocumentTypeName')}</span>
+              <input
+                disabled={documentTypeCreating}
+                onChange={(event) => setNewDocumentTypeLabel(event.target.value)}
+                placeholder={t('adminDocumentTypeName')}
+                value={newDocumentTypeLabel}
+              />
+            </label>
+            <button className="strong-action" disabled={documentTypeCreating || !newDocumentTypeLabel.trim()} type="submit">
+              <CheckCircle2 size={18} aria-hidden="true" />
+              {documentTypeCreating ? t('scannerLoading') : t('adminAddDocumentType')}
+            </button>
+          </form>
+          {documentTypesError ? <p className="scanner-error">{documentTypesError}</p> : null}
+          {scannerNotice ? <p className="scanner-success">{scannerNotice}</p> : null}
+          <div className="doctype-list">
+            {documentTypesLoading ? (
+              <span className="chip">{t('scannerDocTypesLoading')}</span>
+            ) : documentTypes.length ? (
+              documentTypes.map((docType) => (
+                <span className="chip" key={docType.id}>{docType.label}</span>
+              ))
+            ) : (
+              <span className="chip">{t('scannerNoDocType')}</span>
+            )}
+          </div>
+        </div>
         <div className="permission-map">
           {demoUsers.map((user) => (
             <div className="permission-row" key={user.role}>
@@ -1560,6 +1787,15 @@ function PrimaryWorkArea({ activeNav, session, t }) {
               <button className="subtle-action" onClick={clearSelection} type="button">
                 {t('scannerClearSelection')}
               </button>
+              <button
+                className="danger-action"
+                disabled={!selectedFiles.size || scannerDeleting || scannerCreating || importing}
+                onClick={deleteSelectedFiles}
+                type="button"
+              >
+                <Trash2 size={16} aria-hidden="true" />
+                {scannerDeleting ? t('scannerLoading') : t('scannerDeleteSelected')}
+              </button>
               <span className="chip">
                 {fillTemplate(t('scannerSelectedCount'), { count: selectedFiles.size })}
               </span>
@@ -1590,6 +1826,7 @@ function PrimaryWorkArea({ activeNav, session, t }) {
           </div>
 
           {scannerError ? <p className="scanner-error">{scannerError}</p> : null}
+          {scannerNotice ? <p className="scanner-success">{scannerNotice}</p> : null}
           {scannerBatch ? (
             <p className="scanner-success">
               {fillTemplate(t('scannerBatchCreated'), {
@@ -1803,20 +2040,34 @@ function PrimaryWorkArea({ activeNav, session, t }) {
 
       <div className="action-row">
         {scannerMode && !DEMO_LOGIN ? (
-          <label className="scanner-doctype">
-            <span>{t('scannerDocType')}</span>
-            <select
-              disabled={importing || scannerCreating}
-              onChange={(event) => setSelectedDocumentTypeId(event.target.value)}
-              value={selectedDocumentTypeId}
-            >
-              {documentTypes.length
-                ? documentTypes.map((docType) => (
-                  <option key={docType.id} value={String(docType.id)}>{docType.label}</option>
-                ))
-                : <option value="">{t('scannerNoDocType')}</option>}
-            </select>
-          </label>
+          <>
+            <label className="scanner-doctype">
+              <span>{t('scannerDocType')}</span>
+              <select
+                disabled={importing || scannerCreating || documentTypesLoading || !documentTypes.length}
+                onChange={(event) => setSelectedDocumentTypeId(event.target.value)}
+                value={selectedDocumentTypeId}
+              >
+                {documentTypesLoading
+                  ? <option value="">{t('scannerDocTypesLoading')}</option>
+                  : documentTypes.length
+                  ? documentTypes.map((docType) => (
+                    <option key={docType.id} value={String(docType.id)}>{docType.label}</option>
+                  ))
+                  : <option value="">{t('scannerNoDocType')}</option>}
+              </select>
+              {documentTypesError ? <em>{documentTypesError}</em> : null}
+            </label>
+            <label className="scanner-import-option" title={t('scannerDeleteAfterImportHint')}>
+              <input
+                checked={deleteAfterImport}
+                disabled={importing || scannerCreating}
+                onChange={(event) => setDeleteAfterImport(event.target.checked)}
+                type="checkbox"
+              />
+              <span>{t('scannerDeleteAfterImport')}</span>
+            </label>
+          </>
         ) : null}
         <button
           className="strong-action"
@@ -1860,6 +2111,8 @@ function PrimaryWorkArea({ activeNav, session, t }) {
                   </a>
                 ) : null}
                 <span className={`import-status status-${info.status}`}>{t('import_' + info.status)}</span>
+                {info.deletedOriginal ? <span className="import-note">{t('scannerOriginalDeleted')}</span> : null}
+                {info.deleteError ? <span className="import-error">{info.deleteError}</span> : null}
                 {info.status === 'failed' ? (
                   <>
                     <span className="import-error">{info.error}</span>

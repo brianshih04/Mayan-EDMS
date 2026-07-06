@@ -378,6 +378,7 @@ input:focus {
 .primary-login,
 .strong-action,
 .subtle-action,
+.danger-action,
 .search-band button,
 .result-row button,
 .icon-text {
@@ -1286,6 +1287,31 @@ button:disabled {
   min-width: 200px;
 }
 
+.scanner-doctype em {
+  max-width: 280px;
+  color: #b42318;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.scanner-import-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 0 10px;
+  color: #40504c;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.scanner-import-option input {
+  width: 16px;
+  height: 16px;
+}
+
 .scanner-import-panel {
   border: 1px solid #dce3e0;
   border-radius: 8px;
@@ -1356,6 +1382,12 @@ button:disabled {
   color: #9b2618;
 }
 
+.import-note {
+  color: #0f766e;
+  font-size: 12px;
+  font-weight: 800;
+}
+
 .import-error {
   color: #9b2618;
   font-size: 12px;
@@ -1371,6 +1403,20 @@ button:disabled {
 .subtle-action {
   background: #eef0ea;
   color: #182321;
+}
+
+.danger-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff1f1;
+  border: 1px solid #fecaca;
+  color: #b42318;
+  font-weight: 800;
+}
+
+.danger-action:hover:not(:disabled) {
+  background: #fee2e2;
 }
 
 .metadata-grid {
@@ -1407,6 +1453,38 @@ button:disabled {
 .permission-map {
   display: grid;
   gap: 10px;
+}
+
+.admin-document-types {
+  display: grid;
+  gap: 12px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid #e1e8e5;
+}
+
+.admin-doctype-form {
+  display: flex;
+  align-items: end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.admin-doctype-form label {
+  display: grid;
+  gap: 6px;
+  min-width: 260px;
+}
+
+.admin-doctype-form label span {
+  color: #5b6764;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.doctype-list {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .task-row {

@@ -2,7 +2,7 @@
 
 本文件提供給後續 coding agent 接手 Avision EDMS Portal。Portal 是 Mayan-EDMS 上方的角色式簡化前台，不取代 Mayan core。
 
-> **進度（2026-07-05）**：P0 與 P1 全部完成並驗證（function + route 層級）— scanner 選取/QC/空白偵測、PDF/TIFF 逐頁轉圖（mupdf WASM）、Mayan 匯入（service token）、Mayan 登入與角色對應。待辦：以 `start-system.ps1`（設 `MAYAN_SERVICE_TOKEN`）啟動後做瀏覽器端到端 smoke test，即 Task 7。詳見 CHANGELOG / TODOLIST。
+> **進度（2026-07-06）**：P0 與 P1 已完成並上線驗證 — scanner 選取/QC/空白偵測、PDF/TIFF 逐頁轉圖（mupdf WASM）、Mayan 匯入（service token）、Mayan 登入與角色對應、watch folder 刪檔、匯入成功後可刪除原始檔、Admin 可新增 Mayan 文件類型。P2 records/reviewer/viewer 深度功能尚未開始。詳見 CHANGELOG / TODOLIST。
 
 ## 目前狀態
 
@@ -19,27 +19,32 @@
 
 目標是讓一般使用者不需要進入 Mayan 複雜後台，而是依照角色進入簡化工作台：
 
-- `scanner`：掃描匯入、縮圖檢查、空白頁提示、批次建立。
+- `scanner`：掃描匯入、縮圖檢查、空白頁提示、批次建立、匯入 Mayan、刪除不需要的掃描檔。
 - `records`：文件分類、metadata 補齊、送審。
 - `reviewer`：文件審核、核准、退回、註記。
 - `viewer`：文件搜尋、預覽、下載。
-- `admin`：使用者與角色、系統狀態、Mayan 後台入口。
+- `admin`：文件類型、使用者與角色、系統狀態、Mayan 後台入口。
 
 ## 已完成
 
 - 建立角色式 Portal UI。
-- 建立 demo credential login。
+- 串接 Mayan 帳號密碼登入，依 Mayan group 對應 portal role。
 - 支援繁體中文、英文、日文、簡體中文。
 - 透過 Cloudflare tunnel 對外提供 portal。
 - Scanner 已接本機 watch folder API：
   - `GET /api/scanner/watch-folder`
   - `GET /api/scanner/files/:fileName`
+  - `DELETE /api/scanner/files/:fileName`
+  - `GET /api/scanner/files/:fileName/pages`
+  - `GET /api/scanner/files/:fileName/pages/:page/thumbnail`
   - `POST /api/scanner/batches`
+- Scanner 可匯入 Mayan，並可選擇匯入成功後刪除原始檔。
 - Scanner 可顯示實際 watch folder 檔案。
 - Scanner 可顯示影像縮圖與右側大預覽。
 - Scanner 可做瀏覽器端影像空白頁輔助偵測。
 - Scanner 支援小 / 中 / 大縮圖大小選擇，選擇會保存到 `localStorage`。
-- 建立批次 manifest 到 `E:\Mayan-EDMS-Docker\data\portal\batches`，不搬移、不刪除原始掃描檔。
+- 建立批次 manifest 到 `E:\Mayan-EDMS-Docker\data\portal\batches`。
+- Admin 可在 portal 新增 Mayan 文件類型，後端限制 admin role。
 
 ## Cloudflare 掛載方式
 
@@ -160,4 +165,3 @@ Mayan 仍是正式文件後端。Portal 下一步應該開始呼叫 Mayan API �
 - Scanner API 必須防止 path traversal，只能讀 watch folder 內檔案。
 - Cloudflare tunnel 對外時，Vite 必須允許 `mayan-portal.avision-gb10.org` host。
 - 若使用者看到舊 UI，先重啟 Vite，再確認 browser cache。
-

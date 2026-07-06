@@ -17,9 +17,9 @@ export async function readRequestBody(request) {
   return JSON.parse(Buffer.concat(chunks).toString('utf8'));
 }
 
-// Extract the bearer/-token value from an `Authorization: Token <t>` header.
+// Extract the bearer/token value from an Authorization header.
 export function readToken(request) {
   const header = request.headers?.authorization || '';
-  const match = header.match(/^Token\s+(.+)$/i);
-  return match ? match[1].trim() : null;
+  const match = header.match(/^(Token|Bearer)\s+(.+)$/i);
+  return match ? match[2].trim() : null;
 }
