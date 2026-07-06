@@ -528,6 +528,15 @@ const scannerStrings = {
     previewDocument: '預覽文件',
     downloadOriginal: '下載原始檔',
     pagesCount: '{count} 頁',
+    recordsSave: '儲存分類',
+    recordsSaved: '分類資料已儲存。',
+    reviewerApprove: '核准',
+    reviewerReject: '退回',
+    reviewerNote: '審核註記',
+    reviewSaved: '審核狀態已儲存。',
+    reviewPending: '待審核',
+    reviewApproved: '已核准',
+    reviewRejected: '已退回',
     scannerImportToMayan: '匯入 Mayan',
     scannerDeleteAfterImport: '匯入成功後刪除原始檔',
     scannerDeleteAfterImportHint: '只刪除成功匯入 Mayan 的檔案，失敗檔案會保留。',
@@ -600,6 +609,15 @@ const scannerStrings = {
     previewDocument: 'Preview document',
     downloadOriginal: 'Download original',
     pagesCount: '{count} pages',
+    recordsSave: 'Save classification',
+    recordsSaved: 'Classification saved.',
+    reviewerApprove: 'Approve',
+    reviewerReject: 'Reject',
+    reviewerNote: 'Review note',
+    reviewSaved: 'Review saved.',
+    reviewPending: 'Pending review',
+    reviewApproved: 'Approved',
+    reviewRejected: 'Returned',
     scannerImportToMayan: 'Import to Mayan',
     scannerDeleteAfterImport: 'Delete originals after successful import',
     scannerDeleteAfterImportHint: 'Only successfully imported files are removed from the watch folder.',
@@ -672,6 +690,15 @@ const scannerStrings = {
     previewDocument: '文書プレビュー',
     downloadOriginal: '元ファイルをダウンロード',
     pagesCount: '{count} ページ',
+    recordsSave: '分類を保存',
+    recordsSaved: '分類を保存しました。',
+    reviewerApprove: '承認',
+    reviewerReject: '差戻し',
+    reviewerNote: 'レビュー注記',
+    reviewSaved: 'レビュー状態を保存しました。',
+    reviewPending: 'レビュー待ち',
+    reviewApproved: '承認済み',
+    reviewRejected: '差戻し済み',
     scannerImportToMayan: 'Mayan へ取込',
     scannerDeleteAfterImport: '取込成功後に元ファイルを削除',
     scannerDeleteAfterImportHint: 'Mayan への取込に成功したファイルのみ watch folder から削除します。',
@@ -744,6 +771,15 @@ const scannerStrings = {
     previewDocument: '预览文件',
     downloadOriginal: '下载原始文件',
     pagesCount: '{count} 页',
+    recordsSave: '储存分类',
+    recordsSaved: '分类资料已储存。',
+    reviewerApprove: '核准',
+    reviewerReject: '退回',
+    reviewerNote: '审核注记',
+    reviewSaved: '审核状态已储存。',
+    reviewPending: '待审核',
+    reviewApproved: '已核准',
+    reviewRejected: '已退回',
     scannerImportToMayan: '导入 Mayan',
     scannerDeleteAfterImport: '导入成功后删除原始文件',
     scannerDeleteAfterImportHint: '只删除成功导入 Mayan 的文件，失败文件会保留。',
@@ -1267,6 +1303,11 @@ function PrimaryWorkArea({ activeNav, session, t }) {
   const [documentPreviewLoading, setDocumentPreviewLoading] = useState(false);
   const [documentPreviewError, setDocumentPreviewError] = useState('');
   const [selectedPreviewPageId, setSelectedPreviewPageId] = useState('');
+  const [recordForm, setRecordForm] = useState({ label: '', description: '', documentTypeId: '' });
+  const [recordSaving, setRecordSaving] = useState(false);
+  const [reviews, setReviews] = useState({});
+  const [reviewNote, setReviewNote] = useState('');
+  const [reviewSaving, setReviewSaving] = useState(false);
 
   async function loadScannerFiles() {
     setScannerLoading(true);
@@ -1394,6 +1435,12 @@ function PrimaryWorkArea({ activeNav, session, t }) {
 
   async function loadDocumentPreview(document) {
     setSelectedMayanDocument(document);
+    setRecordForm({
+      label: document.label || '',
+      description: document.description || '',
+      documentTypeId: document.documentTypeId ? String(document.documentTypeId) : ''
+    });
+    setReviewNote(reviews[String(document.id)]?.note || '');
     setDocumentPreviewLoading(true);
     setDocumentPreviewError('');
     setDocumentPreview(null);
@@ -1415,10 +1462,79 @@ function PrimaryWorkArea({ activeNav, session, t }) {
   }
 
   useEffect(() => {
-    if (activeNav === 'searchDocs' && !DEMO_LOGIN) {
+    if (['searchDocs', 'classify', 'metadata', 'approvals'].includes(activeNav) && !DEMO_LOGIN) {
       loadMayanDocuments('');
     }
   }, [activeNav, session?.token]);
+
+  async function loadReviews() {
+    if (!session?.token) return;
+    try {
+      const response = await fetch('/api/reviews', { headers: authHeaders(session) });
+      const payload = await response.json().catch(() => ({}));
+      if (response.ok) setReviews(payload.reviews || {});
+    } catch {
+      /* review status is an enhancement; document list remains usable */
+    }
+  }
+
+  useEffect(() => {
+    if (activeNav === 'approvals' && !DEMO_LOGIN) {
+      loadReviews();
+    }
+  }, [activeNav, session?.token]);
+
+  async function saveRecordDocument() {
+    if (!selectedMayanDocument) return;
+    setRecordSaving(true);
+    setDocumentsError('');
+    try {
+      const response = await fetch(`/api/mayan/documents/${selectedMayanDocument.id}`, {
+        method: 'PATCH',
+        headers: authHeaders(session, { 'Content-Type': 'application/json' }),
+        body: JSON.stringify({
+          label: recordForm.label,
+          description: recordForm.description,
+          documentTypeId: String(recordForm.documentTypeId || '') !== String(selectedMayanDocument.documentTypeId || '')
+            ? recordForm.documentTypeId
+            : ''
+        })
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.error || t('documentsLoadError'));
+      setScannerNotice(t('recordsSaved'));
+      await loadMayanDocuments(documentQuery);
+    } catch (error) {
+      setDocumentsError(error.message || t('documentsLoadError'));
+    } finally {
+      setRecordSaving(false);
+    }
+  }
+
+  async function submitReview(status) {
+    if (!selectedMayanDocument) return;
+    setReviewSaving(true);
+    setDocumentsError('');
+    try {
+      const response = await fetch('/api/reviews', {
+        method: 'POST',
+        headers: authHeaders(session, { 'Content-Type': 'application/json' }),
+        body: JSON.stringify({
+          documentId: selectedMayanDocument.id,
+          note: reviewNote,
+          status
+        })
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.error || t('documentsLoadError'));
+      setReviews((current) => ({ ...current, [selectedMayanDocument.id]: payload.review }));
+      setScannerNotice(t('reviewSaved'));
+    } catch (error) {
+      setDocumentsError(error.message || t('documentsLoadError'));
+    } finally {
+      setReviewSaving(false);
+    }
+  }
 
   useEffect(() => {
     setBlankAnalysis(null);
@@ -1492,9 +1608,9 @@ function PrimaryWorkArea({ activeNav, session, t }) {
     }
   }
 
-  // Fetch document types for scanner import and admin management.
+  // Fetch document types for scanner import, records, and admin management.
   useEffect(() => {
-    if (!(scannerMode || activeNav === 'userAdmin') || DEMO_LOGIN) return;
+    if (!(scannerMode || activeNav === 'userAdmin' || activeNav === 'classify' || activeNav === 'metadata') || DEMO_LOGIN) return;
     let cancelled = false;
     (async () => {
       await loadDocumentTypes();
@@ -1711,7 +1827,9 @@ function PrimaryWorkArea({ activeNav, session, t }) {
     setQc(file, order[(order.indexOf(current) + 1) % order.length]);
   }
 
-  if (activeNav === 'searchDocs') {
+  if (['searchDocs', 'classify', 'metadata', 'approvals'].includes(activeNav)) {
+    const recordsMode = activeNav === 'classify' || activeNav === 'metadata';
+    const reviewerMode = activeNav === 'approvals';
     return (
       <section className="work-panel">
         <form
@@ -1750,6 +1868,13 @@ function PrimaryWorkArea({ activeNav, session, t }) {
                         .filter(Boolean)
                         .join(' / ')}
                     </span>
+                    {reviews[String(document.id)] ? (
+                      <span className={`review-chip review-${reviews[String(document.id)].status}`}>
+                        {t('review' + capitalize(reviews[String(document.id)].status))}
+                      </span>
+                    ) : reviewerMode ? (
+                      <span className="review-chip review-pending">{t('reviewPending')}</span>
+                    ) : null}
                   </button>
                   <a className="subtle-action" href={`${MAYAN_URL}/documents/${document.id}/`} target="_blank" rel="noreferrer">
                     {t('openDocument')}
@@ -1807,6 +1932,62 @@ function PrimaryWorkArea({ activeNav, session, t }) {
                 ) : (
                   <div className="scanner-empty">{t('scannerPreviewEmpty')}</div>
                 )}
+                {recordsMode ? (
+                  <div className="record-editor">
+                    <label>
+                      <span>Label</span>
+                      <input
+                        onChange={(event) => setRecordForm((current) => ({ ...current, label: event.target.value }))}
+                        value={recordForm.label}
+                      />
+                    </label>
+                    <label>
+                      <span>{t('scannerDocType')}</span>
+                      <select
+                        onChange={(event) => setRecordForm((current) => ({ ...current, documentTypeId: event.target.value }))}
+                        value={recordForm.documentTypeId}
+                      >
+                        <option value="">{t('scannerNoDocType')}</option>
+                        {documentTypes.map((docType) => (
+                          <option key={docType.id} value={String(docType.id)}>{docType.label}</option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="wide">
+                      <span>Description / metadata note</span>
+                      <textarea
+                        onChange={(event) => setRecordForm((current) => ({ ...current, description: event.target.value }))}
+                        value={recordForm.description}
+                      />
+                    </label>
+                    <button className="strong-action" disabled={recordSaving} onClick={saveRecordDocument} type="button">
+                      {recordSaving ? t('scannerLoading') : t('recordsSave')}
+                    </button>
+                    {scannerNotice ? <p className="scanner-success">{scannerNotice}</p> : null}
+                  </div>
+                ) : null}
+                {reviewerMode ? (
+                  <div className="record-editor">
+                    <label className="wide">
+                      <span>{t('reviewerNote')}</span>
+                      <textarea onChange={(event) => setReviewNote(event.target.value)} value={reviewNote} />
+                    </label>
+                    <div className="review-actions">
+                      <button className="strong-action" disabled={reviewSaving} onClick={() => submitReview('approved')} type="button">
+                        {t('reviewerApprove')}
+                      </button>
+                      <button className="danger-action" disabled={reviewSaving} onClick={() => submitReview('rejected')} type="button">
+                        {t('reviewerReject')}
+                      </button>
+                    </div>
+                    {reviews[String(selectedMayanDocument.id)] ? (
+                      <span className={`review-chip review-${reviews[String(selectedMayanDocument.id)].status}`}>
+                        {t('review' + capitalize(reviews[String(selectedMayanDocument.id)].status))}
+                      </span>
+                    ) : null}
+                    {scannerNotice ? <p className="scanner-success">{scannerNotice}</p> : null}
+                  </div>
+                ) : null}
               </>
             ) : (
               <div className="scanner-empty">{t('scannerPreviewEmpty')}</div>

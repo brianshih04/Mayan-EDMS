@@ -8,13 +8,16 @@ import { createScannerBatch, readBatch, writeBatch } from './lib/batch.js';
 import { listPages, renderPage } from './lib/convert.js';
 import {
   createDocumentType,
+  changeDocumentType,
   getMayanBinary,
   listDocumentPages,
   listDocuments,
   listDocumentTypes,
+  updateDocument,
   uploadDocument
 } from './lib/mayan.js';
 import { portalLogin, resolvePortalUserFromToken } from './lib/auth.js';
+import { listReviews, setReview } from './lib/reviews.js';
 
 // Aggregate a batch status from its files' import states.
 function computeBatchStatus(files) {
@@ -137,6 +140,23 @@ function createApiMiddleware() {
         return;
       }
 
+      const documentUpdateMatch = path.match(/^\/api\/mayan\/documents\/(\d+)$/);
+      if (request.method === 'PATCH' && documentUpdateMatch) {
+        const token = readToken(request);
+        if (!token) { sendJson(response, 401, { error: 'Not authenticated.' }); return; }
+        if (!serviceToken) { sendJson(response, 500, { error: 'MAYAN_SERVICE_TOKEN not configured.' }); return; }
+        const body = await readRequestBody(request);
+        const result = await updateDocument(serviceToken, documentUpdateMatch[1], {
+          label: String(body.label || '').trim(),
+          description: String(body.description || '').trim()
+        });
+        if (body.documentTypeId) {
+          await changeDocumentType(serviceToken, documentUpdateMatch[1], body.documentTypeId);
+        }
+        sendJson(response, 200, { result });
+        return;
+      }
+
       const pageImageMatch = path.match(/^\/api\/mayan\/documents\/(\d+)\/files\/(\d+)\/pages\/(\d+)\/image$/);
       if (request.method === 'GET' && pageImageMatch) {
         const token = readToken(request);
@@ -189,6 +209,32 @@ function createApiMiddleware() {
         if (!entry) { sendJson(response, 404, { error: 'File is not part of this batch.' }); return; }
         const result = await importOneFile(serviceToken, batch, entry, body);
         sendJson(response, 200, { batch: { id: batch.id, status: batch.status }, result });
+        return;
+      }
+
+      if (request.method === 'GET' && path === '/api/reviews') {
+        const token = readToken(request);
+        if (!token) { sendJson(response, 401, { error: 'Not authenticated.' }); return; }
+        sendJson(response, 200, { reviews: await listReviews() });
+        return;
+      }
+
+      if (request.method === 'POST' && path === '/api/reviews') {
+        const token = readToken(request);
+        if (!token) { sendJson(response, 401, { error: 'Not authenticated.' }); return; }
+        const session = serviceToken ? await resolvePortalUserFromToken(token) : { role: '', user: {} };
+        if (session.role !== 'reviewer' && session.role !== 'admin') {
+          sendJson(response, 403, { error: 'Reviewer role is required.' });
+          return;
+        }
+        const body = await readRequestBody(request);
+        const result = await setReview({
+          actor: session.user?.username || '',
+          documentId: body.documentId,
+          note: body.note,
+          status: body.status
+        });
+        sendJson(response, result.error ? 400 : 200, result);
         return;
       }
 

@@ -68,25 +68,28 @@ E:\Mayan-EDMS-Docker\data\portal\thumbnails
 
 ## P2：Records 分類人員功能
 
-- [ ] 讀取 Mayan 中待分類文件。
-- [ ] 顯示文件預覽。
+- [x] 讀取 Mayan 中待分類文件。
+- [x] 顯示文件預覽。
 - [ ] 選擇 document type。
-- [ ] 編輯 metadata：
+- [x] 編輯基本文件欄位：
+  - label
+  - description
+- [ ] 編輯正式 metadata：
   - customer
   - case id
   - document date
   - amount
   - tags
-- [ ] 儲存 metadata 到 Mayan。
+- [x] 儲存基本欄位到 Mayan。
 - [ ] 送審到 reviewer workflow。
 
 ## P2：Reviewer 審核功能
 
-- [ ] 讀取待審核文件清單。
-- [ ] 顯示文件、metadata、歷史紀錄。
-- [ ] 核准文件。
-- [ ] 退回修改。
-- [ ] 留下審核註記。
+- [x] 讀取待審核文件清單。
+- [x] 顯示文件與基本欄位。
+- [x] 核准文件（portal review state）。
+- [x] 退回修改（portal review state）。
+- [x] 留下審核註記（portal review state）。
 - [ ] 與 Mayan workflow/action 對接。
 
 ## P2：Viewer 查詢功能

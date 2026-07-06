@@ -1674,6 +1674,64 @@ button:disabled {
   color: #0f4f49;
 }
 
+.record-editor {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  padding: 14px;
+  border-top: 1px solid #e1e8e5;
+}
+
+.record-editor label {
+  display: grid;
+  gap: 6px;
+}
+
+.record-editor label span {
+  color: #5b6764;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.record-editor .wide {
+  grid-column: 1 / -1;
+}
+
+.record-editor textarea {
+  min-height: 82px;
+  resize: vertical;
+}
+
+.review-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.review-chip {
+  display: inline-flex;
+  width: fit-content;
+  border-radius: 999px;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.review-pending {
+  background: #fff1c7;
+  color: #765a00;
+}
+
+.review-approved {
+  background: #d9f8e5;
+  color: #136733;
+}
+
+.review-rejected {
+  background: #ffe1dd;
+  color: #9b2618;
+}
+
 .note {
   margin: 18px 0 0;
 }

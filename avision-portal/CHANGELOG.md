@@ -56,6 +56,12 @@
 - Viewer 可在 portal 內預覽文件頁面，並可下載 Mayan 原始檔。
 - 新增文件頁面與二進位 proxy routes：`/api/mayan/documents/:id/pages`、`/files/:fileId/pages/:pageId/image`、`/files/:fileId/download`。
 
+### P2：Records / Reviewer 工作台
+
+- Records 的分類與 metadata 畫面改讀 Mayan 真實文件清單，可在 portal 內預覽文件並更新文件 label / description。
+- Reviewer 審核畫面改讀 Mayan 真實文件清單，可在 portal 記錄 `pending` / `approved` / `rejected` 狀態與審核註記。
+- 新增 portal review state store：`server/lib/reviews.js`，資料寫入 `AVISION_PORTAL_STATE_DIR/reviews.json`。
+
 
 ## 0.1.0 - 2026-07-05
 

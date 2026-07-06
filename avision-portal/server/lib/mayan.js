@@ -136,6 +136,7 @@ export async function listDocuments(token, { query = '', pageSize = 50 } = {}) {
     label: entry.label || `#${entry.id ?? entry.pk}`,
     description: entry.description || '',
     documentType: entry.document_type?.label || '',
+    documentTypeId: entry.document_type?.id ?? entry.document_type?.pk ?? '',
     datetimeCreated: entry.datetime_created || '',
     fileName: entry.file_latest?.filename || '',
     url: entry.url
@@ -181,6 +182,38 @@ export async function listDocumentPages(token, documentId) {
       imageUrl: `/api/mayan/documents/${documentId}/files/${file.id}/pages/${page.id ?? page.pk}/image`
     }))
   };
+}
+
+export async function updateDocument(token, documentId, { label, description }) {
+  const response = await mayanRequest(token, `/documents/${documentId}/`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ label, description })
+  });
+  const data = await parseJson(response);
+  if (!response.ok) {
+    throw buildError(response.status, data, 'Unable to update document.');
+  }
+  return {
+    id: data?.id ?? data?.pk,
+    label: data?.label || label,
+    description: data?.description || '',
+    documentType: data?.document_type?.label || '',
+    datetimeCreated: data?.datetime_created || ''
+  };
+}
+
+export async function changeDocumentType(token, documentId, documentTypeId) {
+  const response = await mayanRequest(token, `/documents/${documentId}/type/change/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ document_type_id: Number(documentTypeId) })
+  });
+  const data = await parseJson(response);
+  if (!response.ok) {
+    throw buildError(response.status, data, 'Unable to change document type.');
+  }
+  return true;
 }
 
 export async function getMayanBinary(token, path) {
