@@ -1548,6 +1548,7 @@ function PrimaryWorkArea({ activeNav, session, t }) {
         headers: authHeaders(session, { 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           documentId: selectedMayanDocument.id,
+          documentTypeId: recordForm.documentTypeId || selectedMayanDocument.documentTypeId,
           note: reviewNote,
           status
         })
@@ -1556,6 +1557,7 @@ function PrimaryWorkArea({ activeNav, session, t }) {
       if (!response.ok) throw new Error(payload.error || t('documentsLoadError'));
       setReviews((current) => ({ ...current, [selectedMayanDocument.id]: payload.review }));
       setScannerNotice(status === 'pending' ? t('recordsSentReview') : t('reviewSaved'));
+      await loadReviews();
     } catch (error) {
       setDocumentsError(error.message || t('documentsLoadError'));
     } finally {

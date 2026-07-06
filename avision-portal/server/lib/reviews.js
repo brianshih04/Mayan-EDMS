@@ -23,7 +23,7 @@ export async function listReviews() {
   return readAllReviews();
 }
 
-export async function setReview({ documentId, status, note = '', actor = '' }) {
+export async function setReview({ documentId, status, note = '', actor = '', extra = {} }) {
   const id = String(documentId || '').trim();
   if (!id) return { error: 'documentId is required.' };
   if (!['pending', 'approved', 'rejected'].includes(status)) {
@@ -35,7 +35,8 @@ export async function setReview({ documentId, status, note = '', actor = '' }) {
     actor,
     note,
     status,
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
+    ...extra
   };
   await writeAllReviews(reviews);
   return { documentId: id, review: reviews[id] };

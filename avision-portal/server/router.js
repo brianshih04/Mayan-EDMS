@@ -14,7 +14,9 @@ import {
   listDocumentPages,
   listDocuments,
   listDocumentTypes,
+  listReviewWorkflowStatuses,
   saveAvisionDocumentMetadata,
+  setReviewWorkflowStatus,
   updateDocument,
   uploadDocument
 } from './lib/mayan.js';
@@ -148,19 +150,27 @@ function createApiMiddleware() {
         if (!token) { sendJson(response, 401, { error: 'Not authenticated.' }); return; }
         if (!serviceToken) { sendJson(response, 500, { error: 'MAYAN_SERVICE_TOKEN not configured.' }); return; }
         const body = await readRequestBody(request);
+        const documentTypeId = String(body.documentTypeId || '').trim();
+        if (documentTypeId) {
+          const documentTypes = await listDocumentTypes(serviceToken);
+          if (!documentTypes.some((entry) => String(entry.id) === documentTypeId)) {
+            sendJson(response, 400, { error: `Document type ${documentTypeId} does not exist in Mayan or is not available to the service account.` });
+            return;
+          }
+        }
         const result = await updateDocument(serviceToken, documentUpdateMatch[1], {
           label: String(body.label || '').trim(),
           description: String(body.description || '').trim()
         });
-        if (body.documentTypeId) {
-          await changeDocumentType(serviceToken, documentUpdateMatch[1], body.documentTypeId);
+        if (documentTypeId) {
+          await changeDocumentType(serviceToken, documentUpdateMatch[1], documentTypeId);
         }
         let metadata = null;
         if (body.metadata) {
           metadata = await saveAvisionDocumentMetadata(
             serviceToken,
             documentUpdateMatch[1],
-            body.metadataDocumentTypeId || body.documentTypeId,
+            body.metadataDocumentTypeId || documentTypeId,
             body.metadata
           );
         }
@@ -236,7 +246,11 @@ function createApiMiddleware() {
       if (request.method === 'GET' && path === '/api/reviews') {
         const token = readToken(request);
         if (!token) { sendJson(response, 401, { error: 'Not authenticated.' }); return; }
-        sendJson(response, 200, { reviews: await listReviews() });
+        const localReviews = await listReviews();
+        const workflowReviews = serviceToken
+          ? await listReviewWorkflowStatuses(serviceToken, { pageSize: 100 })
+          : {};
+        sendJson(response, 200, { reviews: { ...localReviews, ...workflowReviews } });
         return;
       }
 
@@ -250,9 +264,19 @@ function createApiMiddleware() {
           sendJson(response, 403, { error: 'Reviewer role is required.' });
           return;
         }
+        let workflowResult = null;
+        if (serviceToken) {
+          workflowResult = await setReviewWorkflowStatus(serviceToken, {
+            documentId: body.documentId,
+            documentTypeId: body.documentTypeId,
+            note: body.note,
+            status: body.status
+          });
+        }
         const result = await setReview({
           actor: session.user?.username || '',
           documentId: body.documentId,
+          extra: workflowResult?.workflow ? { workflow: workflowResult.workflow } : {},
           note: body.note,
           status: body.status
         });

@@ -2,7 +2,7 @@
 
 本文件是交給後續 coding agent 的實作清單。請依優先順序逐步完成，每次修改後執行 `npm run build`，並確認 `https://mayan-portal.avision-gb10.org` 可正常開啟。
 
-> 狀態（2026-07-05）：**P0 全部完成、P1 全部完成**（scanner 穩定化、PDF/TIFF 逐頁轉圖、Mayan 匯入、Mayan 登入與角色對應）。P2 各角色深度功能與 P3 工程整理尚未開始。詳見 CHANGELOG。
+> 狀態（2026-07-06）：**P0 全部完成、P1 全部完成**。P2 已完成 viewer / records / reviewer 的第一版真實 Mayan 串接，reviewer 狀態已開始同步 Mayan workflow；P3 工程整理尚未開始。詳見 CHANGELOG。
 
 ## P0：穩定目前 Scanner 流程
 
@@ -70,7 +70,7 @@ E:\Mayan-EDMS-Docker\data\portal\thumbnails
 
 - [x] 讀取 Mayan 中待分類文件。
 - [x] 顯示文件預覽。
-- [ ] 選擇 document type。
+- [x] 選擇 document type。
 - [x] 編輯基本文件欄位：
   - label
   - description
@@ -82,17 +82,18 @@ E:\Mayan-EDMS-Docker\data\portal\thumbnails
   - tags
 - [x] 儲存基本欄位到 Mayan。
 - [x] 儲存正式 metadata 到 Mayan。
-- [x] 送審到 reviewer 工作台（portal review state）。
+- [x] 送審到 reviewer 工作台（Mayan workflow + portal cache）。
 
 ## P2：Reviewer 審核功能
 
 - [x] 讀取待審核文件清單。
 - [x] 顯示文件與基本欄位。
-- [x] 核准文件（portal review state）。
-- [x] 退回修改（portal review state）。
-- [x] 留下審核註記（portal review state）。
+- [x] 核准文件（Mayan workflow + portal cache）。
+- [x] 退回修改（Mayan workflow + portal cache）。
+- [x] 留下審核註記（Mayan workflow log comment + portal cache）。
 - [x] Reviewer 清單只顯示 records 已送審的 pending 文件。
-- [ ] 與 Mayan workflow/action 對接。
+- [x] 與 Mayan workflow/action 對接。
+- [ ] 增加 reviewer 歷史查詢與重新送審 UI。
 
 ## P2：Viewer 查詢功能
 

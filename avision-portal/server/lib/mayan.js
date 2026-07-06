@@ -42,16 +42,30 @@ async function parseJson(response) {
 }
 
 function buildError(status, data, fallback) {
+  const firstArrayMessage = (...keys) => {
+    for (const key of keys) {
+      const value = data?.[key];
+      if (Array.isArray(value) && value.length) return value.join(' ');
+    }
+    return null;
+  };
   const message =
     data?.detail ||
-    (Array.isArray(data?.non_field_errors) ? data.non_field_errors.join(' ') : null) ||
-    (Array.isArray(data?.file) ? data.file.join(' ') : null) ||
-    (Array.isArray(data?.document_type_id) ? data.document_type_id.join(' ') : null) ||
+    firstArrayMessage('non_field_errors', 'file', 'document_type_id', 'workflow_template_id', 'transition_id') ||
     fallback;
   const error = new Error(message);
   error.status = status;
   error.data = data;
   return error;
+}
+
+async function mayanJson(token, path, options = {}, fallback = 'Mayan API request failed.') {
+  const response = await mayanRequest(token, path, options);
+  const data = await parseJson(response);
+  if (!response.ok) {
+    throw buildError(response.status, data, fallback);
+  }
+  return data;
 }
 
 // POST /auth/token/obtain/ -> { token }
@@ -333,6 +347,300 @@ export async function getMayanBinary(token, path) {
     throw buildError(response.status, data, 'Unable to load binary content.');
   }
   return response;
+}
+
+const reviewWorkflow = {
+  internalName: 'avision_review',
+  label: 'Avision Review',
+  states: {
+    draft: 'Records draft',
+    pending: 'Pending review',
+    approved: 'Approved',
+    rejected: 'Returned'
+  },
+  transitions: {
+    submit: 'Submit for review',
+    approve: 'Approve',
+    reject: 'Return for changes',
+    resubmit: 'Resubmit for review'
+  }
+};
+
+function resultArray(data) {
+  return data?.results || data || [];
+}
+
+async function listWorkflowTemplates(token) {
+  const data = await mayanJson(
+    token,
+    '/workflow_templates/?page_size=200&_ordering=internal_name',
+    {},
+    'Unable to load workflow templates.'
+  );
+  return resultArray(data);
+}
+
+async function createWorkflowTemplate(token) {
+  return mayanJson(
+    token,
+    '/workflow_templates/',
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        auto_launch: false,
+        internal_name: reviewWorkflow.internalName,
+        label: reviewWorkflow.label
+      })
+    },
+    'Unable to create Avision review workflow.'
+  );
+}
+
+async function listWorkflowStates(token, workflowId) {
+  const data = await mayanJson(
+    token,
+    `/workflow_templates/${workflowId}/states/?page_size=200`,
+    {},
+    'Unable to load workflow states.'
+  );
+  return resultArray(data);
+}
+
+async function createWorkflowState(token, workflowId, { label, initial = false, completion = false }) {
+  return mayanJson(
+    token,
+    `/workflow_templates/${workflowId}/states/`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ label, initial, completion })
+    },
+    `Unable to create workflow state: ${label}.`
+  );
+}
+
+async function listWorkflowTransitions(token, workflowId) {
+  const data = await mayanJson(
+    token,
+    `/workflow_templates/${workflowId}/transitions/?page_size=200`,
+    {},
+    'Unable to load workflow transitions.'
+  );
+  return resultArray(data);
+}
+
+async function createWorkflowTransition(token, workflowId, { label, originStateId, destinationStateId }) {
+  return mayanJson(
+    token,
+    `/workflow_templates/${workflowId}/transitions/`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        label,
+        origin_state_id: Number(originStateId),
+        destination_state_id: Number(destinationStateId)
+      })
+    },
+    `Unable to create workflow transition: ${label}.`
+  );
+}
+
+async function attachWorkflowToDocumentType(token, workflowId, documentTypeId) {
+  if (!documentTypeId) return;
+  const response = await mayanRequest(token, `/workflow_templates/${workflowId}/document_types/add/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ document_type_id: Number(documentTypeId) })
+  });
+  const data = await parseJson(response);
+  if (!response.ok && response.status !== 400) {
+    throw buildError(response.status, data, 'Unable to attach review workflow to document type.');
+  }
+}
+
+async function ensureReviewWorkflow(token, documentTypeId = '') {
+  const templates = await listWorkflowTemplates(token);
+  let workflow = templates.find((entry) => entry.internal_name === reviewWorkflow.internalName);
+  if (!workflow) workflow = await createWorkflowTemplate(token);
+  const workflowId = workflow.id ?? workflow.pk;
+
+  const existingStates = await listWorkflowStates(token, workflowId);
+  const statesByLabel = new Map(existingStates.map((state) => [state.label, state]));
+  const ensureState = async (key, options) => {
+    const label = reviewWorkflow.states[key];
+    if (statesByLabel.has(label)) return statesByLabel.get(label);
+    const state = await createWorkflowState(token, workflowId, { label, ...options });
+    statesByLabel.set(label, state);
+    return state;
+  };
+
+  const draft = await ensureState('draft', { initial: true });
+  const pending = await ensureState('pending', {});
+  const approved = await ensureState('approved', { completion: true });
+  const rejected = await ensureState('rejected', { completion: true });
+
+  const existingTransitions = await listWorkflowTransitions(token, workflowId);
+  const transitionsByLabel = new Map(existingTransitions.map((transition) => [transition.label, transition]));
+  const ensureTransition = async (key, originState, destinationState) => {
+    const label = reviewWorkflow.transitions[key];
+    if (transitionsByLabel.has(label)) return transitionsByLabel.get(label);
+    const transition = await createWorkflowTransition(token, workflowId, {
+      label,
+      originStateId: originState.id ?? originState.pk,
+      destinationStateId: destinationState.id ?? destinationState.pk
+    });
+    transitionsByLabel.set(label, transition);
+    return transition;
+  };
+
+  await ensureTransition('submit', draft, pending);
+  await ensureTransition('approve', pending, approved);
+  await ensureTransition('reject', pending, rejected);
+  await ensureTransition('resubmit', rejected, pending);
+  await attachWorkflowToDocumentType(token, workflowId, documentTypeId);
+
+  return { id: workflowId, label: workflow.label || reviewWorkflow.label, internalName: reviewWorkflow.internalName };
+}
+
+async function listWorkflowInstances(token, documentId) {
+  const data = await mayanJson(
+    token,
+    `/documents/${documentId}/workflow_instances/?page_size=200`,
+    {},
+    'Unable to load document workflow instances.'
+  );
+  return resultArray(data);
+}
+
+async function launchReviewWorkflow(token, documentId, workflowId) {
+  await mayanJson(
+    token,
+    `/documents/${documentId}/workflow_instances/launch/`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ workflow_template_id: Number(workflowId) })
+    },
+    'Unable to launch review workflow for document.'
+  );
+}
+
+function reviewStatusFromWorkflowInstance(instance) {
+  const label = instance?.current_state?.label || '';
+  if (label === reviewWorkflow.states.pending) return 'pending';
+  if (label === reviewWorkflow.states.approved) return 'approved';
+  if (label === reviewWorkflow.states.rejected) return 'rejected';
+  return '';
+}
+
+function workflowInstanceSummary(instance) {
+  if (!instance) return null;
+  return {
+    id: instance.id ?? instance.pk,
+    state: instance.current_state?.label || '',
+    workflow: instance.workflow_template?.label || reviewWorkflow.label,
+    lastComment: instance.last_log_entry?.comment || '',
+    updatedAt: instance.last_log_entry?.datetime || ''
+  };
+}
+
+async function getReviewWorkflowInstance(token, documentId, workflowId) {
+  const instances = await listWorkflowInstances(token, documentId);
+  return instances.find((instance) => {
+    const template = instance.workflow_template || {};
+    return (template.id ?? template.pk) === workflowId || template.internal_name === reviewWorkflow.internalName;
+  }) || null;
+}
+
+async function getTransitionChoices(token, documentId, workflowInstanceId) {
+  const data = await mayanJson(
+    token,
+    `/documents/${documentId}/workflow_instances/${workflowInstanceId}/log_entries/transitions/?page_size=200`,
+    {},
+    'Unable to load review workflow transition choices.'
+  );
+  return resultArray(data);
+}
+
+async function executeWorkflowTransition(token, documentId, workflowInstanceId, transitionId, note) {
+  return mayanJson(
+    token,
+    `/documents/${documentId}/workflow_instances/${workflowInstanceId}/log_entries/`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        comment: note || '',
+        transition_id: Number(transitionId)
+      })
+    },
+    'Unable to update review workflow status.'
+  );
+}
+
+export async function setReviewWorkflowStatus(token, { documentId, documentTypeId = '', status, note = '' }) {
+  if (!['pending', 'approved', 'rejected'].includes(status)) {
+    return { error: 'status must be pending, approved, or rejected.' };
+  }
+
+  const workflow = await ensureReviewWorkflow(token, documentTypeId);
+  let instance = await getReviewWorkflowInstance(token, documentId, workflow.id);
+  if (!instance) {
+    await launchReviewWorkflow(token, documentId, workflow.id);
+    instance = await getReviewWorkflowInstance(token, documentId, workflow.id);
+  }
+  if (!instance) throw new Error('Review workflow could not be launched.');
+
+  const targetState = {
+    pending: reviewWorkflow.states.pending,
+    approved: reviewWorkflow.states.approved,
+    rejected: reviewWorkflow.states.rejected
+  }[status];
+
+  const transitionToState = async (stateLabel, transitionNote) => {
+    const choices = await getTransitionChoices(token, documentId, instance.id ?? instance.pk);
+    const transition = choices.find((choice) => choice.destination_state?.label === stateLabel);
+    if (!transition) {
+      throw new Error(`No Mayan workflow transition is available from "${instance.current_state?.label || 'unknown'}" to "${stateLabel}".`);
+    }
+    await executeWorkflowTransition(token, documentId, instance.id ?? instance.pk, transition.id ?? transition.pk, transitionNote);
+    instance = await getReviewWorkflowInstance(token, documentId, workflow.id);
+  };
+
+  if (status !== 'pending' && instance.current_state?.label === reviewWorkflow.states.draft) {
+    await transitionToState(reviewWorkflow.states.pending, 'Auto-submit before reviewer decision.');
+  }
+
+  if (instance.current_state?.label !== targetState) {
+    await transitionToState(targetState, note);
+  }
+
+  return { status, workflow: workflowInstanceSummary(instance) };
+}
+
+export async function listReviewWorkflowStatuses(token, { pageSize = 100 } = {}) {
+  const workflow = (await listWorkflowTemplates(token))
+    .find((entry) => entry.internal_name === reviewWorkflow.internalName);
+  if (!workflow) return {};
+
+  const documents = await listDocuments(token, { pageSize });
+  const reviews = {};
+  for (const document of documents.results || []) {
+    const instance = await getReviewWorkflowInstance(token, document.id, workflow.id ?? workflow.pk);
+    const status = reviewStatusFromWorkflowInstance(instance);
+    if (!status) continue;
+    const summary = workflowInstanceSummary(instance);
+    reviews[String(document.id)] = {
+      actor: '',
+      note: summary?.lastComment || '',
+      status,
+      updatedAt: summary?.updatedAt || '',
+      workflow: summary
+    };
+  }
+  return reviews;
 }
 
 // POST /documents/upload/ (multipart) -> { id, url, label }
