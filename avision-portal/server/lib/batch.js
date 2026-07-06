@@ -117,6 +117,37 @@ export async function readBatch(batchId) {
   }
 }
 
+export async function listBatches({ limit = 20 } = {}) {
+  try {
+    const names = await fs.readdir(batchesDir);
+    const batches = [];
+    for (const name of names.filter((entry) => entry.endsWith('.json'))) {
+      try {
+        const content = await fs.readFile(path.join(batchesDir, name), 'utf8');
+        const batch = JSON.parse(content);
+        const files = Array.isArray(batch.files) ? batch.files : [];
+        batches.push({
+          id: batch.id,
+          createdAt: batch.createdAt,
+          createdBy: batch.createdBy,
+          documentTypeId: batch.documentTypeId,
+          status: batch.status,
+          totalFiles: files.length,
+          importedFiles: files.filter((file) => file.importStatus === 'imported').length,
+          failedFiles: files.filter((file) => file.importStatus === 'failed').length
+        });
+      } catch {
+        // Ignore malformed batch manifests and keep the queue readable.
+      }
+    }
+    return batches
+      .sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')))
+      .slice(0, Math.max(1, Math.min(Number(limit) || 20, 100)));
+  } catch {
+    return [];
+  }
+}
+
 // Atomically rewrite a batch manifest (used by Mayan import status writeback).
 export async function writeBatch(batch) {
   await fs.mkdir(batchesDir, { recursive: true });

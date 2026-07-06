@@ -143,8 +143,8 @@ export async function createDocumentType(token, { label }) {
   };
 }
 
-// GET /documents/ -> recent documents, optionally filtered by query locally.
-export async function listDocuments(token, { query = '', pageSize = 50 } = {}) {
+// GET /documents/ -> recent documents, optionally filtered locally by query and metadata.
+export async function listDocuments(token, { query = '', pageSize = 50, documentTypeId = '', metadata = {} } = {}) {
   const size = Math.max(1, Math.min(Number(pageSize) || 50, 200));
   const response = await mayanRequest(token, `/documents/?page_size=${size}&_ordering=-datetime_created`);
   const data = await parseJson(response);
@@ -164,7 +164,7 @@ export async function listDocuments(token, { query = '', pageSize = 50 } = {}) {
     url: entry.url
   }));
 
-  const filtered = needle
+  let filtered = needle
     ? results.filter((entry) => (
       entry.label.toLowerCase().includes(needle) ||
       entry.description.toLowerCase().includes(needle) ||
@@ -172,6 +172,27 @@ export async function listDocuments(token, { query = '', pageSize = 50 } = {}) {
       entry.fileName.toLowerCase().includes(needle)
     ))
     : results;
+
+  if (documentTypeId) {
+    filtered = filtered.filter((entry) => String(entry.documentTypeId) === String(documentTypeId));
+  }
+
+  const activeMetadataFilters = Object.entries(metadata || {})
+    .map(([name, value]) => [name, String(value || '').trim().toLowerCase()])
+    .filter(([, value]) => value);
+
+  if (activeMetadataFilters.length) {
+    const matches = [];
+    for (const entry of filtered) {
+      const documentMetadata = await listDocumentMetadata(token, entry.id);
+      const values = documentMetadata.values || {};
+      const matched = activeMetadataFilters.every(([name, value]) => (
+        String(values[name] || '').toLowerCase().includes(value)
+      ));
+      if (matched) matches.push({ ...entry, metadata: values });
+    }
+    filtered = matches;
+  }
 
   return { count: data?.count ?? filtered.length, results: filtered };
 }

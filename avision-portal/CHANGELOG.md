@@ -65,6 +65,22 @@
 - 新增 Mayan review workflow helper：自動建立 `Avision Review` workflow、states、transitions，並掛到文件類型。
 - 新增 portal review state store：`server/lib/reviews.js`，資料寫入 `AVISION_PORTAL_STATE_DIR/reviews.json`。
 - Records 儲存文件類型前會先驗證 Mayan document type id，避免傳入不存在或不可用的 id。
+- Reviewer 顯示最新 Mayan workflow state 與審核提示；退回文件可重新送審。
+
+### P2：Admin / Viewer / System
+
+- Viewer 搜尋加入 document type 與 Avision metadata filters（Customer、Case ID、Document date、Amount、Tags）。
+- Admin 新增使用者建立入口，可指定 portal role 並自動加入對應 Mayan group。
+- Admin System 畫面新增 Mayan、Portal、watch folder、Cloudflare health checks。
+- Admin System 畫面新增 portal settings：預設縮圖大小、空白偵測靈敏度。
+- Admin System 畫面新增最近 scanner batch queue。
+- 新增 `GET/PATCH /api/system/settings`、`GET /api/system/status`、`GET /api/system/batches`、`POST /api/admin/users`。
+
+### P3：工程整理
+
+- 新增 `.env.example`。
+- 新增 `npm run test:smoke`，驗證 Mayan service token、document types、documents、review workflow status、settings、batch queue。
+- 前端登入 session 加入 8 小時到期自動登出。
 
 
 ## 0.1.0 - 2026-07-05

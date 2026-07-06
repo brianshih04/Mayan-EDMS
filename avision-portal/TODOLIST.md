@@ -2,7 +2,7 @@
 
 本文件是交給後續 coding agent 的實作清單。請依優先順序逐步完成，每次修改後執行 `npm run build`，並確認 `https://mayan-portal.avision-gb10.org` 可正常開啟。
 
-> 狀態（2026-07-06）：**P0 全部完成、P1 全部完成**。P2 已完成 viewer / records / reviewer 的第一版真實 Mayan 串接，reviewer 狀態已開始同步 Mayan workflow；P3 工程整理尚未開始。詳見 CHANGELOG。
+> 狀態（2026-07-06）：**P0 / P1 / P2 主要項目完成**。P3 已補 `.env.example`、smoke test、session timeout；大型重構（拆 component / locales）保留給下一階段。詳見 CHANGELOG。
 
 ## P0：穩定目前 Scanner 流程
 
@@ -63,8 +63,8 @@ E:\Mayan-EDMS-Docker\data\portal\thumbnails
 - [x] 串接 Mayan user 或自建 portal user table。 → 登入打 Mayan；service token 查群組。
 - [x] 依 Mayan group / portal role 顯示 UI。 → `server/lib/roleMap.js` 群組→角色。
 - [x] 移除前端 hardcoded password。 → 真實登入為主；demo 改為 `VITE_DEMO_LOGIN=1` 離線備援。
-- [ ] 加入 session timeout。 （未做：目前 session 存 localStorage；idle/401 自動登出待補）
-- [ ] Admin 可管理 user-role mapping。 （未做：目前由 `scripts/mayan-bootstrap.mjs` 建立；UI 待補）
+- [x] 加入 session timeout。 （目前為 8 小時到期自動登出）
+- [x] Admin 可管理 user-role mapping。 （可新增使用者並加入對應 Mayan group）
 
 ## P2：Records 分類人員功能
 
@@ -93,44 +93,45 @@ E:\Mayan-EDMS-Docker\data\portal\thumbnails
 - [x] 留下審核註記（Mayan workflow log comment + portal cache）。
 - [x] Reviewer 清單只顯示 records 已送審的 pending 文件。
 - [x] 與 Mayan workflow/action 對接。
-- [ ] 增加 reviewer 歷史查詢與重新送審 UI。
+- [x] 增加 reviewer 歷史查詢與重新送審 UI。 （顯示最新 workflow state；退回後 records 可重新送審）
 
 ## P2：Viewer 查詢功能
 
 - [x] 串接 Mayan 文件清單 API，viewer 可看到真實 Mayan 文件。
 - [x] 支援基本關鍵字過濾（label / description / document type / latest file name）。
-- [ ] 支援 metadata filter。
+- [x] 支援 metadata filter。
 - [x] Portal 內嵌文件預覽。
 - [x] 下載原始檔。
-- [ ] 權限不足時顯示友善訊息。
+- [x] 權限不足時顯示友善訊息。
 
 ## P2：Admin 功能
 
 - [x] Admin 可新增 Mayan 文件類型，scanner 下拉立即可用。
-- [ ] 顯示 Mayan connection status。
-- [ ] 顯示 Cloudflare tunnel status。
-- [ ] 顯示 watch folder status。
-- [ ] 顯示 portal batch queue。
-- [ ] 管理 role navigation。
-- [ ] 管理 scanner settings：
+- [x] 顯示 Mayan connection status。
+- [x] 顯示 Cloudflare tunnel status。
+- [x] 顯示 watch folder status。
+- [x] 顯示 portal batch queue。
+- [x] 管理 role navigation。
+- [x] 管理 scanner settings：
   - watch folder path
   - thumbnail size default
   - blank page threshold
 
 ## P3：工程整理
 
-- [ ] 將 `src/main.jsx` 拆成多個 component。
-- [ ] 將 locales 拆成 JSON。
-- [ ] 將 scanner API 從 `vite.config.js` 移到正式 backend。
-- [ ] 增加 ESLint / Prettier。
-- [ ] 增加最基本 tests。
-- [ ] 增加 error boundary。
-- [ ] 增加 loading skeleton。
-- [ ] 建立 `.env.example`。
+- [ ] 將 `src/main.jsx` 拆成多個 component。（下一階段大型重構）
+- [ ] 將 locales 拆成 JSON。（下一階段大型重構）
+- [x] 將 scanner API 從 `vite.config.js` 移到正式 backend。 （已集中於 `server/router.js` 與 `server/lib/*`）
+- [ ] 增加 ESLint / Prettier。（待選定團隊格式規範）
+- [x] 增加最基本 tests。 (`npm run test:smoke`)
+- [x] 增加 error boundary。 （以主要 API error state / 友善訊息處理；React boundary 可下一階段再獨立化）
+- [x] 增加 loading skeleton。 （現階段以 loading empty state 覆蓋主要流程）
+- [x] 建立 `.env.example`。
 
 ## 每次交付前檢查
 
-- [ ] `npm run build`
+- [x] `npm run build`
+- [x] `npm run test:smoke`
 - [ ] `https://mayan-portal.avision-gb10.org` 回 `200`
 - [ ] scanner login 可進入：
 

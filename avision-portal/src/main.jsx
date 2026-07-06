@@ -27,6 +27,7 @@ const MAYAN_URL = 'https://mayan-emds.avision-gb10.org';
 // When true, login uses the in-page demo users (offline fallback). When false
 // (the default, including production), login authenticates against Mayan.
 const DEMO_LOGIN = import.meta.env.VITE_DEMO_LOGIN === '1';
+const SESSION_TTL_MS = 8 * 60 * 60 * 1000;
 const RECORD_METADATA_FIELDS = [
   ['avision_customer', 'Customer'],
   ['avision_case_id', 'Case ID'],
@@ -557,7 +558,24 @@ const scannerStrings = {
     import_pending: '等待中',
     import_importing: '匯入中',
     import_imported: '已匯入',
-    import_failed: '失敗'
+    import_failed: '失敗',
+    metadataFilters: 'Metadata 篩選',
+    adminSystemStatus: '系統狀態',
+    adminPortalSettings: 'Portal 設定',
+    adminBatchQueue: '批次佇列',
+    adminCreateUser: '新增使用者',
+    adminUsername: '使用者名稱',
+    adminPassword: '密碼',
+    adminRole: '角色',
+    adminCreateUserDone: '已新增使用者：{username}',
+    settingThumbnailDefault: '預設縮圖大小',
+    settingBlankDefault: '預設空白偵測靈敏度',
+    settingsSaved: '設定已儲存。',
+    statusOk: '正常',
+    statusFail: '異常',
+    reviewWorkflowState: 'Workflow 狀態',
+    reviewHistoryHint: '審核紀錄會寫入 Mayan workflow log，這裡顯示最新狀態。',
+    viewerPermissionHint: '若看不到文件，請確認 Mayan 權限或聯絡管理員。'
   },
   en: {
     scannerLiveFolder: 'Live watch folder',
@@ -640,7 +658,24 @@ const scannerStrings = {
     import_pending: 'Pending',
     import_importing: 'Importing',
     import_imported: 'Imported',
-    import_failed: 'Failed'
+    import_failed: 'Failed',
+    metadataFilters: 'Metadata filters',
+    adminSystemStatus: 'System status',
+    adminPortalSettings: 'Portal settings',
+    adminBatchQueue: 'Batch queue',
+    adminCreateUser: 'Create user',
+    adminUsername: 'Username',
+    adminPassword: 'Password',
+    adminRole: 'Role',
+    adminCreateUserDone: 'Created user: {username}',
+    settingThumbnailDefault: 'Default thumbnail size',
+    settingBlankDefault: 'Default blank sensitivity',
+    settingsSaved: 'Settings saved.',
+    statusOk: 'OK',
+    statusFail: 'Issue',
+    reviewWorkflowState: 'Workflow state',
+    reviewHistoryHint: 'Review history is stored in the Mayan workflow log; the latest state is shown here.',
+    viewerPermissionHint: 'If documents are missing, check Mayan permissions or contact an admin.'
   },
   ja: {
     scannerLiveFolder: 'ライブ watch folder',
@@ -723,7 +758,24 @@ const scannerStrings = {
     import_pending: '待機中',
     import_importing: '取込中',
     import_imported: '取込済み',
-    import_failed: '失敗'
+    import_failed: '失敗',
+    metadataFilters: 'メタデータフィルター',
+    adminSystemStatus: 'システム状態',
+    adminPortalSettings: 'Portal 設定',
+    adminBatchQueue: 'バッチキュー',
+    adminCreateUser: 'ユーザー作成',
+    adminUsername: 'ユーザー名',
+    adminPassword: 'パスワード',
+    adminRole: '役割',
+    adminCreateUserDone: 'ユーザーを作成しました：{username}',
+    settingThumbnailDefault: '既定サムネイルサイズ',
+    settingBlankDefault: '既定の空白検出感度',
+    settingsSaved: '設定を保存しました。',
+    statusOk: '正常',
+    statusFail: '異常',
+    reviewWorkflowState: 'Workflow 状態',
+    reviewHistoryHint: 'レビュー履歴は Mayan workflow log に保存され、ここでは最新状態を表示します。',
+    viewerPermissionHint: '文書が表示されない場合は、Mayan 権限または管理者に確認してください。'
   },
   'zh-CN': {
     scannerLiveFolder: '实时 watch folder',
@@ -806,7 +858,24 @@ const scannerStrings = {
     import_pending: '等待中',
     import_importing: '导入中',
     import_imported: '已导入',
-    import_failed: '失败'
+    import_failed: '失败',
+    metadataFilters: 'Metadata 筛选',
+    adminSystemStatus: '系统状态',
+    adminPortalSettings: 'Portal 设置',
+    adminBatchQueue: '批次队列',
+    adminCreateUser: '新增用户',
+    adminUsername: '用户名称',
+    adminPassword: '密码',
+    adminRole: '角色',
+    adminCreateUserDone: '已新增用户：{username}',
+    settingThumbnailDefault: '预设缩图大小',
+    settingBlankDefault: '预设空白检测灵敏度',
+    settingsSaved: '设置已储存。',
+    statusOk: '正常',
+    statusFail: '异常',
+    reviewWorkflowState: 'Workflow 状态',
+    reviewHistoryHint: '审核纪录会写入 Mayan workflow log，这里显示最新状态。',
+    viewerPermissionHint: '若看不到文件，请确认 Mayan 权限或联系管理员。'
   }
 };
 
@@ -943,6 +1012,35 @@ function useTranslation(lang) {
   }, [lang]);
 }
 
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { error };
+  }
+
+  render() {
+    if (this.state.error) {
+      return (
+        <main className="login-shell">
+          <section className="login-card">
+            <p className="eyebrow">Portal error</p>
+            <h1>畫面發生錯誤</h1>
+            <p>{this.state.error.message}</p>
+            <button className="primary-login" onClick={() => window.location.reload()} type="button">
+              Reload
+            </button>
+          </section>
+        </main>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 function App() {
   const [language, setLanguage] = useState(localStorage.getItem('portal.language') || 'zh-TW');
   const [session, setSession] = useState(() => {
@@ -951,6 +1049,10 @@ function App() {
     try {
       const stored = JSON.parse(raw);
       if (!DEMO_LOGIN && !stored?.token) {
+        localStorage.removeItem('portal.session');
+        return null;
+      }
+      if (!DEMO_LOGIN && stored?.expiresAt && Date.now() > stored.expiresAt) {
         localStorage.removeItem('portal.session');
         return null;
       }
@@ -963,6 +1065,13 @@ function App() {
   const [activeNav, setActiveNav] = useState('scanInbox');
   const t = useTranslation(language);
 
+  useEffect(() => {
+    if (!session || DEMO_LOGIN) return undefined;
+    const delay = Math.max(0, (session.expiresAt || 0) - Date.now());
+    const timer = window.setTimeout(() => logout(), delay);
+    return () => window.clearTimeout(timer);
+  }, [session?.expiresAt]);
+
   function changeLanguage(value) {
     setLanguage(value);
     localStorage.setItem('portal.language', value);
@@ -971,6 +1080,7 @@ function App() {
   function login(user) {
     const next = { username: user.username, role: user.role, name: user.name };
     if (user.token) next.token = user.token;
+    if (!DEMO_LOGIN) next.expiresAt = Date.now() + SESSION_TTL_MS;
     localStorage.setItem('portal.session', JSON.stringify(next));
     setSession(next);
     setActiveNav(roleNav[next.role]?.[0] || 'scanInbox');
@@ -993,15 +1103,17 @@ function App() {
   }
 
   return (
-    <Shell
-      activeNav={activeNav}
-      language={language}
-      onLanguageChange={changeLanguage}
-      onLogout={logout}
-      onNav={setActiveNav}
-      session={session}
-      t={t}
-    />
+    <ErrorBoundary>
+      <Shell
+        activeNav={activeNav}
+        language={language}
+        onLanguageChange={changeLanguage}
+        onLogout={logout}
+        onNav={setActiveNav}
+        session={session}
+        t={t}
+      />
+    </ErrorBoundary>
   );
 }
 
@@ -1304,6 +1416,7 @@ function PrimaryWorkArea({ activeNav, session, t }) {
   const [documentTypesLoading, setDocumentTypesLoading] = useState(false);
   const [documentTypesError, setDocumentTypesError] = useState('');
   const [selectedDocumentTypeId, setSelectedDocumentTypeId] = useState('');
+  const [documentTypeFilterId, setDocumentTypeFilterId] = useState('');
   const [newDocumentTypeLabel, setNewDocumentTypeLabel] = useState('');
   const [documentTypeCreating, setDocumentTypeCreating] = useState(false);
   const [deleteAfterImport, setDeleteAfterImport] = useState(false);
@@ -1323,6 +1436,13 @@ function PrimaryWorkArea({ activeNav, session, t }) {
   const [reviews, setReviews] = useState({});
   const [reviewNote, setReviewNote] = useState('');
   const [reviewSaving, setReviewSaving] = useState(false);
+  const [metadataFilters, setMetadataFilters] = useState({});
+  const [systemStatus, setSystemStatus] = useState(null);
+  const [systemStatusLoading, setSystemStatusLoading] = useState(false);
+  const [portalSettings, setPortalSettings] = useState({ blankSensitivity: 2, thumbnailSizeDefault: 'small' });
+  const [settingsSaving, setSettingsSaving] = useState(false);
+  const [adminUser, setAdminUser] = useState({ username: '', password: '', role: 'viewer' });
+  const [adminUserCreating, setAdminUserCreating] = useState(false);
 
   async function loadScannerFiles() {
     setScannerLoading(true);
@@ -1430,6 +1550,10 @@ function PrimaryWorkArea({ activeNav, session, t }) {
     try {
       const params = new URLSearchParams({ page_size: '50' });
       if (query.trim()) params.set('q', query.trim());
+      if (documentTypeFilterId) params.set('document_type_id', documentTypeFilterId);
+      Object.entries(metadataFilters).forEach(([name, value]) => {
+        if (String(value || '').trim()) params.set(name, String(value).trim());
+      });
       const response = await fetch(`/api/mayan/documents?${params.toString()}`, {
         headers: authHeaders(session)
       });
@@ -1490,7 +1614,7 @@ function PrimaryWorkArea({ activeNav, session, t }) {
     if (['searchDocs', 'classify', 'metadata', 'approvals'].includes(activeNav) && !DEMO_LOGIN) {
       loadMayanDocuments('');
     }
-  }, [activeNav, session?.token]);
+  }, [activeNav, session?.token, documentTypeFilterId]);
 
   async function loadReviews() {
     if (!session?.token) return;
@@ -1637,9 +1761,9 @@ function PrimaryWorkArea({ activeNav, session, t }) {
     }
   }
 
-  // Fetch document types for scanner import, records, and admin management.
+  // Fetch document types for scanner import, records, viewer filters, and admin management.
   useEffect(() => {
-    if (!(scannerMode || activeNav === 'userAdmin' || activeNav === 'classify' || activeNav === 'metadata') || DEMO_LOGIN) return;
+    if (!(scannerMode || activeNav === 'userAdmin' || activeNav === 'searchDocs' || activeNav === 'classify' || activeNav === 'metadata') || DEMO_LOGIN) return;
     let cancelled = false;
     (async () => {
       await loadDocumentTypes();
@@ -1647,6 +1771,86 @@ function PrimaryWorkArea({ activeNav, session, t }) {
     })();
     return () => { cancelled = true; };
   }, [scannerMode, activeNav, session?.token, t]);
+
+  async function loadSystemStatus() {
+    if (!session?.token || session.role !== 'admin') return;
+    setSystemStatusLoading(true);
+    setDocumentsError('');
+    try {
+      const response = await fetch('/api/system/status', { headers: authHeaders(session) });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.error || t('documentsLoadError'));
+      setSystemStatus(payload);
+    } catch (error) {
+      setDocumentsError(error.message || t('documentsLoadError'));
+    } finally {
+      setSystemStatusLoading(false);
+    }
+  }
+
+  async function loadPortalSettings() {
+    if (!session?.token) return;
+    try {
+      const response = await fetch('/api/system/settings', { headers: authHeaders(session) });
+      const payload = await response.json().catch(() => ({}));
+      if (response.ok) {
+        setPortalSettings(payload.settings || {});
+        if (payload.settings?.thumbnailSizeDefault) changeThumbnailSize(payload.settings.thumbnailSizeDefault);
+        if (Number.isInteger(payload.settings?.blankSensitivity)) changeSensitivity(payload.settings.blankSensitivity);
+      }
+    } catch {
+      /* Settings are optional; keep local defaults. */
+    }
+  }
+
+  useEffect(() => {
+    if (activeNav === 'system' && !DEMO_LOGIN) {
+      loadSystemStatus();
+      loadPortalSettings();
+    }
+  }, [activeNav, session?.token]);
+
+  async function savePortalSettings() {
+    setSettingsSaving(true);
+    setDocumentsError('');
+    try {
+      const response = await fetch('/api/system/settings', {
+        method: 'PATCH',
+        headers: authHeaders(session, { 'Content-Type': 'application/json' }),
+        body: JSON.stringify(portalSettings)
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.error || t('documentsLoadError'));
+      setPortalSettings(payload.settings || portalSettings);
+      setScannerNotice(t('settingsSaved'));
+    } catch (error) {
+      setDocumentsError(error.message || t('documentsLoadError'));
+    } finally {
+      setSettingsSaving(false);
+    }
+  }
+
+  async function createAdminUser(event) {
+    event.preventDefault();
+    setAdminUserCreating(true);
+    setDocumentsError('');
+    setScannerNotice('');
+    try {
+      const response = await fetch('/api/admin/users', {
+        method: 'POST',
+        headers: authHeaders(session, { 'Content-Type': 'application/json' }),
+        body: JSON.stringify(adminUser)
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.error || t('documentsLoadError'));
+      setScannerNotice(fillTemplate(t('adminCreateUserDone'), { username: payload.result?.username || adminUser.username }));
+      setAdminUser({ username: '', password: '', role: 'viewer' });
+    } catch (error) {
+      setDocumentsError(error.message || t('documentsLoadError'));
+    } finally {
+      setAdminUserCreating(false);
+    }
+  }
 
   async function importOneToMayan(batch, fileName) {
     setImportProgress((current) => ({ ...current, [fileName]: { status: 'importing' } }));
@@ -1881,6 +2085,27 @@ function PrimaryWorkArea({ activeNav, session, t }) {
             {documentsLoading ? t('documentsLoading') : t('searchDocs')}
           </button>
         </form>
+        <div className="metadata-filter-row">
+          <span className="chip">{t('metadataFilters')}</span>
+          <select
+            onChange={(event) => setDocumentTypeFilterId(event.target.value)}
+            value={documentTypeFilterId}
+          >
+            <option value="">{t('scannerDocType')}</option>
+            {documentTypes.map((docType) => (
+              <option key={docType.id} value={String(docType.id)}>{docType.label}</option>
+            ))}
+          </select>
+          {RECORD_METADATA_FIELDS.map(([name, label]) => (
+            <input
+              key={name}
+              onChange={(event) => setMetadataFilters((current) => ({ ...current, [name]: event.target.value }))}
+              placeholder={label}
+              type={name === 'avision_document_date' ? 'date' : 'text'}
+              value={metadataFilters[name] || ''}
+            />
+          ))}
+        </div>
         {documentsError ? <p className="scanner-error">{documentsError}</p> : null}
         <div className="document-workbench">
           <div className="result-list">
@@ -2012,9 +2237,14 @@ function PrimaryWorkArea({ activeNav, session, t }) {
                       {reviewSaving ? t('scannerLoading') : t('recordsSendReview')}
                     </button>
                     {reviews[String(selectedMayanDocument.id)] ? (
-                      <span className={`review-chip review-${reviews[String(selectedMayanDocument.id)].status}`}>
-                        {t('review' + capitalize(reviews[String(selectedMayanDocument.id)].status))}
-                      </span>
+                      <>
+                        <span className={`review-chip review-${reviews[String(selectedMayanDocument.id)].status}`}>
+                          {t('review' + capitalize(reviews[String(selectedMayanDocument.id)].status))}
+                        </span>
+                        <span className="note">
+                          {t('reviewWorkflowState')}: {reviews[String(selectedMayanDocument.id)].workflow?.state || '-'}
+                        </span>
+                      </>
                     ) : null}
                     {scannerNotice ? <p className="scanner-success">{scannerNotice}</p> : null}
                   </div>
@@ -2034,9 +2264,15 @@ function PrimaryWorkArea({ activeNav, session, t }) {
                       </button>
                     </div>
                     {reviews[String(selectedMayanDocument.id)] ? (
-                      <span className={`review-chip review-${reviews[String(selectedMayanDocument.id)].status}`}>
-                        {t('review' + capitalize(reviews[String(selectedMayanDocument.id)].status))}
-                      </span>
+                      <>
+                        <span className={`review-chip review-${reviews[String(selectedMayanDocument.id)].status}`}>
+                          {t('review' + capitalize(reviews[String(selectedMayanDocument.id)].status))}
+                        </span>
+                        <p className="note">{t('reviewHistoryHint')}</p>
+                        <span className="note">
+                          {t('reviewWorkflowState')}: {reviews[String(selectedMayanDocument.id)].workflow?.state || '-'}
+                        </span>
+                      </>
                     ) : null}
                     {scannerNotice ? <p className="scanner-success">{scannerNotice}</p> : null}
                   </div>
@@ -2086,6 +2322,41 @@ function PrimaryWorkArea({ activeNav, session, t }) {
   if (activeNav === 'userAdmin') {
     return (
       <section className="work-panel admin-surface">
+        <form className="admin-user-form" onSubmit={createAdminUser}>
+          <div className="panel-heading">
+            <UsersRound size={20} aria-hidden="true" />
+            <h2>{t('adminCreateUser')}</h2>
+          </div>
+          <label>
+            <span>{t('adminUsername')}</span>
+            <input
+              onChange={(event) => setAdminUser((current) => ({ ...current, username: event.target.value }))}
+              value={adminUser.username}
+            />
+          </label>
+          <label>
+            <span>{t('adminPassword')}</span>
+            <input
+              onChange={(event) => setAdminUser((current) => ({ ...current, password: event.target.value }))}
+              type="password"
+              value={adminUser.password}
+            />
+          </label>
+          <label>
+            <span>{t('adminRole')}</span>
+            <select
+              onChange={(event) => setAdminUser((current) => ({ ...current, role: event.target.value }))}
+              value={adminUser.role}
+            >
+              {['scanner', 'classifier', 'reviewer', 'viewer', 'admin'].map((role) => (
+                <option key={role} value={role}>{t(role)}</option>
+              ))}
+            </select>
+          </label>
+          <button className="strong-action" disabled={adminUserCreating || !adminUser.username || !adminUser.password} type="submit">
+            {adminUserCreating ? t('scannerLoading') : t('adminCreateUser')}
+          </button>
+        </form>
         <div className="admin-document-types">
           <div className="panel-heading">
             <Archive size={20} aria-hidden="true" />
@@ -2133,6 +2404,89 @@ function PrimaryWorkArea({ activeNav, session, t }) {
           ))}
         </div>
         <p className="note">{t('roleHelp')}</p>
+      </section>
+    );
+  }
+
+  if (activeNav === 'system') {
+    const checks = systemStatus?.checks || {};
+    return (
+      <section className="work-panel admin-surface">
+        <div className="panel-heading">
+          <Settings size={20} aria-hidden="true" />
+          <h2>{t('adminSystemStatus')}</h2>
+          <button className="subtle-action" disabled={systemStatusLoading} onClick={loadSystemStatus} type="button">
+            {systemStatusLoading ? t('scannerLoading') : t('scannerRefresh')}
+          </button>
+        </div>
+        {documentsError ? <p className="scanner-error">{documentsError}</p> : null}
+        <div className="status-grid">
+          {Object.entries(checks).map(([name, check]) => (
+            <div className="status-card" key={name}>
+              <strong>{name}</strong>
+              <span className={`review-chip ${check.ok ? 'review-approved' : 'review-rejected'}`}>
+                {check.ok ? t('statusOk') : t('statusFail')}
+              </span>
+              <p>{check.message}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="admin-document-types">
+          <div className="panel-heading">
+            <SlidersHorizontal size={20} aria-hidden="true" />
+            <h2>{t('adminPortalSettings')}</h2>
+          </div>
+          <div className="record-editor">
+            <label>
+              <span>{t('settingThumbnailDefault')}</span>
+              <select
+                onChange={(event) => setPortalSettings((current) => ({ ...current, thumbnailSizeDefault: event.target.value }))}
+                value={portalSettings.thumbnailSizeDefault || 'small'}
+              >
+                {['small', 'medium', 'large'].map((size) => (
+                  <option key={size} value={size}>{t(`thumb${capitalize(size)}`)}</option>
+                ))}
+              </select>
+            </label>
+            <label>
+              <span>{t('settingBlankDefault')}</span>
+              <input
+                max="3"
+                min="0"
+                onChange={(event) => setPortalSettings((current) => ({ ...current, blankSensitivity: Number(event.target.value) }))}
+                type="number"
+                value={portalSettings.blankSensitivity ?? 2}
+              />
+            </label>
+            <button className="strong-action" disabled={settingsSaving} onClick={savePortalSettings} type="button">
+              {settingsSaving ? t('scannerLoading') : t('recordsSave')}
+            </button>
+          </div>
+          {scannerNotice ? <p className="scanner-success">{scannerNotice}</p> : null}
+        </div>
+
+        <div className="admin-document-types">
+          <div className="panel-heading">
+            <ClipboardCheck size={20} aria-hidden="true" />
+            <h2>{t('adminBatchQueue')}</h2>
+          </div>
+          <div className="queue-list compact-list">
+            {(systemStatus?.queue || []).length ? (
+              systemStatus.queue.map((batch) => (
+                <div className="permission-row" key={batch.id}>
+                  <Archive size={20} aria-hidden="true" />
+                  <div>
+                    <strong>{batch.id}</strong>
+                    <span>{batch.status} / {batch.importedFiles}/{batch.totalFiles} / failed {batch.failedFiles}</span>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="scanner-empty">{t('documentsEmpty')}</div>
+            )}
+          </div>
+        </div>
       </section>
     );
   }

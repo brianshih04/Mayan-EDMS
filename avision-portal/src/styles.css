@@ -1462,6 +1462,7 @@ button:disabled {
   border-bottom: 1px solid #e1e8e5;
 }
 
+.admin-user-form,
 .admin-doctype-form {
   display: flex;
   align-items: end;
@@ -1469,12 +1470,19 @@ button:disabled {
   flex-wrap: wrap;
 }
 
+.admin-user-form {
+  padding-bottom: 18px;
+  border-bottom: 1px solid #e1e8e5;
+}
+
+.admin-user-form label,
 .admin-doctype-form label {
   display: grid;
   gap: 6px;
   min-width: 260px;
 }
 
+.admin-user-form label span,
 .admin-doctype-form label span {
   color: #5b6764;
   font-size: 13px;
@@ -1485,6 +1493,48 @@ button:disabled {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+}
+
+.metadata-filter-row,
+.status-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.metadata-filter-row {
+  grid-template-columns: 150px repeat(3, minmax(120px, 1fr));
+  align-items: center;
+  margin: 10px 0 16px;
+}
+
+.metadata-filter-row input,
+.metadata-filter-row select {
+  min-width: 0;
+}
+
+.status-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 14px 0;
+}
+
+.status-card {
+  display: grid;
+  gap: 8px;
+  border: 1px solid #dce3e0;
+  border-radius: 8px;
+  padding: 14px;
+  background: #fbfcfc;
+}
+
+.status-card p {
+  margin: 0;
+  color: #5b6764;
+  font-size: 13px;
+}
+
+.compact-list {
+  display: grid;
+  gap: 10px;
 }
 
 .task-row {

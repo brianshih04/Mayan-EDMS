@@ -4,11 +4,14 @@ import fs from 'node:fs/promises';
 import { previewMimeTypes, serviceToken, watchFolderPath } from './lib/config.js';
 import { readRequestBody, readToken, sendJson } from './lib/http.js';
 import { deleteWatchFolderFile, listWatchFolder, resolveWatchFolderFile } from './lib/watchFolder.js';
-import { createScannerBatch, readBatch, writeBatch } from './lib/batch.js';
+import { createScannerBatch, listBatches, readBatch, writeBatch } from './lib/batch.js';
 import { listPages, renderPage } from './lib/convert.js';
 import {
+  addUserToGroup,
   createDocumentType,
+  createUser,
   changeDocumentType,
+  ensureRoleGroups,
   getMayanBinary,
   listDocumentMetadata,
   listDocumentPages,
@@ -21,7 +24,10 @@ import {
   uploadDocument
 } from './lib/mayan.js';
 import { portalLogin, resolvePortalUserFromToken } from './lib/auth.js';
+import { ROLE_MAP } from './lib/roleMap.js';
 import { listReviews, setReview } from './lib/reviews.js';
+import { readPortalSettings, writePortalSettings } from './lib/portalSettings.js';
+import { getSystemStatus } from './lib/systemStatus.js';
 
 // Aggregate a batch status from its files' import states.
 function computeBatchStatus(files) {
@@ -95,6 +101,76 @@ function createApiMiddleware() {
         return;
       }
 
+      // ---- admin/system ----
+      if (request.method === 'GET' && path === '/api/system/status') {
+        const token = readToken(request);
+        if (!token) { sendJson(response, 401, { error: 'Not authenticated.' }); return; }
+        if (!serviceToken) { sendJson(response, 500, { error: 'MAYAN_SERVICE_TOKEN not configured.' }); return; }
+        const session = await resolvePortalUserFromToken(token);
+        if (session.role !== 'admin') { sendJson(response, 403, { error: 'Admin role is required.' }); return; }
+        sendJson(response, 200, await getSystemStatus());
+        return;
+      }
+
+      if (request.method === 'GET' && path === '/api/system/settings') {
+        const token = readToken(request);
+        if (!token) { sendJson(response, 401, { error: 'Not authenticated.' }); return; }
+        sendJson(response, 200, { settings: await readPortalSettings() });
+        return;
+      }
+
+      if (request.method === 'PATCH' && path === '/api/system/settings') {
+        const token = readToken(request);
+        if (!token) { sendJson(response, 401, { error: 'Not authenticated.' }); return; }
+        if (!serviceToken) { sendJson(response, 500, { error: 'MAYAN_SERVICE_TOKEN not configured.' }); return; }
+        const session = await resolvePortalUserFromToken(token);
+        if (session.role !== 'admin') { sendJson(response, 403, { error: 'Admin role is required.' }); return; }
+        const body = await readRequestBody(request);
+        sendJson(response, 200, { settings: await writePortalSettings(body) });
+        return;
+      }
+
+      if (request.method === 'GET' && path === '/api/system/batches') {
+        const token = readToken(request);
+        if (!token) { sendJson(response, 401, { error: 'Not authenticated.' }); return; }
+        if (!serviceToken) { sendJson(response, 500, { error: 'MAYAN_SERVICE_TOKEN not configured.' }); return; }
+        const session = await resolvePortalUserFromToken(token);
+        if (session.role !== 'admin') { sendJson(response, 403, { error: 'Admin role is required.' }); return; }
+        sendJson(response, 200, { results: await listBatches({ limit: 50 }) });
+        return;
+      }
+
+      if (request.method === 'POST' && path === '/api/admin/users') {
+        const token = readToken(request);
+        if (!token) { sendJson(response, 401, { error: 'Not authenticated.' }); return; }
+        if (!serviceToken) { sendJson(response, 500, { error: 'MAYAN_SERVICE_TOKEN not configured.' }); return; }
+        const session = await resolvePortalUserFromToken(token);
+        if (session.role !== 'admin') { sendJson(response, 403, { error: 'Admin role is required.' }); return; }
+        const body = await readRequestBody(request);
+        const username = String(body.username || '').trim();
+        const password = String(body.password || '');
+        const role = String(body.role || '').trim();
+        if (!username || !password || !['scanner', 'classifier', 'reviewer', 'viewer', 'admin'].includes(role)) {
+          sendJson(response, 400, { error: 'username, password and role are required.' });
+          return;
+        }
+        const user = await createUser(serviceToken, {
+          email: body.email,
+          firstName: body.firstName,
+          lastName: body.lastName,
+          password,
+          username
+        });
+        const groupNames = Object.keys(ROLE_MAP);
+        const groups = await ensureRoleGroups(serviceToken, groupNames);
+        const groupName = Object.entries(ROLE_MAP).find(([, mappedRole]) => mappedRole === role)?.[0];
+        if (groupName && groups.byName[groupName]) {
+          await addUserToGroup(serviceToken, groups.byName[groupName], user.id);
+        }
+        sendJson(response, 201, { result: { ...user, role } });
+        return;
+      }
+
       // ---- mayan ----
       if (request.method === 'GET' && path === '/api/mayan/document-types') {
         const token = readToken(request);
@@ -129,7 +205,13 @@ function createApiMiddleware() {
         const url = new URL(request.url, 'http://localhost');
         const query = url.searchParams.get('q') || '';
         const pageSize = url.searchParams.get('page_size') || 50;
-        const result = await listDocuments(serviceToken, { query, pageSize });
+        const documentTypeId = url.searchParams.get('document_type_id') || '';
+        const metadata = {};
+        for (const field of ['avision_customer', 'avision_case_id', 'avision_document_date', 'avision_amount', 'avision_tags']) {
+          const value = url.searchParams.get(field);
+          if (value) metadata[field] = value;
+        }
+        const result = await listDocuments(serviceToken, { documentTypeId, metadata, query, pageSize });
         sendJson(response, 200, result);
         return;
       }
