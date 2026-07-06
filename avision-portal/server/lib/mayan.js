@@ -2,6 +2,14 @@ import fs from 'node:fs/promises';
 
 import { mayanApiUrl } from './config.js';
 
+export const avisionMetadataFields = [
+  { name: 'avision_customer', label: 'Customer' },
+  { name: 'avision_case_id', label: 'Case ID' },
+  { name: 'avision_document_date', label: 'Document date' },
+  { name: 'avision_amount', label: 'Amount' },
+  { name: 'avision_tags', label: 'Tags' }
+];
+
 // Thin Mayan REST (v4) client. All calls go server-side so the browser stays
 // same-origin with the portal and Mayan's CSRF/CORS config is not a concern.
 // Token auth uses DRF's `Authorization: Token <key>` header.
@@ -214,6 +222,108 @@ export async function changeDocumentType(token, documentId, documentTypeId) {
     throw buildError(response.status, data, 'Unable to change document type.');
   }
   return true;
+}
+
+export async function listDocumentMetadata(token, documentId) {
+  const response = await mayanRequest(token, `/documents/${documentId}/metadata/?page_size=200`);
+  const data = await parseJson(response);
+  if (!response.ok) {
+    throw buildError(response.status, data, 'Unable to load document metadata.');
+  }
+  const results = data?.results || [];
+  return {
+    entries: results.map((entry) => ({
+      id: entry.id ?? entry.pk,
+      label: entry.metadata_type?.label || '',
+      name: entry.metadata_type?.name || '',
+      metadataTypeId: entry.metadata_type?.id ?? entry.metadata_type?.pk,
+      value: entry.value || ''
+    })),
+    values: Object.fromEntries(results.map((entry) => [entry.metadata_type?.name, entry.value || '']).filter(([name]) => name))
+  };
+}
+
+async function listMetadataTypes(token) {
+  const response = await mayanRequest(token, '/metadata_types/?page_size=200');
+  const data = await parseJson(response);
+  if (!response.ok) {
+    throw buildError(response.status, data, 'Unable to load metadata types.');
+  }
+  return data?.results || [];
+}
+
+async function createMetadataType(token, field) {
+  const response = await mayanRequest(token, '/metadata_types/', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: field.name, label: field.label })
+  });
+  const data = await parseJson(response);
+  if (!response.ok) {
+    throw buildError(response.status, data, `Unable to create metadata type: ${field.label}.`);
+  }
+  return data;
+}
+
+async function ensureMetadataTypeRelation(token, documentTypeId, metadataTypeId) {
+  const response = await mayanRequest(token, `/document_types/${documentTypeId}/metadata_types/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ metadata_type_id: Number(metadataTypeId), required: false })
+  });
+  const data = await parseJson(response);
+  if (!response.ok && response.status !== 400) {
+    throw buildError(response.status, data, 'Unable to attach metadata type to document type.');
+  }
+}
+
+export async function ensureAvisionMetadataTypes(token, documentTypeId) {
+  const existing = await listMetadataTypes(token);
+  const byName = new Map(existing.map((entry) => [entry.name, entry]));
+  const ensured = [];
+
+  for (const field of avisionMetadataFields) {
+    let metadataType = byName.get(field.name);
+    if (!metadataType) {
+      metadataType = await createMetadataType(token, field);
+      byName.set(field.name, metadataType);
+    }
+    if (documentTypeId) {
+      await ensureMetadataTypeRelation(token, documentTypeId, metadataType.id ?? metadataType.pk);
+    }
+    ensured.push({
+      id: metadataType.id ?? metadataType.pk,
+      label: metadataType.label || field.label,
+      name: metadataType.name || field.name
+    });
+  }
+
+  return ensured;
+}
+
+export async function saveAvisionDocumentMetadata(token, documentId, documentTypeId, values = {}) {
+  const fields = await ensureAvisionMetadataTypes(token, documentTypeId);
+  const current = await listDocumentMetadata(token, documentId);
+  const currentByName = new Map(current.entries.map((entry) => [entry.name, entry]));
+
+  for (const field of fields) {
+    const value = String(values[field.name] ?? '');
+    const existing = currentByName.get(field.name);
+    const path = existing
+      ? `/documents/${documentId}/metadata/${existing.id}/`
+      : `/documents/${documentId}/metadata/`;
+    const response = await mayanRequest(token, path, {
+      method: existing ? 'PATCH' : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(existing ? { value } : { metadata_type_id: Number(field.id), value })
+    });
+    const data = await parseJson(response);
+    if (!response.ok) {
+      throw buildError(response.status, data, `Unable to save metadata: ${field.label}.`);
+    }
+  }
+
+  return listDocumentMetadata(token, documentId);
 }
 
 export async function getMayanBinary(token, path) {

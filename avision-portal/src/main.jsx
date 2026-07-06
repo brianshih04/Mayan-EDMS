@@ -27,6 +27,13 @@ const MAYAN_URL = 'https://mayan-emds.avision-gb10.org';
 // When true, login uses the in-page demo users (offline fallback). When false
 // (the default, including production), login authenticates against Mayan.
 const DEMO_LOGIN = import.meta.env.VITE_DEMO_LOGIN === '1';
+const RECORD_METADATA_FIELDS = [
+  ['avision_customer', 'Customer'],
+  ['avision_case_id', 'Case ID'],
+  ['avision_document_date', 'Document date'],
+  ['avision_amount', 'Amount'],
+  ['avision_tags', 'Tags']
+];
 
 function authHeaders(session, extra = {}) {
   const headers = { ...extra };
@@ -1303,7 +1310,7 @@ function PrimaryWorkArea({ activeNav, session, t }) {
   const [documentPreviewLoading, setDocumentPreviewLoading] = useState(false);
   const [documentPreviewError, setDocumentPreviewError] = useState('');
   const [selectedPreviewPageId, setSelectedPreviewPageId] = useState('');
-  const [recordForm, setRecordForm] = useState({ label: '', description: '', documentTypeId: '' });
+  const [recordForm, setRecordForm] = useState({ label: '', description: '', documentTypeId: '', metadata: {} });
   const [recordSaving, setRecordSaving] = useState(false);
   const [reviews, setReviews] = useState({});
   const [reviewNote, setReviewNote] = useState('');
@@ -1438,7 +1445,8 @@ function PrimaryWorkArea({ activeNav, session, t }) {
     setRecordForm({
       label: document.label || '',
       description: document.description || '',
-      documentTypeId: document.documentTypeId ? String(document.documentTypeId) : ''
+      documentTypeId: document.documentTypeId ? String(document.documentTypeId) : '',
+      metadata: {}
     });
     setReviewNote(reviews[String(document.id)]?.note || '');
     setDocumentPreviewLoading(true);
@@ -1454,6 +1462,15 @@ function PrimaryWorkArea({ activeNav, session, t }) {
       if (!response.ok) throw new Error(payload.error || t('documentsLoadError'));
       setDocumentPreview(payload);
       setSelectedPreviewPageId(payload.pages?.[0] ? String(payload.pages[0].id) : '');
+      if (activeNav === 'classify' || activeNav === 'metadata') {
+        const metadataResponse = await fetch(`/api/mayan/documents/${document.id}/metadata`, {
+          headers: authHeaders(session)
+        });
+        const metadataPayload = await metadataResponse.json().catch(() => ({}));
+        if (metadataResponse.ok) {
+          setRecordForm((current) => ({ ...current, metadata: metadataPayload.values || {} }));
+        }
+      }
     } catch (error) {
       setDocumentPreviewError(error.message || t('documentsLoadError'));
     } finally {
@@ -1495,6 +1512,8 @@ function PrimaryWorkArea({ activeNav, session, t }) {
         body: JSON.stringify({
           label: recordForm.label,
           description: recordForm.description,
+          metadata: recordForm.metadata,
+          metadataDocumentTypeId: recordForm.documentTypeId || selectedMayanDocument.documentTypeId,
           documentTypeId: String(recordForm.documentTypeId || '') !== String(selectedMayanDocument.documentTypeId || '')
             ? recordForm.documentTypeId
             : ''
@@ -1954,12 +1973,25 @@ function PrimaryWorkArea({ activeNav, session, t }) {
                       </select>
                     </label>
                     <label className="wide">
-                      <span>Description / metadata note</span>
+                      <span>Description</span>
                       <textarea
                         onChange={(event) => setRecordForm((current) => ({ ...current, description: event.target.value }))}
                         value={recordForm.description}
                       />
                     </label>
+                    {RECORD_METADATA_FIELDS.map(([name, label]) => (
+                      <label key={name}>
+                        <span>{label}</span>
+                        <input
+                          onChange={(event) => setRecordForm((current) => ({
+                            ...current,
+                            metadata: { ...current.metadata, [name]: event.target.value }
+                          }))}
+                          type={name === 'avision_document_date' ? 'date' : 'text'}
+                          value={recordForm.metadata?.[name] || ''}
+                        />
+                      </label>
+                    ))}
                     <button className="strong-action" disabled={recordSaving} onClick={saveRecordDocument} type="button">
                       {recordSaving ? t('scannerLoading') : t('recordsSave')}
                     </button>

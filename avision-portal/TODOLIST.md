@@ -74,13 +74,14 @@ E:\Mayan-EDMS-Docker\data\portal\thumbnails
 - [x] 編輯基本文件欄位：
   - label
   - description
-- [ ] 編輯正式 metadata：
+- [x] 編輯正式 metadata：
   - customer
   - case id
   - document date
   - amount
   - tags
 - [x] 儲存基本欄位到 Mayan。
+- [x] 儲存正式 metadata 到 Mayan。
 - [ ] 送審到 reviewer workflow。
 
 ## P2：Reviewer 審核功能

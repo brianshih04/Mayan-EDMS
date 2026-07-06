@@ -10,9 +10,11 @@ import {
   createDocumentType,
   changeDocumentType,
   getMayanBinary,
+  listDocumentMetadata,
   listDocumentPages,
   listDocuments,
   listDocumentTypes,
+  saveAvisionDocumentMetadata,
   updateDocument,
   uploadDocument
 } from './lib/mayan.js';
@@ -153,7 +155,26 @@ function createApiMiddleware() {
         if (body.documentTypeId) {
           await changeDocumentType(serviceToken, documentUpdateMatch[1], body.documentTypeId);
         }
-        sendJson(response, 200, { result });
+        let metadata = null;
+        if (body.metadata) {
+          metadata = await saveAvisionDocumentMetadata(
+            serviceToken,
+            documentUpdateMatch[1],
+            body.metadataDocumentTypeId || body.documentTypeId,
+            body.metadata
+          );
+        }
+        sendJson(response, 200, { result, metadata });
+        return;
+      }
+
+      const documentMetadataMatch = path.match(/^\/api\/mayan\/documents\/(\d+)\/metadata$/);
+      if (request.method === 'GET' && documentMetadataMatch) {
+        const token = readToken(request);
+        if (!token) { sendJson(response, 401, { error: 'Not authenticated.' }); return; }
+        if (!serviceToken) { sendJson(response, 500, { error: 'MAYAN_SERVICE_TOKEN not configured.' }); return; }
+        const result = await listDocumentMetadata(serviceToken, documentMetadataMatch[1]);
+        sendJson(response, 200, result);
         return;
       }
 

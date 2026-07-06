@@ -59,6 +59,7 @@
 ### P2：Records / Reviewer 工作台
 
 - Records 的分類與 metadata 畫面改讀 Mayan 真實文件清單，可在 portal 內預覽文件並更新文件 label / description。
+- Records 可寫入正式 Mayan metadata：Customer、Case ID、Document date、Amount、Tags；portal 會自動建立 metadata type 並掛到文件類型。
 - Reviewer 審核畫面改讀 Mayan 真實文件清單，可在 portal 記錄 `pending` / `approved` / `rejected` 狀態與審核註記。
 - 新增 portal review state store：`server/lib/reviews.js`，資料寫入 `AVISION_PORTAL_STATE_DIR/reviews.json`。
 
