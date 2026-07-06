@@ -153,6 +153,45 @@ export async function listDocuments(token, { query = '', pageSize = 50 } = {}) {
   return { count: data?.count ?? filtered.length, results: filtered };
 }
 
+export async function listDocumentPages(token, documentId) {
+  const filesResponse = await mayanRequest(token, `/documents/${documentId}/files/?page_size=1&_ordering=-timestamp`);
+  const filesData = await parseJson(filesResponse);
+  if (!filesResponse.ok) {
+    throw buildError(filesResponse.status, filesData, 'Unable to load document files.');
+  }
+  const file = (filesData?.results || [])[0];
+  if (!file?.id) return { file: null, pages: [] };
+
+  const pagesResponse = await mayanRequest(token, `/documents/${documentId}/files/${file.id}/pages/?page_size=200`);
+  const pagesData = await parseJson(pagesResponse);
+  if (!pagesResponse.ok) {
+    throw buildError(pagesResponse.status, pagesData, 'Unable to load document pages.');
+  }
+
+  return {
+    file: {
+      id: file.id,
+      filename: file.filename || '',
+      mimetype: file.mimetype || '',
+      size: file.size || 0
+    },
+    pages: (pagesData?.results || []).map((page) => ({
+      id: page.id ?? page.pk,
+      pageNumber: page.page_number,
+      imageUrl: `/api/mayan/documents/${documentId}/files/${file.id}/pages/${page.id ?? page.pk}/image`
+    }))
+  };
+}
+
+export async function getMayanBinary(token, path) {
+  const response = await mayanRequest(token, path);
+  if (!response.ok) {
+    const data = await parseJson(response);
+    throw buildError(response.status, data, 'Unable to load binary content.');
+  }
+  return response;
+}
+
 // POST /documents/upload/ (multipart) -> { id, url, label }
 export async function uploadDocument({ token, documentTypeId, filePath, label, description, language }) {
   const buffer = await fs.readFile(filePath);

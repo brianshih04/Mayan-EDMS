@@ -94,8 +94,8 @@ E:\Mayan-EDMS-Docker\data\portal\thumbnails
 - [x] 串接 Mayan 文件清單 API，viewer 可看到真實 Mayan 文件。
 - [x] 支援基本關鍵字過濾（label / description / document type / latest file name）。
 - [ ] 支援 metadata filter。
-- [ ] Portal 內嵌文件預覽。
-- [ ] 下載原始檔。
+- [x] Portal 內嵌文件預覽。
+- [x] 下載原始檔。
 - [ ] 權限不足時顯示友善訊息。
 
 ## P2：Admin 功能

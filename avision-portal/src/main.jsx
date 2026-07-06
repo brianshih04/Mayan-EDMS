@@ -525,6 +525,9 @@ const scannerStrings = {
     documentsEmpty: '目前沒有符合條件的文件。',
     documentsLoadError: '無法讀取 Mayan 文件。',
     openDocument: '開啟文件',
+    previewDocument: '預覽文件',
+    downloadOriginal: '下載原始檔',
+    pagesCount: '{count} 頁',
     scannerImportToMayan: '匯入 Mayan',
     scannerDeleteAfterImport: '匯入成功後刪除原始檔',
     scannerDeleteAfterImportHint: '只刪除成功匯入 Mayan 的檔案，失敗檔案會保留。',
@@ -594,6 +597,9 @@ const scannerStrings = {
     documentsEmpty: 'No matching documents.',
     documentsLoadError: 'Unable to load Mayan documents.',
     openDocument: 'Open document',
+    previewDocument: 'Preview document',
+    downloadOriginal: 'Download original',
+    pagesCount: '{count} pages',
     scannerImportToMayan: 'Import to Mayan',
     scannerDeleteAfterImport: 'Delete originals after successful import',
     scannerDeleteAfterImportHint: 'Only successfully imported files are removed from the watch folder.',
@@ -663,6 +669,9 @@ const scannerStrings = {
     documentsEmpty: '一致する文書がありません。',
     documentsLoadError: 'Mayan 文書を読み込めません。',
     openDocument: '文書を開く',
+    previewDocument: '文書プレビュー',
+    downloadOriginal: '元ファイルをダウンロード',
+    pagesCount: '{count} ページ',
     scannerImportToMayan: 'Mayan へ取込',
     scannerDeleteAfterImport: '取込成功後に元ファイルを削除',
     scannerDeleteAfterImportHint: 'Mayan への取込に成功したファイルのみ watch folder から削除します。',
@@ -732,6 +741,9 @@ const scannerStrings = {
     documentsEmpty: '目前没有符合条件的文件。',
     documentsLoadError: '无法读取 Mayan 文件。',
     openDocument: '开启文件',
+    previewDocument: '预览文件',
+    downloadOriginal: '下载原始文件',
+    pagesCount: '{count} 页',
     scannerImportToMayan: '导入 Mayan',
     scannerDeleteAfterImport: '导入成功后删除原始文件',
     scannerDeleteAfterImportHint: '只删除成功导入 Mayan 的文件，失败文件会保留。',
@@ -1250,6 +1262,11 @@ function PrimaryWorkArea({ activeNav, session, t }) {
   const [mayanDocuments, setMayanDocuments] = useState([]);
   const [documentsLoading, setDocumentsLoading] = useState(false);
   const [documentsError, setDocumentsError] = useState('');
+  const [selectedMayanDocument, setSelectedMayanDocument] = useState(null);
+  const [documentPreview, setDocumentPreview] = useState(null);
+  const [documentPreviewLoading, setDocumentPreviewLoading] = useState(false);
+  const [documentPreviewError, setDocumentPreviewError] = useState('');
+  const [selectedPreviewPageId, setSelectedPreviewPageId] = useState('');
 
   async function loadScannerFiles() {
     setScannerLoading(true);
@@ -1363,11 +1380,37 @@ function PrimaryWorkArea({ activeNav, session, t }) {
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(payload.error || t('documentsLoadError'));
       setMayanDocuments(payload.results || []);
+      setSelectedMayanDocument((current) => {
+        if (!current) return null;
+        return (payload.results || []).some((document) => document.id === current.id) ? current : null;
+      });
     } catch (error) {
       setMayanDocuments([]);
       setDocumentsError(error.message || t('documentsLoadError'));
     } finally {
       setDocumentsLoading(false);
+    }
+  }
+
+  async function loadDocumentPreview(document) {
+    setSelectedMayanDocument(document);
+    setDocumentPreviewLoading(true);
+    setDocumentPreviewError('');
+    setDocumentPreview(null);
+    setSelectedPreviewPageId('');
+
+    try {
+      const response = await fetch(`/api/mayan/documents/${document.id}/pages`, {
+        headers: authHeaders(session)
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.error || t('documentsLoadError'));
+      setDocumentPreview(payload);
+      setSelectedPreviewPageId(payload.pages?.[0] ? String(payload.pages[0].id) : '');
+    } catch (error) {
+      setDocumentPreviewError(error.message || t('documentsLoadError'));
+    } finally {
+      setDocumentPreviewLoading(false);
     }
   }
 
@@ -1689,29 +1732,86 @@ function PrimaryWorkArea({ activeNav, session, t }) {
           </button>
         </form>
         {documentsError ? <p className="scanner-error">{documentsError}</p> : null}
-        <div className="result-list">
-          {documentsLoading ? (
-            <div className="scanner-empty">{t('documentsLoading')}</div>
-          ) : mayanDocuments.length ? (
-            mayanDocuments.map((document) => (
-              <article className="result-row" key={document.id}>
-                <Archive size={20} aria-hidden="true" />
-                <div>
-                  <strong>{document.label}</strong>
-                  <span>
-                    {[document.documentType, document.fileName, formatDateTime(document.datetimeCreated)]
-                      .filter(Boolean)
-                      .join(' / ')}
-                  </span>
+        <div className="document-workbench">
+          <div className="result-list">
+            {documentsLoading ? (
+              <div className="scanner-empty">{t('documentsLoading')}</div>
+            ) : mayanDocuments.length ? (
+              mayanDocuments.map((document) => (
+                <article
+                  className={selectedMayanDocument?.id === document.id ? 'result-row active' : 'result-row'}
+                  key={document.id}
+                >
+                  <Archive size={20} aria-hidden="true" />
+                  <button className="result-main" onClick={() => loadDocumentPreview(document)} type="button">
+                    <strong>{document.label}</strong>
+                    <span>
+                      {[document.documentType, document.fileName, formatDateTime(document.datetimeCreated)]
+                        .filter(Boolean)
+                        .join(' / ')}
+                    </span>
+                  </button>
+                  <a className="subtle-action" href={`${MAYAN_URL}/documents/${document.id}/`} target="_blank" rel="noreferrer">
+                    {t('openDocument')}
+                  </a>
+                </article>
+              ))
+            ) : (
+              <div className="scanner-empty">{t('documentsEmpty')}</div>
+            )}
+          </div>
+
+          <div className="document-preview-panel">
+            {selectedMayanDocument ? (
+              <>
+                <div className="document-preview-head">
+                  <div>
+                    <p className="eyebrow">{t('previewDocument')}</p>
+                    <h3>{selectedMayanDocument.label}</h3>
+                  </div>
+                  {documentPreview?.file?.id ? (
+                    <a
+                      className="subtle-action"
+                      href={`/api/mayan/documents/${selectedMayanDocument.id}/files/${documentPreview.file.id}/download`}
+                    >
+                      {t('downloadOriginal')}
+                    </a>
+                  ) : null}
                 </div>
-                <a className="subtle-action" href={`${MAYAN_URL}/documents/${document.id}/`} target="_blank" rel="noreferrer">
-                  {t('openDocument')}
-                </a>
-              </article>
-            ))
-          ) : (
-            <div className="scanner-empty">{t('documentsEmpty')}</div>
-          )}
+                {documentPreviewLoading ? (
+                  <div className="scanner-empty">{t('documentsLoading')}</div>
+                ) : documentPreviewError ? (
+                  <p className="scanner-error">{documentPreviewError}</p>
+                ) : documentPreview?.pages?.length ? (
+                  <>
+                    <div className="document-page-stage">
+                      <img
+                        alt={selectedMayanDocument.label}
+                        src={documentPreview.pages.find((page) => String(page.id) === selectedPreviewPageId)?.imageUrl || documentPreview.pages[0].imageUrl}
+                      />
+                    </div>
+                    <div className="document-page-strip">
+                      <span className="chip">{fillTemplate(t('pagesCount'), { count: documentPreview.pages.length })}</span>
+                      {documentPreview.pages.map((page) => (
+                        <button
+                          className={String(page.id) === selectedPreviewPageId ? 'active' : ''}
+                          key={page.id}
+                          onClick={() => setSelectedPreviewPageId(String(page.id))}
+                          type="button"
+                        >
+                          {page.pageNumber}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <div className="scanner-empty">{t('scannerPreviewEmpty')}</div>
+                )}
+              </>
+            ) : (
+              <div className="scanner-empty">{t('scannerPreviewEmpty')}</div>
+            )}
+          </div>
         </div>
       </section>
     );

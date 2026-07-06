@@ -53,6 +53,8 @@
 
 - Viewer 搜尋頁改為讀取 Mayan 真實文件清單，不再顯示 demo rows。
 - 新增 `GET /api/mayan/documents`，以 service token 讀取最近文件，支援簡單關鍵字過濾並回傳 Mayan 文件連結。
+- Viewer 可在 portal 內預覽文件頁面，並可下載 Mayan 原始檔。
+- 新增文件頁面與二進位 proxy routes：`/api/mayan/documents/:id/pages`、`/files/:fileId/pages/:pageId/image`、`/files/:fileId/download`。
 
 
 ## 0.1.0 - 2026-07-05

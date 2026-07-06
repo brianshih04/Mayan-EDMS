@@ -6,7 +6,14 @@ import { readRequestBody, readToken, sendJson } from './lib/http.js';
 import { deleteWatchFolderFile, listWatchFolder, resolveWatchFolderFile } from './lib/watchFolder.js';
 import { createScannerBatch, readBatch, writeBatch } from './lib/batch.js';
 import { listPages, renderPage } from './lib/convert.js';
-import { createDocumentType, listDocuments, listDocumentTypes, uploadDocument } from './lib/mayan.js';
+import {
+  createDocumentType,
+  getMayanBinary,
+  listDocumentPages,
+  listDocuments,
+  listDocumentTypes,
+  uploadDocument
+} from './lib/mayan.js';
 import { portalLogin, resolvePortalUserFromToken } from './lib/auth.js';
 
 // Aggregate a batch status from its files' import states.
@@ -117,6 +124,53 @@ function createApiMiddleware() {
         const pageSize = url.searchParams.get('page_size') || 50;
         const result = await listDocuments(serviceToken, { query, pageSize });
         sendJson(response, 200, result);
+        return;
+      }
+
+      const pagesMatch = path.match(/^\/api\/mayan\/documents\/(\d+)\/pages$/);
+      if (request.method === 'GET' && pagesMatch) {
+        const token = readToken(request);
+        if (!token) { sendJson(response, 401, { error: 'Not authenticated.' }); return; }
+        if (!serviceToken) { sendJson(response, 500, { error: 'MAYAN_SERVICE_TOKEN not configured.' }); return; }
+        const result = await listDocumentPages(serviceToken, pagesMatch[1]);
+        sendJson(response, 200, result);
+        return;
+      }
+
+      const pageImageMatch = path.match(/^\/api\/mayan\/documents\/(\d+)\/files\/(\d+)\/pages\/(\d+)\/image$/);
+      if (request.method === 'GET' && pageImageMatch) {
+        const token = readToken(request);
+        if (!token) { sendJson(response, 401, { error: 'Not authenticated.' }); return; }
+        if (!serviceToken) { sendJson(response, 500, { error: 'MAYAN_SERVICE_TOKEN not configured.' }); return; }
+        const mayanResponse = await getMayanBinary(
+          serviceToken,
+          `/documents/${pageImageMatch[1]}/files/${pageImageMatch[2]}/pages/${pageImageMatch[3]}/image/`
+        );
+        response.statusCode = 200;
+        response.setHeader('Content-Type', mayanResponse.headers.get('content-type') || 'image/jpeg');
+        response.setHeader('Cache-Control', 'private, max-age=300');
+        const buffer = Buffer.from(await mayanResponse.arrayBuffer());
+        response.setHeader('Content-Length', buffer.length);
+        response.end(buffer);
+        return;
+      }
+
+      const fileDownloadMatch = path.match(/^\/api\/mayan\/documents\/(\d+)\/files\/(\d+)\/download$/);
+      if (request.method === 'GET' && fileDownloadMatch) {
+        const token = readToken(request);
+        if (!token) { sendJson(response, 401, { error: 'Not authenticated.' }); return; }
+        if (!serviceToken) { sendJson(response, 500, { error: 'MAYAN_SERVICE_TOKEN not configured.' }); return; }
+        const mayanResponse = await getMayanBinary(
+          serviceToken,
+          `/documents/${fileDownloadMatch[1]}/files/${fileDownloadMatch[2]}/download/`
+        );
+        response.statusCode = 200;
+        response.setHeader('Content-Type', mayanResponse.headers.get('content-type') || 'application/octet-stream');
+        const disposition = mayanResponse.headers.get('content-disposition');
+        if (disposition) response.setHeader('Content-Disposition', disposition);
+        const buffer = Buffer.from(await mayanResponse.arrayBuffer());
+        response.setHeader('Content-Length', buffer.length);
+        response.end(buffer);
         return;
       }
 

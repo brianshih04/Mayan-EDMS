@@ -1557,6 +1557,13 @@ button:disabled {
   flex: 1;
 }
 
+.document-workbench {
+  display: grid;
+  grid-template-columns: minmax(320px, 0.9fr) minmax(420px, 1.1fr);
+  gap: 18px;
+  margin-top: 16px;
+}
+
 .result-row,
 .permission-row {
   gap: 12px;
@@ -1564,17 +1571,107 @@ button:disabled {
   border-bottom: 1px solid #e1e8e5;
 }
 
-.result-row div,
+.result-row.active {
+  background: #f0fdfa;
+}
+
+.result-main,
 .permission-row div {
   flex: 1;
   min-width: 0;
 }
 
-.result-row button,
+.result-main {
+  display: grid;
+  gap: 3px;
+  justify-items: start;
+  min-height: 54px;
+  padding: 6px 0;
+  border: 0;
+  background: transparent;
+  color: #182321;
+  text-align: left;
+}
+
+.result-main:hover {
+  background: transparent;
+}
+
 .result-row a {
   background: #eef0ea;
   color: #182321;
   text-decoration: none;
+}
+
+.document-preview-panel {
+  min-height: 520px;
+  border: 1px solid #dce3e0;
+  border-radius: 8px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.document-preview-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px;
+  border-bottom: 1px solid #e1e8e5;
+}
+
+.document-preview-head h3 {
+  margin: 2px 0 0;
+  font-size: 15px;
+  overflow-wrap: anywhere;
+}
+
+.document-page-stage {
+  display: grid;
+  place-items: center;
+  min-height: 420px;
+  padding: 14px;
+  background:
+    linear-gradient(45deg, #f7faf9 25%, transparent 25%),
+    linear-gradient(-45deg, #f7faf9 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #f7faf9 75%),
+    linear-gradient(-45deg, transparent 75%, #f7faf9 75%);
+  background-color: #fff;
+  background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+  background-size: 16px 16px;
+}
+
+.document-page-stage img {
+  display: block;
+  max-width: 100%;
+  max-height: 620px;
+  object-fit: contain;
+  box-shadow: 0 10px 30px rgba(24, 35, 33, 0.12);
+}
+
+.document-page-strip {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  padding: 12px 14px;
+  border-top: 1px solid #e1e8e5;
+}
+
+.document-page-strip button {
+  min-width: 32px;
+  min-height: 32px;
+  border: 1px solid #d5d9d3;
+  border-radius: 8px;
+  background: #fff;
+  color: #182321;
+  font-weight: 800;
+}
+
+.document-page-strip button.active {
+  border-color: #0f766e;
+  background: #ccfbf1;
+  color: #0f4f49;
 }
 
 .note {
