@@ -6,7 +6,7 @@ import { readRequestBody, readToken, sendJson } from './lib/http.js';
 import { deleteWatchFolderFile, listWatchFolder, resolveWatchFolderFile } from './lib/watchFolder.js';
 import { createScannerBatch, readBatch, writeBatch } from './lib/batch.js';
 import { listPages, renderPage } from './lib/convert.js';
-import { createDocumentType, listDocumentTypes, uploadDocument } from './lib/mayan.js';
+import { createDocumentType, listDocuments, listDocumentTypes, uploadDocument } from './lib/mayan.js';
 import { portalLogin, resolvePortalUserFromToken } from './lib/auth.js';
 
 // Aggregate a batch status from its files' import states.
@@ -105,6 +105,18 @@ function createApiMiddleware() {
         if (!label) { sendJson(response, 400, { error: 'label is required.' }); return; }
         const result = await createDocumentType(serviceToken, { label });
         sendJson(response, 201, { result });
+        return;
+      }
+
+      if (request.method === 'GET' && path === '/api/mayan/documents') {
+        const token = readToken(request);
+        if (!token) { sendJson(response, 401, { error: 'Not authenticated.' }); return; }
+        if (!serviceToken) { sendJson(response, 500, { error: 'MAYAN_SERVICE_TOKEN not configured.' }); return; }
+        const url = new URL(request.url, 'http://localhost');
+        const query = url.searchParams.get('q') || '';
+        const pageSize = url.searchParams.get('page_size') || 50;
+        const result = await listDocuments(serviceToken, { query, pageSize });
+        sendJson(response, 200, result);
         return;
       }
 

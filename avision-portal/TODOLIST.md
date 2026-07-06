@@ -91,10 +91,10 @@ E:\Mayan-EDMS-Docker\data\portal\thumbnails
 
 ## P2：Viewer 查詢功能
 
-- [ ] 串接 Mayan 搜尋 API。
-- [ ] 支援關鍵字搜尋。
+- [x] 串接 Mayan 文件清單 API，viewer 可看到真實 Mayan 文件。
+- [x] 支援基本關鍵字過濾（label / description / document type / latest file name）。
 - [ ] 支援 metadata filter。
-- [ ] 文件預覽。
+- [ ] Portal 內嵌文件預覽。
 - [ ] 下載原始檔。
 - [ ] 權限不足時顯示友善訊息。
 

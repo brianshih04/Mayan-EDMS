@@ -121,6 +121,38 @@ export async function createDocumentType(token, { label }) {
   };
 }
 
+// GET /documents/ -> recent documents, optionally filtered by query locally.
+export async function listDocuments(token, { query = '', pageSize = 50 } = {}) {
+  const size = Math.max(1, Math.min(Number(pageSize) || 50, 200));
+  const response = await mayanRequest(token, `/documents/?page_size=${size}&_ordering=-datetime_created`);
+  const data = await parseJson(response);
+  if (!response.ok) {
+    throw buildError(response.status, data, 'Unable to load documents.');
+  }
+
+  const needle = String(query || '').trim().toLowerCase();
+  const results = (data?.results || []).map((entry) => ({
+    id: entry.id ?? entry.pk,
+    label: entry.label || `#${entry.id ?? entry.pk}`,
+    description: entry.description || '',
+    documentType: entry.document_type?.label || '',
+    datetimeCreated: entry.datetime_created || '',
+    fileName: entry.file_latest?.filename || '',
+    url: entry.url
+  }));
+
+  const filtered = needle
+    ? results.filter((entry) => (
+      entry.label.toLowerCase().includes(needle) ||
+      entry.description.toLowerCase().includes(needle) ||
+      entry.documentType.toLowerCase().includes(needle) ||
+      entry.fileName.toLowerCase().includes(needle)
+    ))
+    : results;
+
+  return { count: data?.count ?? filtered.length, results: filtered };
+}
+
 // POST /documents/upload/ (multipart) -> { id, url, label }
 export async function uploadDocument({ token, documentTypeId, filePath, label, description, language }) {
   const buffer = await fs.readFile(filePath);

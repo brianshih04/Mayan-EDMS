@@ -521,6 +521,10 @@ const scannerStrings = {
     adminAddDocumentType: '新增文件類型',
     adminDocumentTypeCreated: '已新增文件類型：{label}',
     adminDocumentTypeHelp: '新增後會立即出現在 scanner 的文件類型下拉選單。',
+    documentsLoading: '正在讀取文件...',
+    documentsEmpty: '目前沒有符合條件的文件。',
+    documentsLoadError: '無法讀取 Mayan 文件。',
+    openDocument: '開啟文件',
     scannerImportToMayan: '匯入 Mayan',
     scannerDeleteAfterImport: '匯入成功後刪除原始檔',
     scannerDeleteAfterImportHint: '只刪除成功匯入 Mayan 的檔案，失敗檔案會保留。',
@@ -586,6 +590,10 @@ const scannerStrings = {
     adminAddDocumentType: 'Add document type',
     adminDocumentTypeCreated: 'Created document type: {label}',
     adminDocumentTypeHelp: 'New types appear immediately in the scanner document-type selector.',
+    documentsLoading: 'Loading documents...',
+    documentsEmpty: 'No matching documents.',
+    documentsLoadError: 'Unable to load Mayan documents.',
+    openDocument: 'Open document',
     scannerImportToMayan: 'Import to Mayan',
     scannerDeleteAfterImport: 'Delete originals after successful import',
     scannerDeleteAfterImportHint: 'Only successfully imported files are removed from the watch folder.',
@@ -651,6 +659,10 @@ const scannerStrings = {
     adminAddDocumentType: '文書種別を追加',
     adminDocumentTypeCreated: '文書種別を追加しました：{label}',
     adminDocumentTypeHelp: '追加後、scanner の文書種別リストにすぐ表示されます。',
+    documentsLoading: '文書を読み込み中...',
+    documentsEmpty: '一致する文書がありません。',
+    documentsLoadError: 'Mayan 文書を読み込めません。',
+    openDocument: '文書を開く',
     scannerImportToMayan: 'Mayan へ取込',
     scannerDeleteAfterImport: '取込成功後に元ファイルを削除',
     scannerDeleteAfterImportHint: 'Mayan への取込に成功したファイルのみ watch folder から削除します。',
@@ -716,6 +728,10 @@ const scannerStrings = {
     adminAddDocumentType: '新增文件类型',
     adminDocumentTypeCreated: '已新增文件类型：{label}',
     adminDocumentTypeHelp: '新增后会立即出现在 scanner 的文件类型下拉选单。',
+    documentsLoading: '正在读取文件...',
+    documentsEmpty: '目前没有符合条件的文件。',
+    documentsLoadError: '无法读取 Mayan 文件。',
+    openDocument: '开启文件',
     scannerImportToMayan: '导入 Mayan',
     scannerDeleteAfterImport: '导入成功后删除原始文件',
     scannerDeleteAfterImportHint: '只删除成功导入 Mayan 的文件，失败文件会保留。',
@@ -1230,6 +1246,10 @@ function PrimaryWorkArea({ activeNav, session, t }) {
   const [deleteAfterImport, setDeleteAfterImport] = useState(false);
   const [importProgress, setImportProgress] = useState({});
   const [importing, setImporting] = useState(false);
+  const [documentQuery, setDocumentQuery] = useState('');
+  const [mayanDocuments, setMayanDocuments] = useState([]);
+  const [documentsLoading, setDocumentsLoading] = useState(false);
+  const [documentsError, setDocumentsError] = useState('');
 
   async function loadScannerFiles() {
     setScannerLoading(true);
@@ -1325,6 +1345,37 @@ function PrimaryWorkArea({ activeNav, session, t }) {
       loadScannerFiles();
     }
   }, [scannerMode]);
+
+  async function loadMayanDocuments(query = documentQuery) {
+    if (!session?.token) {
+      setMayanDocuments([]);
+      setDocumentsError(t('documentsLoadError'));
+      return;
+    }
+    setDocumentsLoading(true);
+    setDocumentsError('');
+    try {
+      const params = new URLSearchParams({ page_size: '50' });
+      if (query.trim()) params.set('q', query.trim());
+      const response = await fetch(`/api/mayan/documents?${params.toString()}`, {
+        headers: authHeaders(session)
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.error || t('documentsLoadError'));
+      setMayanDocuments(payload.results || []);
+    } catch (error) {
+      setMayanDocuments([]);
+      setDocumentsError(error.message || t('documentsLoadError'));
+    } finally {
+      setDocumentsLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    if (activeNav === 'searchDocs' && !DEMO_LOGIN) {
+      loadMayanDocuments('');
+    }
+  }, [activeNav, session?.token]);
 
   useEffect(() => {
     setBlankAnalysis(null);
@@ -1620,22 +1671,47 @@ function PrimaryWorkArea({ activeNav, session, t }) {
   if (activeNav === 'searchDocs') {
     return (
       <section className="work-panel">
-        <div className="search-band">
+        <form
+          className="search-band"
+          onSubmit={(event) => {
+            event.preventDefault();
+            loadMayanDocuments(documentQuery);
+          }}
+        >
           <Search size={22} aria-hidden="true" />
-          <input placeholder={t('searchPlaceholder')} />
-          <button type="button">{t('searchDocs')}</button>
-        </div>
+          <input
+            onChange={(event) => setDocumentQuery(event.target.value)}
+            placeholder={t('searchPlaceholder')}
+            value={documentQuery}
+          />
+          <button disabled={documentsLoading} type="submit">
+            {documentsLoading ? t('documentsLoading') : t('searchDocs')}
+          </button>
+        </form>
+        {documentsError ? <p className="scanner-error">{documentsError}</p> : null}
         <div className="result-list">
-          {['INV-2026-0712.pdf', 'Contract_AV-9341.pdf', 'PO-77519.pdf'].map((name, index) => (
-            <article className="result-row" key={name}>
-              <Archive size={20} aria-hidden="true" />
-              <div>
-                <strong>{name}</strong>
-                <span>{index === 0 ? 'Vendor / Finance / 2026' : 'Avision / General / Active'}</span>
-              </div>
-              <button type="button">{t('nextAction')}</button>
-            </article>
-          ))}
+          {documentsLoading ? (
+            <div className="scanner-empty">{t('documentsLoading')}</div>
+          ) : mayanDocuments.length ? (
+            mayanDocuments.map((document) => (
+              <article className="result-row" key={document.id}>
+                <Archive size={20} aria-hidden="true" />
+                <div>
+                  <strong>{document.label}</strong>
+                  <span>
+                    {[document.documentType, document.fileName, formatDateTime(document.datetimeCreated)]
+                      .filter(Boolean)
+                      .join(' / ')}
+                  </span>
+                </div>
+                <a className="subtle-action" href={`${MAYAN_URL}/documents/${document.id}/`} target="_blank" rel="noreferrer">
+                  {t('openDocument')}
+                </a>
+              </article>
+            ))
+          ) : (
+            <div className="scanner-empty">{t('documentsEmpty')}</div>
+          )}
         </div>
       </section>
     );

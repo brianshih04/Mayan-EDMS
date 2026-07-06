@@ -49,6 +49,11 @@
 - Admin 畫面可直接新增 Mayan 文件類型，不必進入 Mayan 原生後台。
 - 新增 `POST /api/mayan/document-types`，server 端重新驗證登入 token 並限制 admin role 才能建立文件類型。
 
+### P2：Viewer 文件查詢
+
+- Viewer 搜尋頁改為讀取 Mayan 真實文件清單，不再顯示 demo rows。
+- 新增 `GET /api/mayan/documents`，以 service token 讀取最近文件，支援簡單關鍵字過濾並回傳 Mayan 文件連結。
+
 
 ## 0.1.0 - 2026-07-05
 

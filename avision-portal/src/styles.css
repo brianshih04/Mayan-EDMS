@@ -1570,9 +1570,11 @@ button:disabled {
   min-width: 0;
 }
 
-.result-row button {
+.result-row button,
+.result-row a {
   background: #eef0ea;
   color: #182321;
+  text-decoration: none;
 }
 
 .note {
