@@ -11,7 +11,7 @@ Avision EDMS Portal 是 Mayan-EDMS 的簡化前台，不取代 Mayan。Mayan 仍
 - lucide-react
 - PowerShell 啟動腳本
 
-目前 scanner 角色已透過 Vite middleware 接入本機 watch folder API、PDF/TIFF 逐頁轉圖、Mayan 匯入與匯入後刪檔；admin 角色已可新增 Mayan 文件類型。records / reviewer / viewer 深度功能仍待 P2 串接。
+目前 P0 / P1 / P2 主要功能已完成：scanner 已接本機 watch folder、PDF/TIFF 逐頁轉圖、Mayan 匯入與匯入後刪檔；records 可更新 Mayan 文件與 metadata；reviewer 可透過 Mayan workflow 核准 / 退回；viewer 可搜尋、預覽與下載；admin 可新增文件類型、建立使用者、查看系統狀態與 batch queue。
 
 ## 目錄結構
 
@@ -20,8 +20,16 @@ avision-portal/
   public/
     avision-mark.svg
   src/
+    locales.js
     main.jsx
+    portalConfig.js
     styles.css
+  server/
+    lib/
+    router.js
+  scripts/
+    mayan-bootstrap.mjs
+    portal-smoke.mjs
   README.md
   CHANGELOG.md
   DEVELOPMENT.md
@@ -58,6 +66,19 @@ npm run dev
 npm run build
 ```
 
+檢查 lint：
+
+```powershell
+npm run lint
+```
+
+執行 smoke test：
+
+```powershell
+$env:MAYAN_SERVICE_TOKEN=[Environment]::GetEnvironmentVariable('MAYAN_SERVICE_TOKEN','User')
+npm run test:smoke
+```
+
 或使用腳本：
 
 ```powershell
@@ -72,7 +93,7 @@ npm run preview
 
 ## 多國語言
 
-目前語系字串集中在 `src/main.jsx` 的 `locales` 物件中。
+目前語系字串已拆到 `src/locales.js`，scanner-specific strings 也在同一檔案中，透過 `useTranslation()` 合併使用。
 
 已支援：
 
@@ -81,11 +102,11 @@ npm run preview
 - `ja`：日文。
 - `zh-CN`：簡體中文。
 
-短期內可以先維持這種集中式字典。當字串量變大時，再拆成獨立 JSON 檔或導入 i18n 套件。
+後續若需要交給翻譯人員維護，可再從 `src/locales.js` 拆成 `locales/*.json` 或導入 i18n 套件。
 
 ## 角色式 UI 設計
 
-角色與導航目前定義在 `src/main.jsx`：
+角色與導航目前定義在 `src/portalConfig.js`：
 
 - `demoUsers`
 - `roleNav`
@@ -100,22 +121,22 @@ npm run preview
 - 查閱使用者只看搜尋與文件。
 - 系統管理員才看到角色、系統與 Mayan 後台入口。
 
-## Mayan API 整合方向
+## Mayan API 整合狀態
 
-後續 API 串接建議分階段進行：
+目前已完成：
 
-1. Scanner watch folder 狀態顯示與批次建立。已完成第一版。
-2. 登入與 session。
+1. Scanner watch folder 狀態顯示與批次建立。
+2. Mayan 帳號密碼登入與 8 小時 session timeout。
 3. 讀取目前使用者資訊。
 4. 依 Mayan group / role 對應 portal role。
-5. 文件搜尋。
-6. 文件清單與預覽。
-7. metadata 更新。
-8. workflow 審核動作。
+5. 文件搜尋、文件清單與預覽。
+6. metadata 更新。
+7. Mayan workflow 送審 / 核准 / 退回。
+8. Admin 文件類型、使用者建立、系統狀態與設定。
 
 ## Scanner 本機 API
 
-Scanner API 目前在 `vite.config.js` 內以 Vite middleware 提供，方便 Cloudflare tunnel 直接轉發到 `localhost:5174`：
+Scanner API 目前由 `server/router.js` + `server/lib/*` 提供，並以 Vite plugin 掛到 dev / preview server，方便 Cloudflare tunnel 直接轉發到 `localhost:5174`：
 
 - `GET /api/scanner/watch-folder`
 - `GET /api/scanner/files/:fileName`

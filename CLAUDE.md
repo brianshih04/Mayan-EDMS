@@ -109,22 +109,35 @@ All commands run from `avision-portal/`:
 ```powershell
 npm install
 npm run dev        # Vite dev server on http://localhost:5174 (host 0.0.0.0)
+npm run lint       # ESLint flat config
 npm run build      # production build to dist/
+npm run test:smoke # Mayan/portal smoke test; needs MAYAN_SERVICE_TOKEN
 npm run preview    # preview the build on 5174
 ```
 
-PowerShell helpers exist: `start-portal.ps1`, `build-portal.ps1`, `preview-portal.ps1`.
+PowerShell helpers exist: `start-portal.ps1`, `build-portal.ps1`, `preview-portal.ps1`, `start-system.ps1`, `stop-system.ps1`, `check-system.ps1`, `register-autostart.ps1`.
 
-There is **no separate test runner, lint, or typecheck configured** for the portal (`package.json` has only `dev`/`build`/`preview`). Verify changes by running `npm run dev` and exercising the UI.
+For smoke tests on Windows, load the user-level service token before running:
+
+```powershell
+$env:MAYAN_SERVICE_TOKEN=[Environment]::GetEnvironmentVariable('MAYAN_SERVICE_TOKEN','User')
+npm run test:smoke
+```
 
 ## Avision portal — architecture
 
-- **Stack**: React 19, Vite 6, `lucide-react` icons. No router, no state library, no i18n library — it is intentionally minimal.
-- **Single source file**: nearly all app logic (roles, navigation, tasks, panels, demo data, locale dictionaries) lives in **`src/main.jsx`**. i18n strings for `zh-TW`, `en`, `ja`, `zh-CN` are a single `locales` object there.
-- **Backend bridge is a Vite plugin**: `vite.config.js` exports `scannerApiPlugin()`, which registers Node middleware (on both dev and preview servers) exposing the scanner API:
+- **Stack**: React 19, Vite 6, `lucide-react` icons. No router or state library; i18n remains a lightweight local dictionary.
+- **Frontend layout**: app logic still largely lives in `src/main.jsx`, but pure data has been split into `src/locales.js` and `src/portalConfig.js`.
+- **Backend bridge is mounted by a Vite plugin**: `vite.config.js` mounts `server/router.js`, which registers Node middleware (on both dev and preview servers) exposing scanner, Mayan, review, admin, and system APIs:
   - `GET  /api/scanner/watch-folder` — lists importable files in the watch folder
   - `GET  /api/scanner/files/:fileName` — streams a file for preview
+  - `GET  /api/scanner/files/:fileName/pages` — PDF/TIFF page rendering and blank detection
+  - `DELETE /api/scanner/files/:fileName` — delete selected watch-folder originals
   - `POST /api/scanner/batches` — writes a batch manifest JSON to the portal state dir
+  - `POST /api/mayan/import` — upload selected scan files into Mayan
+  - `GET/PATCH /api/mayan/documents/:id` — document preview/update/metadata workflows
+  - `GET/POST /api/reviews` — review state with Mayan workflow sync
+  - `GET/PATCH /api/system/settings`, `GET /api/system/status`, `POST /api/admin/users`
 
   Config via env: `AVISION_WATCH_FOLDER` (default `E:\watch_folder`), `AVISION_PORTAL_STATE_DIR` (default `E:\Mayan-EDMS-Docker\data\portal`). `allowedHosts` must include `mayan-portal.avision-gb10.org` for the Cloudflare tunnel to work.
 
@@ -133,7 +146,8 @@ There is **no separate test runner, lint, or typecheck configured** for the port
 - **Do not modify Mayan core** unless explicitly necessary and the upgrade cost is evaluated — keep the portal a thin layer.
 - **Never write portal manifests into `E:\watch_folder`** — Mayan's watch-folder source would ingest them as documents. Manifests go to `AVISION_PORTAL_STATE_DIR\batches\`.
 - **The scanner API must prevent path traversal** — only filenames (no path components) are accepted and they must resolve inside the watch folder. `resolveWatchFolderFile()` / `createScannerBatch()` already enforce this; preserve it when editing.
-- Roles (scanner / records / reviewer / viewer / admin) and their nav are defined in `src/main.jsx` (`demoUsers`, `roleNav`, `tasks`, `panels`). Mayan API integration is staged but largely not yet wired — only the scanner watch-folder bridge is real; other roles are still demo data.
-- Planned direction: extract the Vite middleware into a real backend service (`server/scanner`, `server/mayan`, `server/auth`) and call Mayan's REST API for auth, import, metadata, and workflow.
+- Roles (scanner / records / reviewer / viewer / admin) and their nav are defined in `src/portalConfig.js`. Locales are in `src/locales.js`.
+- Mayan API integration is real for auth, group role mapping, document types, import, document list/preview/download, metadata, workflow review, admin user creation, and system status.
+- Planned direction: continue splitting `src/main.jsx` into components/hooks and eventually extract the Vite middleware into a real backend service (`server/scanner`, `server/mayan`, `server/auth`) for long-term production deployment.
 
 The portal's own docs (`avision-portal/README.md`, `DEVELOPMENT.md`, `DEVELOPMENT_PLAN.md`, `USERGUIDE.md`, `CHANGELOG.md`, `TODOLIST.md`) are the authoritative source for product direction and current status — read them before starting portal work.

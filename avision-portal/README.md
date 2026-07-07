@@ -17,6 +17,19 @@ Avision EDMS Portal 是建立在 Mayan-EDMS 之上的簡化前台。Mayan-EDMS �
 - `viewer`：文件搜尋、檢視、下載入口。
 - `admin`：使用者與角色、系統狀態、Mayan 後台入口。
 
+## 預設測試帳號
+
+正式 Portal 登入會呼叫 Mayan API。以下測試帳號目前可用：
+
+| 帳號 | 預設密碼 | 角色 |
+| --- | --- | --- |
+| `scanner` | `Avision-Portal-2026!` | 掃描人員 |
+| `records` | `Avision-Portal-2026!` | 分類人員 |
+| `reviewer` | `Avision-Portal-2026!` | 審核主管 |
+| `viewer` | `Avision-Portal-2026!` | 查閱使用者 |
+
+`avision123` 只保留給 `VITE_DEMO_LOGIN=1` 的離線 demo 模式，不是正式 Mayan 登入密碼。
+
 ## 啟動方式
 
 ```powershell
@@ -63,7 +76,13 @@ npm run dev
 
 ## Admin 簡化管理
 
-Admin 角色可在 Portal 直接新增 Mayan 文件類型。新增成功後，scanner 的「文件類型」下拉會立即讀到新類型。後端會重新驗證登入 token，只有 admin role 可以呼叫新增 API。
+Admin 角色可在 Portal 直接新增 Mayan 文件類型、建立使用者並指定角色、查看 Mayan / Cloudflare / watch folder 狀態、查看 batch queue，並調整 Portal scanner settings。後端會重新驗證登入 token，只有 admin role 可以呼叫管理 API。
+
+## Records / Reviewer / Viewer 真實功能
+
+- Records 可讀取 Mayan 文件、預覽頁面、更新 label / description / document type / metadata，並送審。
+- Reviewer 只顯示 pending 文件，可核准或退回；審核狀態同步寫入 Mayan workflow。
+- Viewer 可搜尋、依 document type / metadata filter 篩選、預覽與下載文件。
 
 ## 相關文件
 

@@ -138,7 +138,7 @@ E:\Mayan-EDMS-Docker\data\portal\thumbnails
 
 ```text
 username: scanner
-password: avision123
+password: Avision-Portal-2026!
 ```
 
 - [ ] `GET /api/scanner/watch-folder` 回 `200`

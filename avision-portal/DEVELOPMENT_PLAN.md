@@ -2,7 +2,7 @@
 
 本文件提供給後續 coding agent 接手 Avision EDMS Portal。Portal 是 Mayan-EDMS 上方的角色式簡化前台，不取代 Mayan core。
 
-> **進度（2026-07-06）**：P0 與 P1 已完成並上線驗證 — scanner 選取/QC/空白偵測、PDF/TIFF 逐頁轉圖（mupdf WASM）、Mayan 匯入（service token）、Mayan 登入與角色對應、watch folder 刪檔、匯入成功後可刪除原始檔、Admin 可新增 Mayan 文件類型。P2 records/reviewer/viewer 深度功能尚未開始。詳見 CHANGELOG / TODOLIST。
+> **進度（2026-07-07）**：P0 / P1 / P2 主要項目已完成 — scanner 選取/QC/空白偵測、PDF/TIFF 逐頁轉圖（mupdf WASM）、Mayan 匯入（service token）、Mayan 登入與角色對應、records metadata 編輯、reviewer workflow 審核、viewer 搜尋/預覽/下載、Admin 使用者/文件類型/系統狀態/設定。P3 已補 ESLint、smoke test、`.env.example`，並完成 locales / role config 拆檔。詳見 CHANGELOG / TODOLIST。
 
 ## 目前狀態
 
@@ -45,6 +45,11 @@
 - Scanner 支援小 / 中 / 大縮圖大小選擇，選擇會保存到 `localStorage`。
 - 建立批次 manifest 到 `E:\Mayan-EDMS-Docker\data\portal\batches`。
 - Admin 可在 portal 新增 Mayan 文件類型，後端限制 admin role。
+- Records 可讀取 Mayan 文件並更新 label / description / document type / Avision metadata。
+- Reviewer 可透過 Mayan workflow 送審、核准、退回並留下註記。
+- Viewer 可依關鍵字、document type、metadata 搜尋，並預覽 / 下載文件。
+- Admin 可建立使用者、指定角色、查看系統狀態與 batch queue、調整 scanner settings。
+- 已新增 `npm run lint`、`npm run test:smoke`、`.env.example`。
 
 ## Cloudflare 掛載方式
 
@@ -128,35 +133,32 @@ scanner software -> E:\watch_folder -> portal backend -> Mayan API/import -> rol
 - `server/mayan`：Mayan auth、document import、metadata、workflow。
 - `server/auth`：session、role mapping。
 
-## Mayan 整合方向
+## Mayan 整合狀態
 
-Mayan 仍是正式文件後端。Portal 下一步應該開始呼叫 Mayan API 或使用 Mayan ingestion mechanism：
+Mayan 仍是正式文件後端。Portal 目前已呼叫 Mayan API 完成以下流程：
 
-1. 確認 Mayan API auth/token 方式。
-2. 建立 portal backend session。
-3. 將 portal user 對應 Mayan group 或 permission。
+1. Mayan API auth/token。
+2. Portal backend session 與 role mapping。
+3. Portal user 對應 Mayan group。
 4. Scanner 批次送入 Mayan document import。
-5. Records 讀取待分類文件。
-6. Records 寫入 metadata。
-7. Reviewer 執行 approval / reject workflow。
-8. Viewer 搜尋 Mayan 文件並預覽。
+5. Records 讀取文件、更新分類與 metadata。
+6. Reviewer 執行 approval / reject workflow。
+7. Viewer 搜尋 Mayan 文件並預覽 / 下載。
+8. Admin 建立文件類型、建立使用者、查詢系統狀態。
 
 ## Scanner 後續規劃
 
-目前 scanner 的縮圖與空白頁偵測只支援瀏覽器可直接讀的影像格式：
+目前 scanner 的縮圖與空白頁偵測支援：
 
-- 支援預覽與空白偵測：JPG、JPEG、PNG、BMP。
-- PDF 可嵌入預覽，但尚未逐頁縮圖與逐頁空白偵測。
-- TIFF 需要後端轉圖服務。
+- JPG、JPEG、PNG、BMP：瀏覽器直接預覽並輔助偵測。
+- PDF、TIFF：server 端透過 `mupdf` 逐頁轉 PNG、產生縮圖並做逐頁空白頁偵測。
 
 建議下一步：
 
-- 加入 PDF 逐頁轉圖。
-- 加入 TIFF 轉圖。
-- 產生每頁 thumbnail cache。
-- 空白頁偵測移到 backend，避免瀏覽器效能不穩。
-- 提供「標記重掃」、「忽略空白」、「確認批次」。
-- 建立 batch manifest 後，將檔案送入 Mayan 或 staging folder。
+- 將 `src/main.jsx` 進一步拆成 React components / hooks。
+- 將 `src/locales.js` 進一步拆成 JSON 或導入 i18n。
+- 增加 Playwright E2E 測試。
+- 評估改成正式 backend service，取代 Vite middleware 作為長期部署模式。
 
 ## 重要注意事項
 

@@ -126,8 +126,7 @@ http://localhost:5174
 
 ## 下一步
 
-- 串接 Mayan REST API。
-- 將 demo 工作清單改成真實文件資料。
-- 依 Mayan 使用者權限切換角色工作台。
-- 加入正式登入與 session 管理。
-- 加入文件搜尋、預覽、metadata 更新與審核 API。
+- 將 `src/main.jsx` 繼續拆成 React components / hooks。
+- 將 `src/locales.js` 拆成 JSON 或導入 i18n 套件。
+- 補 Playwright E2E 測試，覆蓋 login、scanner、records、reviewer、viewer、admin flows。
+- 評估將 Vite middleware 抽成正式 backend service。
