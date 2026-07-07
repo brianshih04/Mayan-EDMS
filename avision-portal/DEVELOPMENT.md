@@ -121,6 +121,15 @@ npm run preview
 - 查閱使用者只看搜尋與文件。
 - 系統管理員才看到角色、系統與 Mayan 後台入口。
 
+下一階段產品角色應收斂為：
+
+- `operator`：合併 scanner + records，負責掃描匯入、縮圖 QC、OCR 檢查 / 校正、文件分類、metadata、送審。
+- `reviewer`：只負責審核、核准、退回與審核註記。
+- `viewer`：唯讀查詢、預覽、下載。
+- `admin`：使用者、文件類型、系統狀態與設定。
+
+OCR 不應放到 reviewer 或 viewer。OCR 屬於送審前資料品質確認，應由 operator 在文件分類與 metadata 補齊時一起完成。既有 `Scanner` / `Records` Mayan group 可先同時映射到 operator 工作台，避免破壞目前測試帳號。
+
 ## Mayan API 整合狀態
 
 目前已完成：
@@ -133,6 +142,8 @@ npm run preview
 6. metadata 更新。
 7. Mayan workflow 送審 / 核准 / 退回。
 8. Admin 文件類型、使用者建立、系統狀態與設定。
+
+尚待下一階段補上 Portal 內的 OCR workflow：匯入後讀取 Mayan OCR / parsed text 狀態、顯示辨識文字、允許 operator 校正、並在送審前確認 OCR 已完成或標記無需 OCR。
 
 ## Scanner 本機 API
 

@@ -17,6 +17,8 @@ Avision EDMS Portal 是建立在 Mayan-EDMS 之上的簡化前台。Mayan-EDMS �
 - `viewer`：文件搜尋、檢視、下載入口。
 - `admin`：使用者與角色、系統狀態、Mayan 後台入口。
 
+下一階段產品角色會收斂為 `operator` / `reviewer` / `viewer` / `admin`。其中 `operator` 會合併目前 scanner + records 的日常流程，包含掃描匯入、品質檢查、OCR 結果檢查 / 校正、metadata 補齊與送審。
+
 ## 預設測試帳號
 
 正式 Portal 登入會呼叫 Mayan API。以下測試帳號目前可用：
@@ -81,6 +83,7 @@ Admin 角色可在 Portal 直接新增 Mayan 文件類型、建立使用者並�
 ## Records / Reviewer / Viewer 真實功能
 
 - Records 可讀取 Mayan 文件、預覽頁面、更新 label / description / document type / metadata，並送審。
+- OCR 應在 operator / records 流程完成：匯入後確認 OCR 狀態、檢查辨識文字、必要時校正，再送審。
 - Reviewer 只顯示 pending 文件，可核准或退回；審核狀態同步寫入 Mayan workflow。
 - Viewer 可搜尋、依 document type / metadata filter 篩選、預覽與下載文件。
 

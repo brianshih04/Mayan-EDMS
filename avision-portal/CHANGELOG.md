@@ -4,6 +4,12 @@
 
 ## Unreleased
 
+### 產品角色設計
+
+- 明確將下一階段角色收斂方向定為 `operator` / `reviewer` / `viewer` / `admin`。
+- `operator` 會合併目前 scanner + records 的日常流程，包含掃描匯入、品質檢查、OCR 結果檢查 / 校正、metadata 補齊與送審。
+- OCR 定位為送審前資料品質工作，應由 operator 完成；reviewer 只負責審核，viewer 只負責查閱。
+
 ### 後端重構
 
 - 將 Vite middleware 內的掃描 API 抽出到 `server/` 目錄（`router.js` + `lib/{config,http,watchFolder,batch,convert,mayan,auth,roleMap}.js`），`vite.config.js` 只剩 plugin 接線。

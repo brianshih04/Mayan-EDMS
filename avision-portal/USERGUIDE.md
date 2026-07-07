@@ -43,6 +43,22 @@ Admin 帳號由 Mayan 管理。超級使用者或 `Admin` 群組使用者登入�
 
 ## 角色功能
 
+## 建議角色簡化方向
+
+下一階段 Portal 會以 `Operator` 作為主要工作台，合併目前 `scanner` 與 `records` 的日常操作。Operator 應一次完成：
+
+- 掃描匯入。
+- 縮圖與空白頁檢查。
+- 刪除錯誤或不需要的掃描檔。
+- 選擇文件類型。
+- 匯入 Mayan。
+- OCR 執行狀態確認。
+- OCR 文字檢查與必要校正。
+- Metadata 補齊。
+- 送交 reviewer 審核。
+
+OCR 屬於資料品質與歸檔前處理，應在 operator 送審前完成；reviewer 只負責審核，不負責逐字修 OCR；viewer 只負責查閱，不負責修改。
+
 ### Scanner：掃描人員
 
 適用於掃描站或負責把掃描檔匯入系統的人員。
@@ -86,6 +102,8 @@ Admin 帳號由 Mayan 管理。超級使用者或 `Admin` 群組使用者登入�
   - Document date
   - Amount
   - Tags
+- 檢查 OCR 結果。
+- 必要時校正 OCR 文字。
 - 儲存分類資料到 Mayan。
 - 將文件送到 reviewer 工作台。
 
@@ -95,9 +113,11 @@ Admin 帳號由 Mayan 管理。超級使用者或 `Admin` 群組使用者登入�
 2. 開啟「文件分類」或「資料欄位」。
 3. 選擇文件。
 4. 確認文件類型。
-5. 補齊 metadata。
-6. 儲存。
-7. 按「送審」。
+5. 檢查 OCR 狀態與文字內容。
+6. 必要時校正 OCR。
+7. 補齊 metadata。
+8. 儲存。
+9. 按「送審」。
 
 ### Reviewer：審核主管
 
