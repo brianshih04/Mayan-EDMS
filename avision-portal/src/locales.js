@@ -72,6 +72,11 @@ export const locales = {
     ocrEmpty: '此文件尚無 OCR 文字。',
     ocrLoadError: '無法讀取 OCR 文字。',
     ocrNoChanges: '沒有要儲存的變更。',
+    taskScanPending: '{count} 個檔案待掃描匯入',
+    taskClassifyPending: '{count} 份文件待分類／OCR',
+    taskReturned: '{count} 份文件被退回待修改',
+    taskImportFailed: '{count} 個批次匯入失敗',
+    taskReviewPending: '{count} 份文件待審核',
     roleHelp: '每個角色只看需要的操作，降低 Mayan 原生設定頁面的干擾。'
   },
   en: {
@@ -147,6 +152,11 @@ export const locales = {
     ocrEmpty: 'No OCR text for this document.',
     ocrLoadError: 'Unable to load OCR text.',
     ocrNoChanges: 'No changes to save.',
+    taskScanPending: '{count} files to scan',
+    taskClassifyPending: '{count} docs to classify / OCR',
+    taskReturned: '{count} docs returned for rework',
+    taskImportFailed: '{count} batches failed to import',
+    taskReviewPending: '{count} docs awaiting review',
     roleHelp: 'Each role sees only the actions they need, reducing Mayan configuration noise.'
   },
   ja: {
@@ -222,6 +232,11 @@ export const locales = {
     ocrEmpty: 'この文書には OCR テキストがありません。',
     ocrLoadError: 'OCR テキストを読み込めません。',
     ocrNoChanges: '保存する変更はありません。',
+    taskScanPending: '{count} 件スキャン待ち',
+    taskClassifyPending: '{count} 件は分類／OCR待ち',
+    taskReturned: '{count} 件差戻し中',
+    taskImportFailed: '{count} 件取込失敗',
+    taskReviewPending: '{count} 件承認待ち',
     roleHelp: '役割ごとに必要な操作だけを表示し、Mayan の複雑さを隠します。'
   },
   'zh-CN': {
@@ -297,6 +312,11 @@ export const locales = {
     ocrEmpty: '此文件尚无 OCR 文字。',
     ocrLoadError: '无法读取 OCR 文字。',
     ocrNoChanges: '没有要保存的变更。',
+    taskScanPending: '{count} 个文件待扫描导入',
+    taskClassifyPending: '{count} 份文件待分类／OCR',
+    taskReturned: '{count} 份文件被退回待修改',
+    taskImportFailed: '{count} 个批次导入失败',
+    taskReviewPending: '{count} 份文件待审核',
     roleHelp: '每个角色只看需要的操作，降低 Mayan 原生设置页的干扰。'
   }
 };

@@ -695,6 +695,10 @@ button:disabled {
   margin-top: 24px;
 }
 
+.content-grid.single {
+  grid-template-columns: 1fr;
+}
+
 .work-panel,
 .queue-panel {
   background: #ffffff;
@@ -1546,11 +1550,19 @@ button:disabled {
 
 .task-row {
   display: grid;
-  grid-template-columns: 1fr auto auto;
+  grid-template-columns: 1fr auto;
   align-items: center;
   gap: 12px;
   min-height: 64px;
+  width: 100%;
+  padding: 0;
+  border: 0;
   border-bottom: 1px solid #e1e8e5;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
   transition: background-color 140ms ease;
 }
 

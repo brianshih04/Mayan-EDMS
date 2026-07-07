@@ -528,8 +528,22 @@ function LoginScreen({ language, onLanguageChange, onLogin, t }) {
 
 function Shell({ activeNav, language, onLanguageChange, onLogout, onNav, session, t }) {
   const navItems = roleNav[session.role];
-  const roleTasks = tasks[session.role];
   const rolePanel = panels[session.role];
+  const [workbench, setWorkbench] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const response = await fetch('/api/workbench/summary', { headers: authHeaders(session) });
+        const payload = await response.json().catch(() => ({}));
+        if (!cancelled && response.ok) setWorkbench(payload);
+      } catch {
+        /* dashboard summary is an enhancement; leave null (no fake numbers) */
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [session?.token]);
 
   return (
     <div className="app-shell">
@@ -586,10 +600,17 @@ function Shell({ activeNav, language, onLanguageChange, onLogout, onNav, session
               <option value="ja">日本語</option>
               <option value="zh-CN">简中</option>
             </select>
-            <button className="icon-text notification-button" type="button">
-              <Bell size={18} aria-hidden="true" />
-              {rolePanel.stats[2][1]}
-            </button>
+            {workbench?.stats && workbench.stats.alerts > 0 ? (
+              <button
+                aria-label={t('alerts')}
+                className="icon-text notification-button"
+                onClick={() => workbench.alertsTarget && onNav(workbench.alertsTarget)}
+                type="button"
+              >
+                <Bell size={18} aria-hidden="true" />
+                {workbench.stats.alerts}
+              </button>
+            ) : null}
             <button className="icon-text" onClick={onLogout} type="button">
               <LogOut size={18} aria-hidden="true" />
               {t('signOut')}
@@ -603,14 +624,20 @@ function Shell({ activeNav, language, onLanguageChange, onLogout, onNav, session
             <h2>{t(session.role)}</h2>
             <p>{t(rolePanel.intro)}</p>
           </div>
-          <div className="stats-grid">
-            {rolePanel.stats.map(([label, value]) => (
-              <div className="stat-block" key={label}>
-                <span>{t(label)}</span>
-                <strong>{value}</strong>
-              </div>
-            ))}
-          </div>
+          {workbench?.stats ? (
+            <div className="stats-grid">
+              {[
+                ['activeQueue', workbench.stats.activeQueue],
+                ['completedToday', workbench.stats.completedToday],
+                ['alerts', workbench.stats.alerts]
+              ].map(([label, value]) => (
+                <div className="stat-block" key={label}>
+                  <span>{t(label)}</span>
+                  <strong>{value}</strong>
+                </div>
+              ))}
+            </div>
+          ) : null}
         </section>
 
         {session.role === 'operator' ? (
@@ -653,9 +680,9 @@ function Shell({ activeNav, language, onLanguageChange, onLogout, onNav, session
           </section>
         ) : null}
 
-        <section className="content-grid">
+        <section className={workbench?.tasks?.length ? 'content-grid' : 'content-grid single'}>
           <PrimaryWorkArea activeNav={activeNav} session={session} t={t} />
-          <QueuePanel roleTasks={roleTasks} t={t} />
+          <QueuePanel onNav={onNav} t={t} tasks={workbench?.tasks || []} />
         </section>
       </main>
     </div>
@@ -2363,7 +2390,8 @@ function PrimaryWorkArea({ activeNav, session, t }) {
   );
 }
 
-function QueuePanel({ roleTasks, t }) {
+function QueuePanel({ tasks, onNav, t }) {
+  if (!tasks.length) return null;
   return (
     <section className="queue-panel">
       <div className="panel-heading">
@@ -2372,15 +2400,18 @@ function QueuePanel({ roleTasks, t }) {
       </div>
       <p className="queue-helper">{t('nextAction')}</p>
       <div className="task-list">
-        {roleTasks.map((task) => (
-          <article className="task-row" key={task.id}>
+        {tasks.map((task) => (
+          <button
+            className="task-row"
+            key={`${task.action}-${task.labelKey}`}
+            onClick={() => onNav(task.action)}
+            type="button"
+          >
             <div className="task-main">
-              <strong>{task.id}</strong>
-              <span>{task.label}</span>
+              <strong>{fillTemplate(t(task.labelKey), { count: task.count })}</strong>
             </div>
             <div className={`status ${task.status}`}>{t(task.status)}</div>
-            <small>{task.due}</small>
-          </article>
+          </button>
         ))}
       </div>
     </section>

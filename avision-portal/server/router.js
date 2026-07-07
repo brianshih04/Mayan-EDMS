@@ -6,6 +6,7 @@ import { readRequestBody, readToken, sendJson } from './lib/http.js';
 import { deleteWatchFolderFile, listWatchFolder, resolveWatchFolderFile } from './lib/watchFolder.js';
 import { createScannerBatch, listBatches, readBatch, writeBatch } from './lib/batch.js';
 import { listPages, renderPage } from './lib/convert.js';
+import { getWorkbenchSummary } from './lib/workbench.js';
 import {
   addUserToGroup,
   createDocumentType,
@@ -100,6 +101,16 @@ function createApiMiddleware() {
         }
         const result = await portalLogin({ username: body.username, password: body.password });
         sendJson(response, 200, result);
+        return;
+      }
+
+      // ---- workbench summary (role-aware dashboard counts) ----
+      if (request.method === 'GET' && path === '/api/workbench/summary') {
+        const token = readToken(request);
+        if (!token) { sendJson(response, 401, { error: 'Not authenticated.' }); return; }
+        if (!serviceToken) { sendJson(response, 500, { error: 'MAYAN_SERVICE_TOKEN not configured.' }); return; }
+        const session = await resolvePortalUserFromToken(token);
+        sendJson(response, 200, await getWorkbenchSummary(serviceToken, session.role));
         return;
       }
 

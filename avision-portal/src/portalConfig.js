@@ -20,6 +20,9 @@ export const roleNav = {
   admin: ['userAdmin', 'system', 'searchDocs']
 };
 
+// Sample task lines shown only on the login role-preview card (a "what does
+// this role look like" hint). The live dashboard queue comes from
+// /api/workbench/summary, not from here.
 export const tasks = {
   operator: [
     { id: 'O-1001', label: 'Scan and QC incoming pages', status: 'ready', due: 'Now', action: 'scanInbox' },
@@ -43,38 +46,10 @@ export const tasks = {
 };
 
 export const panels = {
-  operator: {
-    intro: 'operatorIntro',
-    stats: [
-      ['activeQueue', '31'],
-      ['completedToday', '24'],
-      ['alerts', '4']
-    ]
-  },
-  reviewer: {
-    intro: 'reviewerIntro',
-    stats: [
-      ['activeQueue', '8'],
-      ['completedToday', '11'],
-      ['alerts', '1']
-    ]
-  },
-  viewer: {
-    intro: 'viewerIntro',
-    stats: [
-      ['activeQueue', '2'],
-      ['completedToday', '9'],
-      ['alerts', '0']
-    ]
-  },
-  admin: {
-    intro: 'adminIntro',
-    stats: [
-      ['activeQueue', '6'],
-      ['completedToday', '5'],
-      ['alerts', '4']
-    ]
-  }
+  operator: { intro: 'operatorIntro' },
+  reviewer: { intro: 'reviewerIntro' },
+  viewer: { intro: 'viewerIntro' },
+  admin: { intro: 'adminIntro' }
 };
 
 export const workflowContent = {
