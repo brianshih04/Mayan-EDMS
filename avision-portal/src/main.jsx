@@ -619,6 +619,7 @@ function Shell({ activeNav, language, onLanguageChange, onLogout, onNav, session
               const Icon = navIcons[item];
               return (
                 <button
+                  aria-current={activeNav === item ? 'step' : undefined}
                   className={activeNav === item ? 'operator-step active' : 'operator-step'}
                   key={item}
                   onClick={() => onNav(item)}
@@ -633,22 +634,24 @@ function Shell({ activeNav, language, onLanguageChange, onLogout, onNav, session
           </section>
         ) : null}
 
-        <section className="quick-actions" aria-label={t('nextAction')}>
-          {navItems.map((item) => {
-            const Icon = navIcons[item];
-            return (
-              <button
-                className={activeNav === item ? 'quick-card active' : 'quick-card'}
-                key={item}
-                onClick={() => onNav(item)}
-                type="button"
-              >
-                <Icon size={22} aria-hidden="true" />
-                <span>{t(item)}</span>
-              </button>
-            );
-          })}
-        </section>
+        {session.role !== 'operator' ? (
+          <section className="quick-actions" aria-label={t('nextAction')}>
+            {navItems.map((item) => {
+              const Icon = navIcons[item];
+              return (
+                <button
+                  className={activeNav === item ? 'quick-card active' : 'quick-card'}
+                  key={item}
+                  onClick={() => onNav(item)}
+                  type="button"
+                >
+                  <Icon size={22} aria-hidden="true" />
+                  <span>{t(item)}</span>
+                </button>
+              );
+            })}
+          </section>
+        ) : null}
 
         <section className="content-grid">
           <PrimaryWorkArea activeNav={activeNav} session={session} t={t} />
