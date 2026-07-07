@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { createRoot } from 'react-dom/client';
 import {
   Archive,
@@ -17,7 +18,6 @@ import {
   ShieldCheck,
   SlidersHorizontal,
   Trash2,
-  UploadCloud,
   UserRound,
   UsersRound
 } from 'lucide-react';
@@ -391,86 +391,12 @@ const workflowContent = {
   scanInbox: {
     step: '1 / 3',
     title: '掃描批次匯入',
-    description: '確認掃描軟體輸出到 E:\\watch_folder，建立批次後送入 Mayan watch folder。',
-    checklist: ['掃描解析度 300 DPI', '輸出格式 PDF 或 TIFF', '檔名包含日期與批次號', '確認沒有空白頁'],
-    fields: [
-      ['批次名稱', '2026-07-05-Scan-01'],
-      ['來源設備', 'Avision Scanner'],
-      ['目的資料夾', 'E:\\watch_folder'],
-      ['掃描人員', 'Scan Station 01']
-    ],
-    primary: '建立匯入批次',
-    secondary: '開啟 watch folder'
+    primary: '建立匯入批次'
   },
   batchCheck: {
     step: '2 / 3',
     title: '批次品質檢查',
-    description: '檢查頁數、方向、可讀性與重掃項目，確認後再交給分類人員。',
-    checklist: ['頁數與紙本相符', '沒有歪斜或裁切', '條碼/印章清楚', '低對比頁面已標記'],
-    fields: [
-      ['批次編號', 'S-1028'],
-      ['文件數量', '18'],
-      ['需要重掃', '3'],
-      ['送出狀態', 'Ready']
-    ],
-    primary: '送出給分類',
-    secondary: '標記重掃'
-  },
-  classify: {
-    step: '1 / 2',
-    title: '文件分類',
-    description: '依照文件內容選擇 document type，讓後續 metadata 與 OCR 規則能正確套用。',
-    checklist: ['確認文件首頁', '選擇 document type', '套用保存期限', '分派到正確 cabinet'],
-    fields: [
-      ['Document type', 'Invoice'],
-      ['Cabinet', 'Finance / Vendor'],
-      ['OCR language', '繁體中文 + English'],
-      ['Retention', '7 years']
-    ],
-    primary: '套用分類',
-    secondary: '查看原始文件'
-  },
-  metadata: {
-    step: '2 / 2',
-    title: '資料欄位補齊',
-    description: '補齊客戶、案件、日期與金額等欄位，讓查詢和審核能依條件篩選。',
-    checklist: ['客戶名稱一致', '案件號格式正確', '日期與文件相符', '必要欄位皆完成'],
-    fields: [
-      ['Customer', 'Avision'],
-      ['Case ID', 'AV-9341'],
-      ['Document date', '2026-07-05'],
-      ['Amount', 'Auto suggested']
-    ],
-    primary: '儲存 metadata',
-    secondary: '送審'
-  },
-  approvals: {
-    step: 'Decision',
-    title: '審核與核准',
-    description: '只顯示需要主管決策的文件，保留核准、退回與審核註記。',
-    checklist: ['文件類型正確', 'metadata 完整', '權限符合規範', '重複文件已排除'],
-    fields: [
-      ['審核批次', 'R-3301'],
-      ['風險等級', 'Normal'],
-      ['申請人', 'Records Desk'],
-      ['審核註記', 'Ready for approval']
-    ],
-    primary: '核准文件',
-    secondary: '退回修改'
-  },
-  system: {
-    step: 'Admin',
-    title: '系統連線與同步',
-    description: '確認 Mayan、Cloudflare tunnel、watch folder 與角色同步狀態。',
-    checklist: ['Mayan tunnel online', 'Portal tunnel online', 'watch folder 可寫入', '角色權限已同步'],
-    fields: [
-      ['Mayan URL', 'mayan-emds.avision-gb10.org'],
-      ['Portal URL', 'mayan-portal.avision-gb10.org'],
-      ['Watch folder', 'E:\\watch_folder'],
-      ['Auth mode', 'Demo credential mapping']
-    ],
-    primary: '重新檢查狀態',
-    secondary: '開啟 Mayan 後台'
+    primary: '送出給分類'
   }
 };
 
@@ -495,6 +421,10 @@ const scannerStrings = {
     scannerDeleteConfirm: '確定要刪除選取的 {count} 個檔案？這會從 watch folder 移除原始檔。',
     scannerDeleteDone: '已刪除 {count} 個檔案。',
     scannerDeleteFailed: '刪除失敗',
+    scannerDeleteTitle: '刪除選取的檔案',
+    scannerDeleteConfirmAction: '確認刪除',
+    scannerCancel: '取消',
+    scannerFileCount: '共 {count} 個檔案',
     scannerBlankCount: '疑似空白 {count}',
     scannerFilterBlank: '只看疑似空白',
     scannerFilterEmpty: '沒有符合過濾條件的檔案。',
@@ -505,7 +435,6 @@ const scannerStrings = {
     qcIgnore: '忽略',
     scannerQcHint: '切換品質狀態',
     scannerEmpty: '目前沒有可匯入的 PDF、TIFF 或影像檔。',
-    scannerLoadingFolder: '正在讀取 watch folder...',
     scannerPreviewEmpty: '選取左側檔案可在此預覽與標記品質。',
     scannerPdfPreviewHint: 'PDF 可預覽；逐頁縮圖與逐頁空白偵測將在後續版本提供。',
     scannerAnalyzingImage: '正在分析影像...',
@@ -559,6 +488,7 @@ const scannerStrings = {
     import_importing: '匯入中',
     import_imported: '已匯入',
     import_failed: '失敗',
+    import_queued: '排隊中',
     metadataFilters: 'Metadata 篩選',
     adminSystemStatus: '系統狀態',
     adminPortalSettings: 'Portal 設定',
@@ -595,6 +525,10 @@ const scannerStrings = {
     scannerDeleteConfirm: 'Delete {count} selected file(s)? This removes the originals from the watch folder.',
     scannerDeleteDone: 'Deleted {count} file(s).',
     scannerDeleteFailed: 'Delete failed',
+    scannerDeleteTitle: 'Delete selected files',
+    scannerDeleteConfirmAction: 'Delete',
+    scannerCancel: 'Cancel',
+    scannerFileCount: '{count} files',
     scannerBlankCount: '{count} suspected blank',
     scannerFilterBlank: 'Only suspected blank',
     scannerFilterEmpty: 'No files match the filter.',
@@ -605,7 +539,6 @@ const scannerStrings = {
     qcIgnore: 'Ignore',
     scannerQcHint: 'Cycle quality state',
     scannerEmpty: 'No importable PDF, TIFF, or image files yet.',
-    scannerLoadingFolder: 'Reading watch folder...',
     scannerPreviewEmpty: 'Select a file on the left to preview and mark quality.',
     scannerPdfPreviewHint: 'PDF preview available; per-page thumbnails and blank detection arrive in a later build.',
     scannerAnalyzingImage: 'Analyzing image...',
@@ -659,6 +592,7 @@ const scannerStrings = {
     import_importing: 'Importing',
     import_imported: 'Imported',
     import_failed: 'Failed',
+    import_queued: 'Queued',
     metadataFilters: 'Metadata filters',
     adminSystemStatus: 'System status',
     adminPortalSettings: 'Portal settings',
@@ -695,6 +629,10 @@ const scannerStrings = {
     scannerDeleteConfirm: '選択した {count} 件を削除しますか？watch folder から元ファイルを削除します。',
     scannerDeleteDone: '{count} 件を削除しました。',
     scannerDeleteFailed: '削除に失敗しました',
+    scannerDeleteTitle: '選択したファイルを削除',
+    scannerDeleteConfirmAction: '削除',
+    scannerCancel: 'キャンセル',
+    scannerFileCount: '全 {count} 件',
     scannerBlankCount: '空白疑い {count}',
     scannerFilterBlank: '空白疑いのみ',
     scannerFilterEmpty: 'フィルターに一致するファイルがありません。',
@@ -705,7 +643,6 @@ const scannerStrings = {
     qcIgnore: '無視',
     scannerQcHint: '品質状態を切替',
     scannerEmpty: '取込可能な PDF・TIFF・画像ファイルがありません。',
-    scannerLoadingFolder: 'watch folder を読み込み中...',
     scannerPreviewEmpty: '左のファイルを選択してプレビュー・品質設定。',
     scannerPdfPreviewHint: 'PDF はプレビュー可能。ページごとのサムネイルと空白検出は今後の版で提供します。',
     scannerAnalyzingImage: '画像を分析中...',
@@ -759,6 +696,7 @@ const scannerStrings = {
     import_importing: '取込中',
     import_imported: '取込済み',
     import_failed: '失敗',
+    import_queued: '順番待ち',
     metadataFilters: 'メタデータフィルター',
     adminSystemStatus: 'システム状態',
     adminPortalSettings: 'Portal 設定',
@@ -795,6 +733,10 @@ const scannerStrings = {
     scannerDeleteConfirm: '确定要删除选择的 {count} 个文件？这会从 watch folder 移除原始文件。',
     scannerDeleteDone: '已删除 {count} 个文件。',
     scannerDeleteFailed: '删除失败',
+    scannerDeleteTitle: '删除选取的文件',
+    scannerDeleteConfirmAction: '确认删除',
+    scannerCancel: '取消',
+    scannerFileCount: '共 {count} 个文件',
     scannerBlankCount: '疑似空白 {count}',
     scannerFilterBlank: '只看疑似空白',
     scannerFilterEmpty: '没有符合过滤条件的文件。',
@@ -805,7 +747,6 @@ const scannerStrings = {
     qcIgnore: '忽略',
     scannerQcHint: '切换质量状态',
     scannerEmpty: '目前没有可导入的 PDF、TIFF 或图像文件。',
-    scannerLoadingFolder: '正在读取 watch folder...',
     scannerPreviewEmpty: '选择左侧文件可在此预览与标记质量。',
     scannerPdfPreviewHint: 'PDF 可预览；逐页缩图与逐页空白检测将在后续版本提供。',
     scannerAnalyzingImage: '正在分析图像...',
@@ -859,6 +800,7 @@ const scannerStrings = {
     import_importing: '导入中',
     import_imported: '已导入',
     import_failed: '失败',
+    import_queued: '排队中',
     metadataFilters: 'Metadata 筛选',
     adminSystemStatus: '系统状态',
     adminPortalSettings: 'Portal 设置',
@@ -1039,6 +981,94 @@ class ErrorBoundary extends React.Component {
     }
     return this.props.children;
   }
+}
+
+// Accessible modal built on a React portal. Focuses the first focusable element
+// (put the non-destructive action first in DOM order), traps Tab/Shift+Tab,
+// closes on Escape and backdrop click, locks body scroll while open, and restores
+// focus on close. Restore target is the element that was focused when the modal
+// opened (captured below) — `triggerRef`/`fallbackFocusRef` are fallbacks, since
+// the trigger may be disabled by the time we close (e.g. the delete button is
+// disabled while deletion runs and after the selection is cleared), and disabled
+// controls can't receive focus.
+function Modal({ open, onClose, titleId, descId, triggerRef, fallbackFocusRef, children }) {
+  const dialogRef = useRef(null);
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const previouslyFocused = document.activeElement;
+    const dialog = dialogRef.current;
+    if (dialog) {
+      const focusable = dialog.querySelector(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      (focusable || dialog).focus?.();
+    }
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      const primary = previouslyFocused || triggerRef?.current;
+      if (primary && !primary.disabled && document.contains(primary)) {
+        primary.focus?.();
+        return;
+      }
+      const fallback = fallbackFocusRef?.current;
+      if (fallback && document.contains(fallback)) {
+        fallback.focus?.();
+      }
+    };
+  }, [open, triggerRef, fallbackFocusRef]);
+
+  if (!open) return null;
+
+  function handleKeyDown(event) {
+    if (event.key === 'Escape') {
+      event.stopPropagation();
+      onClose();
+      return;
+    }
+    if (event.key !== 'Tab') return;
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    const nodes = Array.from(
+      dialog.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      )
+    ).filter((el) => !el.disabled);
+    if (!nodes.length) return;
+    const first = nodes[0];
+    const last = nodes[nodes.length - 1];
+    const active = document.activeElement;
+    if (event.shiftKey) {
+      if (active === first || !dialog.contains(active)) {
+        event.preventDefault();
+        last.focus();
+      }
+    } else if (active === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  }
+
+  return createPortal(
+    <div className="modal-backdrop" onClick={onClose}>
+      <div
+        aria-describedby={descId}
+        aria-labelledby={titleId}
+        aria-modal="true"
+        className="modal-dialog"
+        onClick={(event) => event.stopPropagation()}
+        onKeyDown={handleKeyDown}
+        ref={dialogRef}
+        role="dialog"
+        tabIndex={-1}
+      >
+        {children}
+      </div>
+    </div>,
+    document.body
+  );
 }
 
 function App() {
@@ -1443,6 +1473,9 @@ function PrimaryWorkArea({ activeNav, session, t }) {
   const [settingsSaving, setSettingsSaving] = useState(false);
   const [adminUser, setAdminUser] = useState({ username: '', password: '', role: 'viewer' });
   const [adminUserCreating, setAdminUserCreating] = useState(false);
+  const deleteBtnRef = useRef(null);
+  const livePanelRef = useRef(null);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
 
   async function loadScannerFiles() {
     setScannerLoading(true);
@@ -2017,14 +2050,12 @@ function PrimaryWorkArea({ activeNav, session, t }) {
     return payload;
   }
 
-  async function deleteSelectedFiles() {
+  async function runDeleteSelectedFiles() {
     const names = Array.from(selectedFiles);
     if (!names.length) {
       setScannerError(t('scannerNoSelection'));
       return;
     }
-    const confirmed = window.confirm(fillTemplate(t('scannerDeleteConfirm'), { count: names.length }));
-    if (!confirmed) return;
 
     setScannerDeleting(true);
     setScannerError('');
@@ -2044,6 +2075,23 @@ function PrimaryWorkArea({ activeNav, session, t }) {
     } finally {
       setScannerDeleting(false);
     }
+  }
+
+  function openDeleteConfirm() {
+    if (!selectedFiles.size) {
+      setScannerError(t('scannerNoSelection'));
+      return;
+    }
+    setConfirmDeleteOpen(true);
+  }
+
+  function confirmDelete() {
+    setConfirmDeleteOpen(false);
+    runDeleteSelectedFiles();
+  }
+
+  function cancelDelete() {
+    setConfirmDeleteOpen(false);
   }
 
   function setQc(file, state) {
@@ -2110,8 +2158,16 @@ function PrimaryWorkArea({ activeNav, session, t }) {
         <div className="document-workbench">
           <div className="result-list">
             {documentsLoading ? (
-              <div className="scanner-empty">{t('documentsLoading')}</div>
-          ) : visibleMayanDocuments.length ? (
+              Array.from({ length: 5 }).map((_, index) => (
+                <div className="result-skeleton" key={index}>
+                  <div className="scanner-skeleton scanner-skeleton-block" />
+                  <div className="result-skeleton-lines">
+                    <div className="scanner-skeleton scanner-skeleton-line wide" />
+                    <div className="scanner-skeleton scanner-skeleton-line narrow" />
+                  </div>
+                </div>
+              ))
+            ) : visibleMayanDocuments.length ? (
             visibleMayanDocuments.map((document) => (
                 <article
                   className={selectedMayanDocument?.id === document.id ? 'result-row active' : 'result-row'}
@@ -2477,8 +2533,13 @@ function PrimaryWorkArea({ activeNav, session, t }) {
                 <div className="permission-row" key={batch.id}>
                   <Archive size={20} aria-hidden="true" />
                   <div>
-                    <strong>{batch.id}</strong>
-                    <span>{batch.status} / {batch.importedFiles}/{batch.totalFiles} / failed {batch.failedFiles}</span>
+                    <strong>
+                      {batch.id}
+                      <span className={`batch-status batch-${batch.status}`}>{t('import_' + batch.status)}</span>
+                    </strong>
+                    <span>
+                      {batch.importedFiles}/{batch.totalFiles} imported{batch.failedFiles ? ` · ${batch.failedFiles} failed` : ''}
+                    </span>
                   </div>
                 </div>
               ))
@@ -2500,21 +2561,12 @@ function PrimaryWorkArea({ activeNav, session, t }) {
         <div>
           <p className="eyebrow">{workflow.step}</p>
           <h2>{workflow.title}</h2>
-          <p>{workflow.description}</p>
         </div>
         <span className={`workflow-badge ${roleAccent[session.role]}`}>{t(session.role)}</span>
       </div>
 
-      <div className="intake-box compact">
-        <UploadCloud size={42} aria-hidden="true" />
-        <div>
-          <h3>{activeNav === 'system' ? t('connected') : t(activeNav)}</h3>
-          <p>{activeNav === 'scanInbox' ? t('dropText') : workflow.description}</p>
-        </div>
-      </div>
-
       {scannerMode ? (
-        <div className="scanner-live-panel">
+        <div className="scanner-live-panel" ref={livePanelRef} tabIndex={-1}>
           <div className="scanner-live-header">
             <div>
               <p className="eyebrow">{t('scannerLiveFolder')}</p>
@@ -2554,7 +2606,8 @@ function PrimaryWorkArea({ activeNav, session, t }) {
               <button
                 className="danger-action"
                 disabled={!selectedFiles.size || scannerDeleting || scannerCreating || importing}
-                onClick={deleteSelectedFiles}
+                onClick={openDeleteConfirm}
+                ref={deleteBtnRef}
                 type="button"
               >
                 <Trash2 size={16} aria-hidden="true" />
@@ -2597,6 +2650,13 @@ function PrimaryWorkArea({ activeNav, session, t }) {
                 id: scannerBatch.id,
                 count: scannerBatch.files.length
               })}
+            </p>
+          ) : null}
+
+          {visibleFiles.length ? (
+            <p className="scanner-grid-summary">
+              {fillTemplate(t('scannerFileCount'), { count: scannerFiles.length })}
+              {onlyBlank ? <span className="scanner-grid-filter"> · {t('scannerFilterBlank')}</span> : null}
             </p>
           ) : null}
 
@@ -2665,6 +2725,7 @@ function PrimaryWorkArea({ activeNav, session, t }) {
                           </span>
                         </button>
                         <button
+                          aria-label={`${t('qc' + capitalize(qc))} · ${t('scannerQcHint')}`}
                           className={`qc-badge qc-${qc}`}
                           onClick={() => cycleQc(file)}
                           title={t('scannerQcHint')}
@@ -2678,9 +2739,14 @@ function PrimaryWorkArea({ activeNav, session, t }) {
                 ) : (
                   <div className="scanner-empty">{t('scannerFilterEmpty')}</div>
                 )
+              ) : scannerLoading ? (
+                Array.from({ length: 8 }).map((_, index) => (
+                  <div className="scanner-skeleton scanner-skeleton-card" key={index} />
+                ))
               ) : (
                 <div className="scanner-empty">
-                  {scannerLoading ? t('scannerLoadingFolder') : t('scannerEmpty')}
+                  {t('scannerEmpty')}
+                  <p className="scanner-empty-hint">{t('dropText')}</p>
                 </div>
               )}
             </div>
@@ -2691,7 +2757,11 @@ function PrimaryWorkArea({ activeNav, session, t }) {
                   <div className="scanner-preview-frame">
                     {isMultiPage(selectedScannerFile) ? (
                       scannerPagesLoading ? (
-                        <div className="scanner-empty">{t('scannerLoadingFolder')}</div>
+                        <div className="scanner-skeleton-strip">
+                          {Array.from({ length: 6 }).map((_, index) => (
+                            <div className="scanner-skeleton scanner-skeleton-page" key={index} />
+                          ))}
+                        </div>
                       ) : scannerPagesError ? (
                         <div className="scanner-empty">{scannerPagesError}</div>
                       ) : scannerPages.length ? (
@@ -2740,6 +2810,7 @@ function PrimaryWorkArea({ activeNav, session, t }) {
                     <div className="scanner-qc-row">
                       {['normal', 'rescan', 'ignore'].map((state) => (
                         <button
+                          aria-pressed={(qcStates[qcKey(selectedScannerFile)] || 'normal') === state}
                           className={`qc-badge qc-${state} ${(qcStates[qcKey(selectedScannerFile)] || 'normal') === state ? 'active' : ''}`}
                           key={state}
                           onClick={() => setQc(selectedScannerFile, state)}
@@ -2783,24 +2854,6 @@ function PrimaryWorkArea({ activeNav, session, t }) {
           </div>
         </div>
       ) : null}
-
-      <div className="checklist-grid">
-        {workflow.checklist.map((item) => (
-          <div className="check-item" key={item}>
-            <CheckCircle2 size={17} aria-hidden="true" />
-            <span>{item}</span>
-          </div>
-        ))}
-      </div>
-
-      <div className="metadata-grid">
-        {workflow.fields.map(([label, value]) => (
-          <label key={label}>
-            <span>{label}</span>
-            <input defaultValue={value} />
-          </label>
-        ))}
-      </div>
 
       <div className="action-row">
         {scannerMode && !DEMO_LOGIN ? (
@@ -2848,10 +2901,6 @@ function PrimaryWorkArea({ activeNav, session, t }) {
                 : (importing ? t('scannerImporting') : t('scannerImportToMayan')))
               : workflow.primary)}
         </button>
-        <button className="subtle-action" type="button">
-          <FolderInput size={18} aria-hidden="true" />
-          {workflow.secondary}
-        </button>
       </div>
 
       {scannerMode && Object.keys(importProgress).length ? (
@@ -2895,6 +2944,33 @@ function PrimaryWorkArea({ activeNav, session, t }) {
           </ul>
         </div>
       ) : null}
+
+      <Modal
+        descId="delete-desc"
+        fallbackFocusRef={livePanelRef}
+        onClose={cancelDelete}
+        open={confirmDeleteOpen}
+        titleId="delete-title"
+        triggerRef={deleteBtnRef}
+      >
+        <h3 id="delete-title">{t('scannerDeleteTitle')}</h3>
+        <p id="delete-desc">{fillTemplate(t('scannerDeleteConfirm'), { count: selectedFiles.size })}</p>
+        {/* Cancel is first in DOM order so the Modal focuses it on open —
+            keep it ahead of the destructive action. */}
+        <div className="modal-actions">
+          <button className="subtle-action" onClick={cancelDelete} type="button">
+            {t('scannerCancel')}
+          </button>
+          <button
+            className="danger-action"
+            disabled={scannerDeleting}
+            onClick={confirmDelete}
+            type="button"
+          >
+            {scannerDeleting ? t('scannerLoading') : t('scannerDeleteConfirmAction')}
+          </button>
+        </div>
+      </Modal>
     </section>
   );
 }

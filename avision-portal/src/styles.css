@@ -52,11 +52,13 @@ button {
   align-items: center;
   gap: 24px;
   padding: 56px;
+  position: relative;
+  overflow: hidden;
   background:
-    linear-gradient(135deg, rgba(11, 68, 64, 0.9), rgba(15, 118, 110, 0.8)),
-    url("https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=1600&q=80");
-  background-size: cover;
-  background-position: center;
+    radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px) 0 0 / 22px 22px,
+    radial-gradient(circle at 18% 22%, rgba(246, 211, 101, 0.18), transparent 42%),
+    radial-gradient(circle at 82% 78%, rgba(45, 212, 191, 0.22), transparent 46%),
+    linear-gradient(135deg, #0a3f3b 0%, #0f766e 65%);
   color: #fff;
 }
 
@@ -731,65 +733,17 @@ button:disabled {
   background: #dce3e0;
 }
 
-.intake-box {
-  min-height: 180px;
-  display: grid;
-  grid-template-columns: 64px 1fr;
-  align-items: center;
-  gap: 18px;
-  border: 1px dashed #91aaa4;
-  border-radius: 8px;
-  padding: 24px;
-  background:
-    linear-gradient(135deg, rgba(231, 247, 244, 0.92), rgba(255, 255, 255, 0.9));
-}
-
-.intake-box.compact {
-  min-height: 124px;
-  margin-bottom: 18px;
-}
-
-.intake-box h3 {
-  margin: 0;
-  font-size: 20px;
-}
-
-.intake-box p {
-  margin: 8px 0 0;
-  color: #5b6764;
-}
-
-.checklist-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.check-item {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  min-height: 44px;
-  border: 1px solid #e1e8e5;
-  border-radius: 8px;
-  background: #f8faf9;
-  color: #40504c;
-  font-size: 13px;
-  font-weight: 700;
-  padding: 10px 12px;
-}
-
-.check-item svg {
-  color: var(--teal);
-  flex: 0 0 auto;
-}
-
 .scanner-live-panel {
   border: 1px solid #dce3e0;
   border-radius: 8px;
   background: #fff;
   margin-bottom: 18px;
   overflow: hidden;
+}
+
+.scanner-live-panel:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: -2px;
 }
 
 .scanner-live-header {
@@ -944,10 +898,6 @@ button:disabled {
   box-shadow: 0 0 0 3px rgba(217, 72, 65, 0.18);
   font-size: 10px;
   padding: 4px 7px;
-}
-
-.scanner-mini-meta {
-  display: none;
 }
 
 .scanner-empty,
@@ -1419,24 +1369,6 @@ button:disabled {
   background: #fee2e2;
 }
 
-.metadata-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
-  margin-top: 20px;
-}
-
-.metadata-grid label span {
-  display: block;
-  margin-bottom: 6px;
-  color: #5b6764;
-  font-size: 13px;
-}
-
-.metadata-grid input {
-  width: 100%;
-}
-
 .panel-heading {
   gap: 8px;
   margin-bottom: 4px;
@@ -1530,6 +1462,37 @@ button:disabled {
   margin: 0;
   color: #5b6764;
   font-size: 13px;
+}
+
+.batch-status {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: capitalize;
+  vertical-align: middle;
+}
+
+.batch-status.batch-imported {
+  background: #d9f8e5;
+  color: #136733;
+}
+
+.batch-status.batch-importing {
+  background: #fff1c7;
+  color: #765a00;
+}
+
+.batch-status.batch-queued {
+  background: #dcecff;
+  color: #1d4f8f;
+}
+
+.batch-status.batch-failed {
+  background: #ffe1dd;
+  color: #9b2618;
 }
 
 .compact-list {
@@ -1839,7 +1802,6 @@ button:disabled {
 
   .role-picker,
   .account-grid,
-  .metadata-grid,
   .stats-grid,
   .nav-list {
     grid-template-columns: 1fr;
@@ -1862,24 +1824,143 @@ button:disabled {
     grid-template-columns: 1fr;
   }
 
-  .scanner-thumbnail-grid {
-    grid-template-columns: 1fr;
-    border-right: 0;
-    border-bottom: 1px solid #e1e8e5;
-    max-height: 520px;
-  }
-
-  .intake-box {
-    grid-template-columns: 1fr;
-  }
-
   .task-row {
     grid-template-columns: 1fr;
     align-items: start;
     padding: 12px 0;
   }
 
-  .checklist-grid {
-    grid-template-columns: 1fr;
+}
+
+/* ---- Scanner polish: modal, skeletons, grid summary ---- */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(18, 31, 29, 0.55);
+}
+
+.modal-dialog {
+  width: min(420px, 100%);
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: 0 24px 60px rgba(18, 31, 29, 0.28);
+  padding: 22px;
+  outline: none;
+}
+
+.modal-dialog h3 {
+  margin: 0 0 8px;
+  font-size: 18px;
+}
+
+.modal-dialog p {
+  margin: 0 0 18px;
+  color: #5b6764;
+  font-size: 14px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.scanner-grid-summary {
+  margin: 4px 0 10px;
+  color: #52625e;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.scanner-grid-filter {
+  color: #9a6a00;
+  font-weight: 800;
+}
+
+.scanner-empty-hint {
+  margin: 8px 0 0;
+  color: #66726e;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+/* Skeletons — scoped; the shared .scanner-empty is intentionally untouched. */
+.scanner-skeleton {
+  background: linear-gradient(90deg, #eef2f0 25%, #e2e9e5 37%, #eef2f0 63%);
+  background-size: 400% 100%;
+  animation: scanner-shimmer 1.4s ease-in-out infinite;
+}
+
+.scanner-skeleton-card {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  border: 1px solid #e6ecea;
+  border-radius: 8px;
+}
+
+.scanner-skeleton-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 4px;
+}
+
+.scanner-skeleton-page {
+  flex: 0 0 auto;
+  width: 86px;
+  aspect-ratio: 3 / 4;
+  border-radius: 6px;
+}
+
+/* document-list skeleton rows (records / reviewer / viewer workbench) */
+.result-skeleton {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 68px;
+  border-bottom: 1px solid #e1e8e5;
+}
+
+.result-skeleton .scanner-skeleton-block {
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+}
+
+.result-skeleton-lines {
+  flex: 1;
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.scanner-skeleton-line {
+  height: 12px;
+  border-radius: 6px;
+}
+
+.scanner-skeleton-line.wide {
+  width: 70%;
+}
+
+.scanner-skeleton-line.narrow {
+  width: 45%;
+}
+
+@keyframes scanner-shimmer {
+  0% { background-position: 100% 0; }
+  100% { background-position: 0 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scanner-skeleton {
+    animation: none;
   }
 }
