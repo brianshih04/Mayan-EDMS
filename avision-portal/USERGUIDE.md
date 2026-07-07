@@ -57,7 +57,7 @@ Admin 帳號由 Mayan 管理。超級使用者或 `Admin` 群組使用者登入�
 - Metadata 補齊。
 - 送交 reviewer 審核。
 
-OCR 屬於資料品質與歸檔前處理，應在 operator 送審前完成；reviewer 只負責審核，不負責逐字修 OCR；viewer 只負責查閱，不負責修改。
+OCR 屬於資料品質與歸檔前處理，應由 operator 在送審前先完成；reviewer 審核時也可以校正 OCR 文字，或在 OCR 問題較大時退回 operator 補正。Viewer 只負責查閱，不負責修改。
 
 ### Scanner：掃描人員
 
@@ -128,6 +128,8 @@ OCR 屬於資料品質與歸檔前處理，應在 operator 送審前完成；rev
 - 只顯示待審核文件。
 - 預覽文件內容。
 - 查看文件基本資料與 metadata。
+- 查看 OCR 文字。
+- 校正 OCR 文字。
 - 填寫審核註記。
 - 核准文件。
 - 退回文件。
@@ -138,9 +140,10 @@ OCR 屬於資料品質與歸檔前處理，應在 operator 送審前完成；rev
 1. 使用 `reviewer` 登入 Portal。
 2. 開啟「審核清單」。
 3. 選擇待審核文件。
-4. 檢查文件與 metadata。
-5. 填寫審核註記。
-6. 選擇「核准」或「退回」。
+4. 檢查文件、metadata 與 OCR 文字。
+5. 必要時校正 OCR。
+6. 填寫審核註記。
+7. 選擇「核准」或「退回」。
 
 ### Viewer：查閱使用者
 

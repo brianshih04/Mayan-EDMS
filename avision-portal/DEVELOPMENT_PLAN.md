@@ -22,7 +22,7 @@
 下一階段角色應收斂成以 `operator` 為主的工作流：
 
 - `operator`：掃描匯入、縮圖檢查、空白頁提示、批次建立、匯入 Mayan、文件分類、OCR 結果檢查 / 校正、metadata 補齊、送審。
-- `reviewer`：文件審核、核准、退回、註記。
+- `reviewer`：文件審核、OCR 複核 / 校正、核准、退回、註記。
 - `viewer`：文件搜尋、預覽、下載，唯讀。
 - `admin`：文件類型、使用者與角色、系統狀態、Mayan 後台入口。
 
@@ -30,11 +30,11 @@
 
 - `scanner`：掃描匯入、縮圖檢查、空白頁提示、批次建立、匯入 Mayan、刪除不需要的掃描檔。
 - `records`：文件分類、metadata 補齊、送審。
-- `reviewer`：文件審核、核准、退回、註記。
+- `reviewer`：文件審核、OCR 複核 / 校正、核准、退回、註記。
 - `viewer`：文件搜尋、預覽、下載。
 - `admin`：文件類型、使用者與角色、系統狀態、Mayan 後台入口。
 
-建議實作時不要再把 OCR 放到 reviewer 或 viewer。OCR 是資料品質的一部分，應該由 operator 在送審前完成。既有 `scanner` 與 `records` 帳號可先同時映射到 operator 工作台，避免一次改動 Mayan group 造成既有帳號失效。
+建議實作時不要把 OCR 做成獨立角色，也不要放到 viewer。OCR 是資料品質的一部分，應該由 operator 在送審前先完成；reviewer 審核時若發現 OCR 錯誤，也應能直接校正或退回 operator 補正。既有 `scanner` 與 `records` 帳號可先同時映射到 operator 工作台，避免一次改動 Mayan group 造成既有帳號失效。
 
 ## 已完成
 
@@ -159,10 +159,10 @@ Mayan 仍是正式文件後端。Portal 目前已呼叫 Mayan API 完成以下�
 
 ## OCR 整合方向
 
-OCR 應納入 operator 工作台，而不是獨立角色。建議流程如下：
+OCR 應納入 operator 與 reviewer 工作台，而不是獨立角色。建議流程如下：
 
 ```text
-scan/import -> thumbnail QC -> document type -> OCR -> OCR review/correction -> metadata -> submit review
+scan/import -> thumbnail QC -> document type -> OCR -> operator correction -> metadata -> submit review -> reviewer OCR correction/approval
 ```
 
 建議下一階段實作項目：
@@ -170,9 +170,10 @@ scan/import -> thumbnail QC -> document type -> OCR -> OCR review/correction -> 
 - 在 operator 工作台加入 OCR 狀態欄位：未執行、執行中、需校正、已確認。
 - 匯入 Mayan 後讀取 Mayan OCR / parsed text 結果，顯示在文件預覽旁。
 - 提供 OCR 文字校正區，operator 可修正常見辨識錯誤。
-- OCR 結果確認後，才能送審給 reviewer。
+- Reviewer 工作台也需顯示 OCR 文字與校正 UI，審核時可直接修正小錯誤。
+- OCR 結果由 operator 初次確認後可送審；reviewer 可再次確認、校正、核准或退回。
 - 若 OCR 尚未完成或失敗，operator 可重跑 OCR 或標記「無需 OCR」。
-- viewer 搜尋應使用已確認的 OCR / index 文字，但 viewer 不負責校正。
+- Viewer 搜尋應使用已確認的 OCR / index 文字，但 viewer 不提供校正。
 
 ## Scanner 後續規劃
 
