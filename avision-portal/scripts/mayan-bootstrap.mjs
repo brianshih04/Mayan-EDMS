@@ -59,7 +59,7 @@ try {
   try {
     const groups = await getUserGroups(token, me.id);
     console.log(groups.length ? groups.join(', ') : '(none)');
-  } catch (error) {
+  } catch {
     // Expected for superuser/staff: Mayan excludes them from the lookup queryset.
     console.log('(not listable for admin — expected if admin is a superuser; role will resolve to admin)');
   }

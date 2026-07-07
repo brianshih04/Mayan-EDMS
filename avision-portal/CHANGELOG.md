@@ -81,6 +81,9 @@
 - 新增 `.env.example`。
 - 新增 `npm run test:smoke`，驗證 Mayan service token、document types、documents、review workflow status、settings、batch queue。
 - 前端登入 session 加入 8 小時到期自動登出。
+- 將 base locales 與 scanner strings 從 `src/main.jsx` 拆到 `src/locales.js`。
+- 將 demo users、role navigation、dashboard panels、workflow content 拆到 `src/portalConfig.js`。
+- 新增 ESLint flat config 與 `npm run lint`，先以保守規則檢查未定義與未使用變數。
 
 
 ## 0.1.0 - 2026-07-05

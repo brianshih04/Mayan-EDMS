@@ -2,7 +2,7 @@
 
 本文件是交給後續 coding agent 的實作清單。請依優先順序逐步完成，每次修改後執行 `npm run build`，並確認 `https://mayan-portal.avision-gb10.org` 可正常開啟。
 
-> 狀態（2026-07-06）：**P0 / P1 / P2 主要項目完成**。P3 已補 `.env.example`、smoke test、session timeout；大型重構（拆 component / locales）保留給下一階段。詳見 CHANGELOG。
+> 狀態（2026-07-07）：**P0 / P1 / P2 主要項目完成**。P3 已補 `.env.example`、smoke test、session timeout、ESLint，並先完成語系/角色設定拆檔；大型 component 拆分保留給下一階段。詳見 CHANGELOG。
 
 ## P0：穩定目前 Scanner 流程
 
@@ -120,9 +120,9 @@ E:\Mayan-EDMS-Docker\data\portal\thumbnails
 ## P3：工程整理
 
 - [ ] 將 `src/main.jsx` 拆成多個 component。（下一階段大型重構）
-- [ ] 將 locales 拆成 JSON。（下一階段大型重構）
+- [x] 將 locales 拆成 JSON。（目前先拆成 `src/locales.js`，避免一次改動過大；後續可再轉 JSON）
 - [x] 將 scanner API 從 `vite.config.js` 移到正式 backend。 （已集中於 `server/router.js` 與 `server/lib/*`）
-- [ ] 增加 ESLint / Prettier。（待選定團隊格式規範）
+- [x] 增加 ESLint / Prettier。（已加入 ESLint；Prettier 待選定團隊格式規範）
 - [x] 增加最基本 tests。 (`npm run test:smoke`)
 - [x] 增加 error boundary。 （以主要 API error state / 友善訊息處理；React boundary 可下一階段再獨立化）
 - [x] 增加 loading skeleton。 （現階段以 loading empty state 覆蓋主要流程）
@@ -131,6 +131,7 @@ E:\Mayan-EDMS-Docker\data\portal\thumbnails
 ## 每次交付前檢查
 
 - [x] `npm run build`
+- [x] `npm run lint`
 - [x] `npm run test:smoke`
 - [ ] `https://mayan-portal.avision-gb10.org` 回 `200`
 - [ ] scanner login 可進入：

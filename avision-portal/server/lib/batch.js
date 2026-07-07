@@ -58,7 +58,6 @@ export async function createScannerBatch(payload) {
   }
 
   const availableFiles = await listWatchFolder();
-  const availableByName = new Map(availableFiles.map((file) => [file.name, file]));
   const qcByName = new Map(safe.map((entry) => [entry.name, entry]));
 
   const batchFiles = availableFiles
