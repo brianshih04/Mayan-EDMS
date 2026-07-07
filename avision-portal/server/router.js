@@ -341,7 +341,7 @@ function createApiMiddleware() {
         if (!token) { sendJson(response, 401, { error: 'Not authenticated.' }); return; }
         const body = await readRequestBody(request);
         const session = serviceToken ? await resolvePortalUserFromToken(token) : { role: '', user: {} };
-        const canSubmitForReview = session.role === 'classifier' && body.status === 'pending';
+        const canSubmitForReview = session.role === 'operator' && body.status === 'pending';
         if (session.role !== 'reviewer' && session.role !== 'admin' && !canSubmitForReview) {
           sendJson(response, 403, { error: 'Reviewer role is required.' });
           return;

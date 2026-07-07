@@ -8,8 +8,6 @@ export const demoUsers = [
 
 export const roleAccent = {
   operator: 'teal',
-  scanner: 'teal',
-  classifier: 'blue',
   reviewer: 'amber',
   viewer: 'slate',
   admin: 'violet'
@@ -17,8 +15,6 @@ export const roleAccent = {
 
 export const roleNav = {
   operator: ['scanInbox', 'classify', 'ocrReview', 'metadata', 'searchDocs'],
-  scanner: ['scanInbox', 'batchCheck'],
-  classifier: ['classify', 'metadata', 'searchDocs'],
   reviewer: ['approvals', 'searchDocs'],
   viewer: ['searchDocs'],
   admin: ['userAdmin', 'system', 'searchDocs']
@@ -30,16 +26,6 @@ export const tasks = {
     { id: 'O-1002', label: 'Confirm document type and OCR text', status: 'waiting', due: 'Today', action: 'ocrReview' },
     { id: 'O-1003', label: 'Complete metadata before review', status: 'saved', due: 'Today', action: 'metadata' }
   ],
-  scanner: [
-    { id: 'S-1028', label: 'Vendor invoices batch', status: 'ready', due: '10:30', action: 'batchCheck' },
-    { id: 'S-1029', label: 'HR onboarding files', status: 'waiting', due: '11:00', action: 'scanInbox' },
-    { id: 'S-1030', label: 'Rescan low contrast pages', status: 'rejected', due: '14:00', action: 'scanInbox' }
-  ],
-  classifier: [
-    { id: 'C-2214', label: 'Assign document type', status: 'waiting', due: 'Today', action: 'classify' },
-    { id: 'C-2215', label: 'Fill customer metadata', status: 'saved', due: 'Today', action: 'metadata' },
-    { id: 'C-2216', label: 'Add project tags', status: 'ready', due: 'Tomorrow', action: 'metadata' }
-  ],
   reviewer: [
     { id: 'R-3301', label: 'Approve contract archive', status: 'waiting', due: 'Today', action: 'approvals' },
     { id: 'R-3302', label: 'Reject duplicate scan', status: 'ready', due: 'Today', action: 'approvals' },
@@ -50,7 +36,7 @@ export const tasks = {
     { id: 'V-4402', label: 'Download signed PDF', status: 'approved', due: 'Today', action: 'searchDocs' }
   ],
   admin: [
-    { id: 'A-5501', label: 'Create scanner role policy', status: 'waiting', due: 'Today', action: 'userAdmin' },
+    { id: 'A-5501', label: 'Create operator role policy', status: 'waiting', due: 'Today', action: 'userAdmin' },
     { id: 'A-5502', label: 'Check Mayan tunnel status', status: 'ready', due: 'Now', action: 'system' },
     { id: 'A-5503', label: 'Audit inactive users', status: 'saved', due: 'Friday', action: 'userAdmin' }
   ]
@@ -63,22 +49,6 @@ export const panels = {
       ['activeQueue', '31'],
       ['completedToday', '24'],
       ['alerts', '4']
-    ]
-  },
-  scanner: {
-    intro: 'scannerIntro',
-    stats: [
-      ['activeQueue', '18'],
-      ['completedToday', '42'],
-      ['alerts', '3']
-    ]
-  },
-  classifier: {
-    intro: 'classifierIntro',
-    stats: [
-      ['activeQueue', '27'],
-      ['completedToday', '16'],
-      ['alerts', '2']
     ]
   },
   reviewer: {

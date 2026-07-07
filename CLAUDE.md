@@ -141,7 +141,7 @@ npm run test:smoke
 
   Config via env: `AVISION_WATCH_FOLDER` (default `E:\watch_folder`), `AVISION_PORTAL_STATE_DIR` (default `E:\Mayan-EDMS-Docker\data\portal`). `allowedHosts` must include `mayan-portal.avision-gb10.org` for the Cloudflare tunnel to work.
 
-### Hard constraints (from DEVELOPMENT_PLAN.md / DEVELOPMENT.md)
+### Hard constraints (from DEVELOPMENT.md)
 
 - **Do not modify Mayan core** unless explicitly necessary and the upgrade cost is evaluated — keep the portal a thin layer.
 - **Never write portal manifests into `E:\watch_folder`** — Mayan's watch-folder source would ingest them as documents. Manifests go to `AVISION_PORTAL_STATE_DIR\batches\`.
@@ -150,4 +150,4 @@ npm run test:smoke
 - Mayan API integration is real for auth, group role mapping, document types, import, document list/preview/download, metadata, workflow review, admin user creation, and system status.
 - Planned direction: continue splitting `src/main.jsx` into components/hooks and eventually extract the Vite middleware into a real backend service (`server/scanner`, `server/mayan`, `server/auth`) for long-term production deployment.
 
-The portal's own docs (`avision-portal/README.md`, `DEVELOPMENT.md`, `DEVELOPMENT_PLAN.md`, `USERGUIDE.md`, `CHANGELOG.md`, `TODOLIST.md`) are the authoritative source for product direction and current status — read them before starting portal work.
+The portal's own docs (`avision-portal/README.md`, `DEVELOPMENT.md`, `USERGUIDE.md`, `CHANGELOG.md`, `TODOLIST.md`) are the authoritative source for product direction and current status — read them before starting portal work.

@@ -130,6 +130,7 @@ const fillTemplate = (template, vars) => Object.keys(vars).reduce(
   (acc, key) => acc.replace(new RegExp(`\\{${key}\\}`, 'g'), vars[key]),
   template
 );
+const normalizeRole = (role) => (role === 'scanner' || role === 'classifier' ? 'operator' : role);
 const qcKey = (file) => file.name;
 
 function loadQcStates() {
@@ -313,7 +314,7 @@ function App() {
         localStorage.removeItem('portal.session');
         return null;
       }
-      return stored;
+      return { ...stored, role: normalizeRole(stored.role) };
     } catch {
       localStorage.removeItem('portal.session');
       return null;
@@ -335,7 +336,7 @@ function App() {
   }
 
   function login(user) {
-    const next = { username: user.username, role: user.role, name: user.name };
+    const next = { username: user.username, role: normalizeRole(user.role), name: user.name };
     if (user.token) next.token = user.token;
     if (!DEMO_LOGIN) next.expiresAt = Date.now() + SESSION_TTL_MS;
     localStorage.setItem('portal.session', JSON.stringify(next));
