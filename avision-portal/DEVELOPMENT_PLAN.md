@@ -26,15 +26,15 @@
 - `viewer`：文件搜尋、預覽、下載，唯讀。
 - `admin`：文件類型、使用者與角色、系統狀態、Mayan 後台入口。
 
-目前程式仍保留既有 Mayan group / portal role：
+目前程式仍保留既有 Mayan group 名稱以維持相容性：
 
-- `scanner`：掃描匯入、縮圖檢查、空白頁提示、批次建立、匯入 Mayan、刪除不需要的掃描檔。
-- `records`：文件分類、metadata 補齊、送審。
-- `reviewer`：文件審核、OCR 複核 / 校正、核准、退回、註記。
-- `viewer`：文件搜尋、預覽、下載。
-- `admin`：文件類型、使用者與角色、系統狀態、Mayan 後台入口。
+- `Scanner` group → portal `operator`
+- `Records` group → portal `operator`
+- `Reviewer` group → portal `reviewer`
+- `Viewer` group → portal `viewer`
+- `Admin` group / superuser → portal `admin`
 
-建議實作時不要把 OCR 做成獨立角色，也不要放到 viewer。OCR 是資料品質的一部分，應該由 operator 在送審前先完成；reviewer 審核時若發現 OCR 錯誤，也應能直接校正或退回 operator 補正。既有 `scanner` 與 `records` 帳號可先同時映射到 operator 工作台，避免一次改動 Mayan group 造成既有帳號失效。
+OCR 不做成獨立角色，也不放到 viewer。OCR 是資料品質的一部分，應該由 operator 在送審前先完成；reviewer 審核時若發現 OCR 錯誤，也能直接校正或退回 operator 補正。既有 `scanner` 與 `records` 帳號目前都會進入 operator 工作台。
 
 ## 已完成
 
@@ -49,14 +49,14 @@
   - `GET /api/scanner/files/:fileName/pages`
   - `GET /api/scanner/files/:fileName/pages/:page/thumbnail`
   - `POST /api/scanner/batches`
-- Scanner 可匯入 Mayan，並可選擇匯入成功後刪除原始檔。
-- Scanner 可顯示實際 watch folder 檔案。
-- Scanner 可顯示影像縮圖與右側大預覽。
-- Scanner 可做瀏覽器端影像空白頁輔助偵測。
-- Scanner 支援小 / 中 / 大縮圖大小選擇，選擇會保存到 `localStorage`。
+- Operator 可匯入 Mayan，並可選擇匯入成功後刪除原始檔。
+- Operator 可顯示實際 watch folder 檔案。
+- Operator 可顯示影像縮圖與右側大預覽。
+- Operator 可做瀏覽器端影像空白頁輔助偵測。
+- Operator 支援小 / 中 / 大縮圖大小選擇，選擇會保存到 `localStorage`。
 - 建立批次 manifest 到 `E:\Mayan-EDMS-Docker\data\portal\batches`。
 - Admin 可在 portal 新增 Mayan 文件類型，後端限制 admin role。
-- Records 可讀取 Mayan 文件並更新 label / description / document type / Avision metadata。
+- Operator 可讀取 Mayan 文件並更新 label / description / document type / Avision metadata。
 - Reviewer 可透過 Mayan workflow 送審、核准、退回並留下註記。
 - Viewer 可依關鍵字、document type、metadata 搜尋，並預覽 / 下載文件。
 - Admin 可建立使用者、指定角色、查看系統狀態與 batch queue、調整 scanner settings。
@@ -151,8 +151,8 @@ Mayan 仍是正式文件後端。Portal 目前已呼叫 Mayan API 完成以下�
 1. Mayan API auth/token。
 2. Portal backend session 與 role mapping。
 3. Portal user 對應 Mayan group。
-4. Scanner 批次送入 Mayan document import。
-5. Records 讀取文件、更新分類與 metadata。
+4. Operator 批次送入 Mayan document import。
+5. Operator 讀取文件、更新分類、OCR UI 與 metadata。
 6. Reviewer 執行 approval / reject workflow。
 7. Viewer 搜尋 Mayan 文件並預覽 / 下載。
 8. Admin 建立文件類型、建立使用者、查詢系統狀態。
@@ -165,12 +165,12 @@ OCR 應納入 operator 與 reviewer 工作台，而不是獨立角色。建議�
 scan/import -> thumbnail QC -> document type -> OCR -> operator correction -> metadata -> submit review -> reviewer OCR correction/approval
 ```
 
-建議下一階段實作項目：
+已完成 UI，尚待下一階段串接正式 OCR API：
 
-- 在 operator 工作台加入 OCR 狀態欄位：未執行、執行中、需校正、已確認。
+- 在 operator 工作台加入正式 OCR 狀態欄位：未執行、執行中、需校正、已確認。
 - 匯入 Mayan 後讀取 Mayan OCR / parsed text 結果，顯示在文件預覽旁。
-- 提供 OCR 文字校正區，operator 可修正常見辨識錯誤。
-- Reviewer 工作台也需顯示 OCR 文字與校正 UI，審核時可直接修正小錯誤。
+- 將目前 UI 內的 OCR 文字校正區接到 Mayan 儲存 API。
+- Reviewer 工作台已顯示 OCR 文字與校正 UI；下一步需接 Mayan 寫回。
 - OCR 結果由 operator 初次確認後可送審；reviewer 可再次確認、校正、核准或退回。
 - 若 OCR 尚未完成或失敗，operator 可重跑 OCR 或標記「無需 OCR」。
 - Viewer 搜尋應使用已確認的 OCR / index 文字，但 viewer 不提供校正。

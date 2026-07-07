@@ -6,7 +6,7 @@
 
 ### 產品角色設計
 
-- 明確將下一階段角色收斂方向定為 `operator` / `reviewer` / `viewer` / `admin`。
+- 產品角色已收斂為 `operator` / `reviewer` / `viewer` / `admin`。
 - `operator` 會合併目前 scanner + records 的日常流程，包含掃描匯入、品質檢查、OCR 結果初次檢查 / 校正、metadata 補齊與送審。
 - OCR 定位為資料品質工作，應由 operator 先完成；reviewer 審核時也可複核 / 校正 OCR，viewer 只負責查閱。
 - Operator UI 已重新設計為 5 步流程列：掃描匯入、文件分類、OCR 校正、資料欄位、文件搜尋。
@@ -65,15 +65,15 @@
 - Viewer 可在 portal 內預覽文件頁面，並可下載 Mayan 原始檔。
 - 新增文件頁面與二進位 proxy routes：`/api/mayan/documents/:id/pages`、`/files/:fileId/pages/:pageId/image`、`/files/:fileId/download`。
 
-### P2：Records / Reviewer 工作台
+### P2：Operator / Reviewer 工作台
 
-- Records 的分類與 metadata 畫面改讀 Mayan 真實文件清單，可在 portal 內預覽文件並更新文件 label / description。
-- Records 可寫入正式 Mayan metadata：Customer、Case ID、Document date、Amount、Tags；portal 會自動建立 metadata type 並掛到文件類型。
-- Records 可將文件送審，送審後 reviewer 清單只顯示 pending 文件；送審會同步啟動 / 轉移 Mayan `Avision Review` workflow。
+- Operator 的分類與 metadata 畫面改讀 Mayan 真實文件清單，可在 portal 內預覽文件並更新文件 label / description。
+- Operator 可寫入正式 Mayan metadata：Customer、Case ID、Document date、Amount、Tags；portal 會自動建立 metadata type 並掛到文件類型。
+- Operator 可將文件送審，送審後 reviewer 清單只顯示 pending 文件；送審會同步啟動 / 轉移 Mayan `Avision Review` workflow。
 - Reviewer 審核畫面改讀 Mayan 真實文件清單，可核准或退回文件；狀態同步寫入 Mayan workflow，portal review state 作為 UI 快取與備援。
 - 新增 Mayan review workflow helper：自動建立 `Avision Review` workflow、states、transitions，並掛到文件類型。
 - 新增 portal review state store：`server/lib/reviews.js`，資料寫入 `AVISION_PORTAL_STATE_DIR/reviews.json`。
-- Records 儲存文件類型前會先驗證 Mayan document type id，避免傳入不存在或不可用的 id。
+- Operator 儲存文件類型前會先驗證 Mayan document type id，避免傳入不存在或不可用的 id。
 - Reviewer 顯示最新 Mayan workflow state 與審核提示；退回文件可重新送審。
 
 ### P2：Admin / Viewer / System
@@ -101,8 +101,7 @@
 
 - 建立 React + Vite 前台專案。
 - 加入角色導向 UI：
-  - 掃描人員。
-  - 分類人員。
+  - 文件處理人員。
   - 審核主管。
   - 查閱使用者。
   - 系統管理員。

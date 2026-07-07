@@ -43,7 +43,7 @@ Admin 帳號由 Mayan 管理。超級使用者或 `Admin` 群組使用者登入�
 
 ## 角色功能
 
-## 建議角色簡化方向
+## Operator 工作台
 
 Portal 目前以 `Operator` 作為主要工作台，合併目前 `scanner` 與 `records` 的日常操作。Operator 應一次完成：
 
@@ -59,9 +59,7 @@ Portal 目前以 `Operator` 作為主要工作台，合併目前 `scanner` 與 `
 
 OCR 屬於資料品質與歸檔前處理，應由 operator 在送審前先完成；reviewer 審核時也可以校正 OCR 文字，或在 OCR 問題較大時退回 operator 補正。Viewer 只負責查閱，不負責修改。
 
-### Scanner：掃描人員
-
-適用於掃描站或負責把掃描檔匯入系統的人員。
+既有 `scanner` 與 `records` 測試帳號都會進入 operator 工作台。
 
 主要功能：
 
@@ -75,22 +73,6 @@ OCR 屬於資料品質與歸檔前處理，應由 operator 在送審前先完成
 - 選擇 Mayan 文件類型。
 - 匯入 Mayan。
 - 可選擇「匯入成功後刪除原始檔」。
-
-建議流程：
-
-1. 掃描器或掃描軟體輸出 PDF / TIFF / JPG / PNG 到 `E:\watch_folder`。
-2. 使用 `scanner` 登入 Portal。
-3. 檢查縮圖與疑似空白頁標記。
-4. 勾選要匯入的檔案。
-5. 選擇文件類型。
-6. 按「匯入 Mayan」。
-
-### Records：分類人員
-
-適用於負責整理文件資料、補 metadata、送審的人員。
-
-主要功能：
-
 - 查看 Mayan 中的文件清單。
 - 預覽文件頁面。
 - 修改文件 label。
@@ -109,15 +91,14 @@ OCR 屬於資料品質與歸檔前處理，應由 operator 在送審前先完成
 
 建議流程：
 
-1. 使用 `records` 登入 Portal。
-2. 開啟「文件分類」或「資料欄位」。
-3. 選擇文件。
-4. 確認文件類型。
-5. 檢查 OCR 狀態與文字內容。
-6. 必要時校正 OCR。
-7. 補齊 metadata。
-8. 儲存。
-9. 按「送審」。
+1. 掃描器或掃描軟體輸出 PDF / TIFF / JPG / PNG 到 `E:\watch_folder`。
+2. 使用 `scanner` 或 `records` 登入 Portal。
+3. 在「掃描匯入」檢查縮圖與疑似空白頁標記。
+4. 勾選要匯入的檔案，選擇文件類型，按「匯入 Mayan」。
+5. 在「文件分類」確認 document type、label、description。
+6. 在「OCR 校正」檢查 OCR 狀態與文字內容，必要時校正 OCR。
+7. 在「資料欄位」補齊 metadata。
+8. 儲存後送審。
 
 ### Reviewer：審核主管
 

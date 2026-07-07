@@ -11,7 +11,7 @@ Avision EDMS Portal 是 Mayan-EDMS 的簡化前台，不取代 Mayan。Mayan 仍
 - lucide-react
 - PowerShell 啟動腳本
 
-目前 P0 / P1 / P2 主要功能已完成：scanner 已接本機 watch folder、PDF/TIFF 逐頁轉圖、Mayan 匯入與匯入後刪檔；records 可更新 Mayan 文件與 metadata；reviewer 可透過 Mayan workflow 核准 / 退回；viewer 可搜尋、預覽與下載；admin 可新增文件類型、建立使用者、查看系統狀態與 batch queue。
+目前 P0 / P1 / P2 主要功能已完成，P4 operator UI 也已開始落地：operator 已接本機 watch folder、PDF/TIFF 逐頁轉圖、Mayan 匯入與匯入後刪檔、文件分類、OCR 校正 UI、metadata 與送審；reviewer 可透過 Mayan workflow 核准 / 退回並校正 OCR；viewer 可搜尋、預覽與下載；admin 可新增文件類型、建立使用者、查看系統狀態與 batch queue。
 
 ## 目錄結構
 
@@ -113,22 +113,14 @@ npm run preview
 - `tasks`
 - `panels`
 
-第一版目標是先確認操作體驗：
-
-- 掃描人員只看掃描與批次檢查。
-- 分類人員只看分類與 metadata。
-- 審核主管只看審核清單。
-- 查閱使用者只看搜尋與文件。
-- 系統管理員才看到角色、系統與 Mayan 後台入口。
-
-下一階段產品角色應收斂為：
+目前產品角色為：
 
 - `operator`：合併 scanner + records，負責掃描匯入、縮圖 QC、OCR 檢查 / 校正、文件分類、metadata、送審。
 - `reviewer`：負責審核、OCR 複核 / 校正、核准、退回與審核註記。
 - `viewer`：唯讀查詢、預覽、下載。
 - `admin`：使用者、文件類型、系統狀態與設定。
 
-OCR 不應做成獨立角色，也不應放到 viewer。OCR 屬於資料品質確認，應由 operator 在文件分類與 metadata 補齊時先完成；reviewer 審核時若發現 OCR 錯誤，也應能直接校正或退回 operator 補正。既有 `Scanner` / `Records` Mayan group 可先同時映射到 operator 工作台，避免破壞目前測試帳號。
+OCR 不應做成獨立角色，也不應放到 viewer。OCR 屬於資料品質確認，應由 operator 在文件分類與 metadata 補齊時先完成；reviewer 審核時若發現 OCR 錯誤，也能直接校正或退回 operator 補正。既有 `Scanner` / `Records` Mayan group 目前都映射到 operator 工作台。
 
 ## Mayan API 整合狀態
 
@@ -143,7 +135,7 @@ OCR 不應做成獨立角色，也不應放到 viewer。OCR 屬於資料品質�
 7. Mayan workflow 送審 / 核准 / 退回。
 8. Admin 文件類型、使用者建立、系統狀態與設定。
 
-尚待下一階段補上 Portal 內的 OCR workflow：匯入後讀取 Mayan OCR / parsed text 狀態、顯示辨識文字、允許 operator 與 reviewer 校正，並在審核流程中保存 OCR 確認狀態。
+Portal 內已加入 operator / reviewer OCR 校正 UI。尚待下一階段補上正式 OCR workflow API：匯入後讀取 Mayan OCR / parsed text 狀態、將校正文字寫回 Mayan，並在審核流程中保存 OCR 確認狀態。
 
 ## Scanner 本機 API
 

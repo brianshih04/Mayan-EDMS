@@ -11,13 +11,12 @@ Avision EDMS Portal 是建立在 Mayan-EDMS 之上的簡化前台。Mayan-EDMS �
 
 ## 目前角色
 
-- `scanner`：掃描匯入、批次檢查。
-- `records`：文件分類、metadata 編輯。
+- `operator`：掃描匯入、批次檢查、文件分類、OCR 校正、metadata 編輯、送審。
 - `reviewer`：審核清單、決策工作。
 - `viewer`：文件搜尋、檢視、下載入口。
 - `admin`：使用者與角色、系統狀態、Mayan 後台入口。
 
-目前產品角色已收斂為 `operator` / `reviewer` / `viewer` / `admin`。其中 `operator` 會合併目前 scanner + records 的日常流程，包含掃描匯入、品質檢查、OCR 結果檢查 / 校正、metadata 補齊與送審；`reviewer` 審核時也可以複核與校正 OCR。
+既有 Mayan `Scanner` 與 `Records` 群組，以及測試帳號 `scanner` / `records`，目前都會進入同一個 `operator` 工作台。`reviewer` 審核時也可以複核與校正 OCR。
 
 ## 預設測試帳號
 
@@ -57,15 +56,16 @@ Cloudflare portal 網址：
 https://mayan-portal.avision-gb10.org
 ```
 
-## Scanner 真實功能
+## Operator 真實功能
 
-目前 scanner 角色已接本機 watch folder 與 Mayan 匯入：
+目前 operator 工作台已接本機 watch folder、Mayan 匯入、文件分類、OCR 校正 UI、metadata 與送審：
 
 - `GET /api/scanner/watch-folder`：讀取 `E:\watch_folder` 中可匯入的 PDF、TIFF 與影像檔。
 - `GET /api/scanner/files/:fileName/pages`：PDF/TIFF 逐頁轉圖與空白頁偵測。
 - `DELETE /api/scanner/files/:fileName`：刪除不需要的 watch folder 原始檔。
 - `POST /api/scanner/batches`：依選取檔案建立本機匯入批次 manifest。
 - `POST /api/mayan/import`：將成功確認的檔案匯入 Mayan，並可選擇匯入成功後刪除原始檔。
+- 文件分類 / OCR 校正 / metadata 補齊 / 送審都在 operator 的 5 步流程內完成。
 
 預設 watch folder 是 `E:\watch_folder`。如需改路徑，可在啟動 Vite 前設定：
 
@@ -80,10 +80,10 @@ npm run dev
 
 Admin 角色可在 Portal 直接新增 Mayan 文件類型、建立使用者並指定角色、查看 Mayan / Cloudflare / watch folder 狀態、查看 batch queue，並調整 Portal scanner settings。後端會重新驗證登入 token，只有 admin role 可以呼叫管理 API。
 
-## Records / Reviewer / Viewer 真實功能
+## Reviewer / Viewer 真實功能
 
-- Records 可讀取 Mayan 文件、預覽頁面、更新 label / description / document type / metadata，並送審。
-- OCR 應在 operator / records 流程完成：匯入後確認 OCR 狀態、檢查辨識文字、必要時校正，再送審。
+- Operator 可讀取 Mayan 文件、預覽頁面、更新 label / description / document type / metadata，並送審。
+- OCR 應在 operator 流程先完成：匯入後確認 OCR 狀態、檢查辨識文字、必要時校正，再送審。
 - Reviewer 只顯示 pending 文件，可複核 / 校正 OCR、核准或退回；審核狀態同步寫入 Mayan workflow。
 - Viewer 可搜尋、依 document type / metadata filter 篩選、預覽與下載文件。
 

@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 This repo contains **two distinct projects** that are developed together:
 
 1. **`mayan/`** — the Mayan EDMS backend. A fork/mirror of upstream Mayan EDMS **4.3.1** (Django 3.2.14, Python 3.7–3.9), an Apache-2.0 document management system. ~60 Django apps under `mayan/apps/`. This is the stable document backend: OCR, indexing, permissions, workflows, search, signatures.
-2. **`avision-portal/`** — a React + Vite role-based frontend that sits **on top of** Mayan. This is the **active development** (current branch `codex/avision-portal`). It does not replace Mayan; it presents a simplified, role-oriented UI (scanner / records / reviewer / viewer / admin) and talks to Mayan as its backend.
+2. **`avision-portal/`** — a React + Vite role-based frontend that sits **on top of** Mayan. This is the **active development** (current branch `codex/avision-portal`). It does not replace Mayan; it presents a simplified, role-oriented UI (`operator` / `reviewer` / `viewer` / `admin`) and talks to Mayan as its backend. Existing Mayan `Scanner` and `Records` groups both map to the portal `operator` role.
 
 The running deployment is on Windows. Mayan runs in Docker at `http://localhost:8080` (deployment root `E:\Mayan-EDMS-Docker`, outside the repo); the portal dev server runs on `http://localhost:5174`. Both are exposed publicly via a single Cloudflare named tunnel (`mayan-emds`).
 
@@ -146,7 +146,7 @@ npm run test:smoke
 - **Do not modify Mayan core** unless explicitly necessary and the upgrade cost is evaluated — keep the portal a thin layer.
 - **Never write portal manifests into `E:\watch_folder`** — Mayan's watch-folder source would ingest them as documents. Manifests go to `AVISION_PORTAL_STATE_DIR\batches\`.
 - **The scanner API must prevent path traversal** — only filenames (no path components) are accepted and they must resolve inside the watch folder. `resolveWatchFolderFile()` / `createScannerBatch()` already enforce this; preserve it when editing.
-- Roles (scanner / records / reviewer / viewer / admin) and their nav are defined in `src/portalConfig.js`. Locales are in `src/locales.js`.
+- Roles (`operator` / `reviewer` / `viewer` / `admin`) and their nav are defined in `src/portalConfig.js`. Locales are in `src/locales.js`. Legacy Mayan groups `Scanner` and `Records` intentionally resolve to `operator` in `server/lib/roleMap.js`.
 - Mayan API integration is real for auth, group role mapping, document types, import, document list/preview/download, metadata, workflow review, admin user creation, and system status.
 - Planned direction: continue splitting `src/main.jsx` into components/hooks and eventually extract the Vite middleware into a real backend service (`server/scanner`, `server/mayan`, `server/auth`) for long-term production deployment.
 

@@ -2,7 +2,7 @@
 
 本文件是交給後續 coding agent 的實作清單。請依優先順序逐步完成，每次修改後執行 `npm run build`，並確認 `https://mayan-portal.avision-gb10.org` 可正常開啟。
 
-> 狀態（2026-07-07）：**P0 / P1 / P2 主要項目完成**。P3 已補 `.env.example`、smoke test、session timeout、ESLint，並先完成語系/角色設定拆檔；大型 component 拆分保留給下一階段。詳見 CHANGELOG。
+> 狀態（2026-07-07）：**P0 / P1 / P2 主要項目完成**。P3 已補 `.env.example`、smoke test、session timeout、ESLint，並先完成語系/角色設定拆檔。P4 已完成 operator 角色收斂與 OCR 校正 UI；OCR 正式讀寫 Mayan API 仍待下一階段。詳見 CHANGELOG。
 
 ## P0：穩定目前 Scanner 流程
 
@@ -66,7 +66,7 @@ E:\Mayan-EDMS-Docker\data\portal\thumbnails
 - [x] 加入 session timeout。 （目前為 8 小時到期自動登出）
 - [x] Admin 可管理 user-role mapping。 （可新增使用者並加入對應 Mayan group）
 
-## P2：Records 分類人員功能
+## P2：Operator 文件分類功能
 
 - [x] 讀取 Mayan 中待分類文件。
 - [x] 顯示文件預覽。
@@ -91,9 +91,9 @@ E:\Mayan-EDMS-Docker\data\portal\thumbnails
 - [x] 核准文件（Mayan workflow + portal cache）。
 - [x] 退回修改（Mayan workflow + portal cache）。
 - [x] 留下審核註記（Mayan workflow log comment + portal cache）。
-- [x] Reviewer 清單只顯示 records 已送審的 pending 文件。
+- [x] Reviewer 清單只顯示 operator 已送審的 pending 文件。
 - [x] 與 Mayan workflow/action 對接。
-- [x] 增加 reviewer 歷史查詢與重新送審 UI。 （顯示最新 workflow state；退回後 records 可重新送審）
+- [x] 增加 reviewer 歷史查詢與重新送審 UI。 （顯示最新 workflow state；退回後 operator 可重新送審）
 
 ## P2：Viewer 查詢功能
 
@@ -147,12 +147,14 @@ E:\Mayan-EDMS-Docker\data\portal\thumbnails
 - [x] `npm run lint`
 - [x] `npm run test:smoke`
 - [ ] `https://mayan-portal.avision-gb10.org` 回 `200`
-- [ ] scanner login 可進入：
+- [ ] operator login 可進入：
 
 ```text
 username: scanner
 password: Avision-Portal-2026!
 ```
+
+登入後應顯示「文件處理人員」與 5 步流程：掃描匯入 / 文件分類 / OCR 校正 / 資料欄位 / 文件搜尋。
 
 - [ ] `GET /api/scanner/watch-folder` 回 `200`
 - [ ] 若修改 Cloudflare 設定，確認 `mayan-emds` 與 `mayan-portal` 都仍可用。
