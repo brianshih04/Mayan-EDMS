@@ -9,6 +9,9 @@
 - 明確將下一階段角色收斂方向定為 `operator` / `reviewer` / `viewer` / `admin`。
 - `operator` 會合併目前 scanner + records 的日常流程，包含掃描匯入、品質檢查、OCR 結果初次檢查 / 校正、metadata 補齊與送審。
 - OCR 定位為資料品質工作，應由 operator 先完成；reviewer 審核時也可複核 / 校正 OCR，viewer 只負責查閱。
+- Operator UI 已重新設計為 5 步流程列：掃描匯入、文件分類、OCR 校正、資料欄位、文件搜尋。
+- Mayan `Scanner` 與 `Records` 群組現在都映射到 Portal `operator` role，既有 `scanner` / `records` 測試帳號會進同一個 operator 工作台。
+- Operator 與 reviewer 文件預覽區已加入 OCR 文字校正 UI 與 OCR 確認狀態；正式 OCR 寫回 Mayan API 仍待下一階段串接。
 
 ### 後端重構
 

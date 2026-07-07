@@ -32,8 +32,8 @@ https://mayan-emds.avision-gb10.org
 
 | 帳號 | 預設密碼 | Portal 角色 | 主要用途 |
 | --- | --- | --- | --- |
-| `scanner` | `Avision-Portal-2026!` | 掃描人員 | 掃描匯入、批次檢查、刪除不需要的掃描檔、匯入 Mayan |
-| `records` | `Avision-Portal-2026!` | 分類人員 | 文件分類、文件類型調整、metadata 編輯、送審 |
+| `scanner` | `Avision-Portal-2026!` | 文件處理人員 | 掃描匯入、批次檢查、OCR 校正、metadata 編輯、送審 |
+| `records` | `Avision-Portal-2026!` | 文件處理人員 | 文件分類、文件類型調整、OCR 校正、metadata 編輯、送審 |
 | `reviewer` | `Avision-Portal-2026!` | 審核主管 | 查看待審核文件、核准、退回、填寫審核註記 |
 | `viewer` | `Avision-Portal-2026!` | 查閱使用者 | 搜尋、預覽、下載文件 |
 
@@ -45,7 +45,7 @@ Admin 帳號由 Mayan 管理。超級使用者或 `Admin` 群組使用者登入�
 
 ## 建議角色簡化方向
 
-下一階段 Portal 會以 `Operator` 作為主要工作台，合併目前 `scanner` 與 `records` 的日常操作。Operator 應一次完成：
+Portal 目前以 `Operator` 作為主要工作台，合併目前 `scanner` 與 `records` 的日常操作。Operator 應一次完成：
 
 - 掃描匯入。
 - 縮圖與空白頁檢查。

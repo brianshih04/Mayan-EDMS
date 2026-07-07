@@ -164,6 +164,7 @@ const navIcons = {
   scanInbox: ScanLine,
   batchCheck: ClipboardCheck,
   classify: FolderInput,
+  ocrReview: ClipboardCheck,
   metadata: SlidersHorizontal,
   approvals: CheckCircle2,
   searchDocs: FileSearch,
@@ -437,7 +438,7 @@ function LoginScreen({ language, onLanguageChange, onLogin, t }) {
             <span>{t('language')}</span>
           </div>
           <div>
-            <strong>5</strong>
+            <strong>4</strong>
             <span>{t('role')}</span>
           </div>
         </div>
@@ -611,6 +612,26 @@ function Shell({ activeNav, language, onLanguageChange, onLogout, onNav, session
           </div>
         </section>
 
+        {session.role === 'operator' ? (
+          <section className="operator-flow" aria-label={t('operatorFlow')}>
+            {['scanInbox', 'classify', 'ocrReview', 'metadata', 'searchDocs'].map((item, index) => {
+              const Icon = navIcons[item];
+              return (
+                <button
+                  className={activeNav === item ? 'operator-step active' : 'operator-step'}
+                  key={item}
+                  onClick={() => onNav(item)}
+                  type="button"
+                >
+                  <span className="operator-step-index">{index + 1}</span>
+                  <Icon size={18} aria-hidden="true" />
+                  <span>{t(item)}</span>
+                </button>
+              );
+            })}
+          </section>
+        ) : null}
+
         <section className="quick-actions" aria-label={t('nextAction')}>
           {navItems.map((item) => {
             const Icon = navIcons[item];
@@ -688,6 +709,8 @@ function PrimaryWorkArea({ activeNav, session, t }) {
   const [documentPreviewError, setDocumentPreviewError] = useState('');
   const [selectedPreviewPageId, setSelectedPreviewPageId] = useState('');
   const [recordForm, setRecordForm] = useState({ label: '', description: '', documentTypeId: '', metadata: {} });
+  const [ocrText, setOcrText] = useState('');
+  const [ocrConfirmed, setOcrConfirmed] = useState(false);
   const [recordSaving, setRecordSaving] = useState(false);
   const [reviews, setReviews] = useState({});
   const [reviewNote, setReviewNote] = useState('');
@@ -697,7 +720,7 @@ function PrimaryWorkArea({ activeNav, session, t }) {
   const [systemStatusLoading, setSystemStatusLoading] = useState(false);
   const [portalSettings, setPortalSettings] = useState({ blankSensitivity: 2, thumbnailSizeDefault: 'small' });
   const [settingsSaving, setSettingsSaving] = useState(false);
-  const [adminUser, setAdminUser] = useState({ username: '', password: '', role: 'viewer' });
+  const [adminUser, setAdminUser] = useState({ username: '', password: '', role: 'operator' });
   const [adminUserCreating, setAdminUserCreating] = useState(false);
   const deleteBtnRef = useRef(null);
   const livePanelRef = useRef(null);
@@ -840,6 +863,8 @@ function PrimaryWorkArea({ activeNav, session, t }) {
       documentTypeId: document.documentTypeId ? String(document.documentTypeId) : '',
       metadata: {}
     });
+    setOcrText(document.ocrText || document.text || document.description || document.label || '');
+    setOcrConfirmed(false);
     setReviewNote(reviews[String(document.id)]?.note || '');
     setDocumentPreviewLoading(true);
     setDocumentPreviewError('');
@@ -854,7 +879,7 @@ function PrimaryWorkArea({ activeNav, session, t }) {
       if (!response.ok) throw new Error(payload.error || t('documentsLoadError'));
       setDocumentPreview(payload);
       setSelectedPreviewPageId(payload.pages?.[0] ? String(payload.pages[0].id) : '');
-      if (activeNav === 'classify' || activeNav === 'metadata') {
+      if (activeNav === 'classify' || activeNav === 'metadata' || activeNav === 'ocrReview') {
         const metadataResponse = await fetch(`/api/mayan/documents/${document.id}/metadata`, {
           headers: authHeaders(session)
         });
@@ -871,7 +896,7 @@ function PrimaryWorkArea({ activeNav, session, t }) {
   }
 
   useEffect(() => {
-    if (['searchDocs', 'classify', 'metadata', 'approvals'].includes(activeNav) && !DEMO_LOGIN) {
+    if (['searchDocs', 'classify', 'ocrReview', 'metadata', 'approvals'].includes(activeNav) && !DEMO_LOGIN) {
       loadMayanDocuments('');
     }
   }, [activeNav, session?.token, documentTypeFilterId]);
@@ -888,7 +913,7 @@ function PrimaryWorkArea({ activeNav, session, t }) {
   }
 
   useEffect(() => {
-    if (['classify', 'metadata', 'approvals'].includes(activeNav) && !DEMO_LOGIN) {
+    if (['classify', 'ocrReview', 'metadata', 'approvals'].includes(activeNav) && !DEMO_LOGIN) {
       loadReviews();
     }
   }, [activeNav, session?.token]);
@@ -1335,8 +1360,9 @@ function PrimaryWorkArea({ activeNav, session, t }) {
     setQc(file, order[(order.indexOf(current) + 1) % order.length]);
   }
 
-  if (['searchDocs', 'classify', 'metadata', 'approvals'].includes(activeNav)) {
-    const recordsMode = activeNav === 'classify' || activeNav === 'metadata';
+  if (['searchDocs', 'classify', 'ocrReview', 'metadata', 'approvals'].includes(activeNav)) {
+    const recordsMode = activeNav === 'classify' || activeNav === 'ocrReview' || activeNav === 'metadata';
+    const ocrMode = activeNav === 'ocrReview';
     const reviewerMode = activeNav === 'approvals';
     const visibleMayanDocuments = reviewerMode
       ? mayanDocuments.filter((document) => reviews[String(document.id)]?.status === 'pending')
@@ -1513,6 +1539,31 @@ function PrimaryWorkArea({ activeNav, session, t }) {
                         />
                       </label>
                     ))}
+                    <label className="wide ocr-review-box">
+                      <span>{t('ocrText')}</span>
+                      <textarea
+                        onChange={(event) => {
+                          setOcrText(event.target.value);
+                          setOcrConfirmed(false);
+                        }}
+                        value={ocrText}
+                      />
+                    </label>
+                    <div className="wide ocr-status-row">
+                      <span className={`review-chip ${ocrConfirmed ? 'review-approved' : 'review-pending'}`}>
+                        {ocrConfirmed ? t('ocrConfirmed') : t('ocrNeedsCheck')}
+                      </span>
+                      <button
+                        className={ocrMode ? 'strong-action' : 'subtle-action'}
+                        onClick={() => {
+                          setOcrConfirmed(true);
+                          setScannerNotice(t('ocrSaved'));
+                        }}
+                        type="button"
+                      >
+                        {t('ocrConfirm')}
+                      </button>
+                    </div>
                     <button className="strong-action" disabled={recordSaving} onClick={saveRecordDocument} type="button">
                       {recordSaving ? t('scannerLoading') : t('recordsSave')}
                     </button>
@@ -1534,6 +1585,26 @@ function PrimaryWorkArea({ activeNav, session, t }) {
                 ) : null}
                 {reviewerMode ? (
                   <div className="record-editor">
+                    <label className="wide ocr-review-box">
+                      <span>{t('ocrText')}</span>
+                      <textarea
+                        onChange={(event) => setOcrText(event.target.value)}
+                        value={ocrText}
+                      />
+                    </label>
+                    <div className="wide ocr-status-row">
+                      <span className="review-chip review-pending">{t('ocrReviewerCanFix')}</span>
+                      <button
+                        className="subtle-action"
+                        onClick={() => {
+                          setOcrConfirmed(true);
+                          setScannerNotice(t('ocrSaved'));
+                        }}
+                        type="button"
+                      >
+                        {t('ocrConfirm')}
+                      </button>
+                    </div>
                     <label className="wide">
                       <span>{t('reviewerNote')}</span>
                       <textarea onChange={(event) => setReviewNote(event.target.value)} value={reviewNote} />
@@ -1631,7 +1702,7 @@ function PrimaryWorkArea({ activeNav, session, t }) {
               onChange={(event) => setAdminUser((current) => ({ ...current, role: event.target.value }))}
               value={adminUser.role}
             >
-              {['scanner', 'classifier', 'reviewer', 'viewer', 'admin'].map((role) => (
+              {['operator', 'reviewer', 'viewer', 'admin'].map((role) => (
                 <option key={role} value={role}>{t(role)}</option>
               ))}
             </select>
@@ -1677,7 +1748,7 @@ function PrimaryWorkArea({ activeNav, session, t }) {
         </div>
         <div className="permission-map">
           {demoUsers.map((user) => (
-            <div className="permission-row" key={user.role}>
+            <div className="permission-row" key={user.username}>
               <ShieldCheck size={20} aria-hidden="true" />
               <div>
                 <strong>{t(user.role)}</strong>

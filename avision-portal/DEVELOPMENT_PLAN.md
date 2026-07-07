@@ -2,7 +2,7 @@
 
 本文件提供給後續 coding agent 接手 Avision EDMS Portal。Portal 是 Mayan-EDMS 上方的角色式簡化前台，不取代 Mayan core。
 
-> **進度（2026-07-07）**：P0 / P1 / P2 主要項目已完成 — scanner 選取/QC/空白偵測、PDF/TIFF 逐頁轉圖（mupdf WASM）、Mayan 匯入（service token）、Mayan 登入與角色對應、records metadata 編輯、reviewer workflow 審核、viewer 搜尋/預覽/下載、Admin 使用者/文件類型/系統狀態/設定。P3 已補 ESLint、smoke test、`.env.example`，並完成 locales / role config 拆檔。詳見 CHANGELOG / TODOLIST。
+> **進度（2026-07-07）**：P0 / P1 / P2 主要項目已完成。P3 已補 ESLint、smoke test、`.env.example`，並完成 locales / role config 拆檔。P4 已開始：`Scanner` / `Records` Mayan group 已映射到 `operator`，operator UI 已改為掃描、分類、OCR、metadata、搜尋的 5 步流程；OCR 正式寫回 Mayan API 仍待串接。詳見 CHANGELOG / TODOLIST。
 
 ## 目前狀態
 
@@ -19,7 +19,7 @@
 
 目標是讓一般使用者不需要進入 Mayan 複雜後台，而是依照實際工作流程進入簡化工作台。
 
-下一階段角色應收斂成以 `operator` 為主的工作流：
+目前角色已收斂成以 `operator` 為主的工作流：
 
 - `operator`：掃描匯入、縮圖檢查、空白頁提示、批次建立、匯入 Mayan、文件分類、OCR 結果檢查 / 校正、metadata 補齊、送審。
 - `reviewer`：文件審核、OCR 複核 / 校正、核准、退回、註記。

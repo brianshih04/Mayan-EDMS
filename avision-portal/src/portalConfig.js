@@ -1,12 +1,13 @@
 export const demoUsers = [
-  { username: 'scanner', password: 'avision123', role: 'scanner', name: 'Scan Station 01' },
-  { username: 'records', password: 'avision123', role: 'classifier', name: 'Records Desk' },
+  { username: 'scanner', password: 'avision123', role: 'operator', name: 'Scan Station 01' },
+  { username: 'records', password: 'avision123', role: 'operator', name: 'Records Desk' },
   { username: 'reviewer', password: 'avision123', role: 'reviewer', name: 'Team Lead' },
   { username: 'viewer', password: 'avision123', role: 'viewer', name: 'Document User' },
   { username: 'admin', password: 'avision123', role: 'admin', name: 'System Admin' }
 ];
 
 export const roleAccent = {
+  operator: 'teal',
   scanner: 'teal',
   classifier: 'blue',
   reviewer: 'amber',
@@ -15,6 +16,7 @@ export const roleAccent = {
 };
 
 export const roleNav = {
+  operator: ['scanInbox', 'classify', 'ocrReview', 'metadata', 'searchDocs'],
   scanner: ['scanInbox', 'batchCheck'],
   classifier: ['classify', 'metadata', 'searchDocs'],
   reviewer: ['approvals', 'searchDocs'],
@@ -23,6 +25,11 @@ export const roleNav = {
 };
 
 export const tasks = {
+  operator: [
+    { id: 'O-1001', label: 'Scan and QC incoming pages', status: 'ready', due: 'Now', action: 'scanInbox' },
+    { id: 'O-1002', label: 'Confirm document type and OCR text', status: 'waiting', due: 'Today', action: 'ocrReview' },
+    { id: 'O-1003', label: 'Complete metadata before review', status: 'saved', due: 'Today', action: 'metadata' }
+  ],
   scanner: [
     { id: 'S-1028', label: 'Vendor invoices batch', status: 'ready', due: '10:30', action: 'batchCheck' },
     { id: 'S-1029', label: 'HR onboarding files', status: 'waiting', due: '11:00', action: 'scanInbox' },
@@ -50,6 +57,14 @@ export const tasks = {
 };
 
 export const panels = {
+  operator: {
+    intro: 'operatorIntro',
+    stats: [
+      ['activeQueue', '31'],
+      ['completedToday', '24'],
+      ['alerts', '4']
+    ]
+  },
   scanner: {
     intro: 'scannerIntro',
     stats: [
@@ -94,13 +109,33 @@ export const panels = {
 
 export const workflowContent = {
   scanInbox: {
-    step: '1 / 3',
+    step: '1 / 5',
     title: '掃描批次匯入',
     primary: '建立匯入批次'
   },
   batchCheck: {
-    step: '2 / 3',
+    step: '2 / 5',
     title: '批次品質檢查',
     primary: '送出給分類'
+  },
+  classify: {
+    step: '2 / 5',
+    title: '文件分類',
+    primary: '儲存分類'
+  },
+  ocrReview: {
+    step: '3 / 5',
+    title: 'OCR 檢查與校正',
+    primary: '確認 OCR'
+  },
+  metadata: {
+    step: '4 / 5',
+    title: 'Metadata 補齊',
+    primary: '儲存並送審'
+  },
+  searchDocs: {
+    step: '5 / 5',
+    title: '文件查詢',
+    primary: '搜尋文件'
   }
 };

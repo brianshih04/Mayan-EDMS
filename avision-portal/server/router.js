@@ -150,7 +150,7 @@ function createApiMiddleware() {
         const username = String(body.username || '').trim();
         const password = String(body.password || '');
         const role = String(body.role || '').trim();
-        if (!username || !password || !['scanner', 'classifier', 'reviewer', 'viewer', 'admin'].includes(role)) {
+        if (!username || !password || !['operator', 'reviewer', 'viewer', 'admin'].includes(role)) {
           sendJson(response, 400, { error: 'username, password and role are required.' });
           return;
         }

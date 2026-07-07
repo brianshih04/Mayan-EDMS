@@ -610,6 +610,50 @@ button:disabled {
   margin-top: 18px;
 }
 
+.operator-flow {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.operator-step {
+  min-height: 70px;
+  border: 1px solid #dce3e0;
+  border-radius: 8px;
+  background: #fff;
+  color: #182321;
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  align-items: center;
+  gap: 9px;
+  padding: 12px;
+  text-align: left;
+}
+
+.operator-step.active,
+.operator-step:hover {
+  border-color: var(--teal);
+  background: #f0fdfa;
+}
+
+.operator-step-index {
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: #e6efeb;
+  color: #31524c;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.operator-step.active .operator-step-index {
+  background: var(--teal);
+  color: #fff;
+}
+
 .quick-card {
   min-height: 76px;
   border: 1px solid var(--line);
@@ -1715,6 +1759,20 @@ button:disabled {
   resize: vertical;
 }
 
+.ocr-review-box textarea {
+  min-height: 180px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  line-height: 1.6;
+}
+
+.ocr-status-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 10px 0 2px;
+}
+
 .review-actions {
   display: flex;
   gap: 10px;
@@ -1766,6 +1824,10 @@ button:disabled {
   }
 
   .quick-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .operator-flow {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 

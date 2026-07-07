@@ -130,13 +130,13 @@ E:\Mayan-EDMS-Docker\data\portal\thumbnails
 
 ## P4：Operator 與 OCR 工作流
 
-- [ ] 將產品角色收斂為 `operator` / `reviewer` / `viewer` / `admin`。
-- [ ] 讓既有 `Scanner` 與 `Records` Mayan group 先映射到 operator 工作台，保留既有帳號可用。
-- [ ] Operator 工作台整合掃描匯入、文件分類、OCR 初次檢查 / 校正、metadata 補齊與送審。
+- [x] 將產品角色收斂為 `operator` / `reviewer` / `viewer` / `admin`。
+- [x] 讓既有 `Scanner` 與 `Records` Mayan group 先映射到 operator 工作台，保留既有帳號可用。
+- [x] Operator 工作台整合掃描匯入、文件分類、OCR 初次檢查 / 校正、metadata 補齊與送審。
 - [ ] 匯入 Mayan 後讀取 OCR / parsed text 狀態並顯示於文件預覽旁。
 - [ ] 加入 OCR 狀態：未執行、執行中、需校正、已確認、失敗。
-- [ ] 提供 operator 校正 OCR 文字的 UI。
-- [ ] 提供 reviewer 複核與校正 OCR 文字的 UI。
+- [x] 提供 operator 校正 OCR 文字的 UI。
+- [x] 提供 reviewer 複核與校正 OCR 文字的 UI。
 - [ ] 送審前檢查 OCR 是否已確認，或由 operator 明確標記「無需 OCR」。
 - [ ] Viewer 搜尋使用已確認的 OCR / index 文字，但不提供修改。
 - [ ] Reviewer 可直接校正小型 OCR 錯誤；重大 OCR 問題可退回 operator 補正。

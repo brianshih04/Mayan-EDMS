@@ -1,13 +1,13 @@
 // Map Mayan group names to portal roles.
-// Portal role keys must match roleNav/roleAccent/tasks/panels in src/main.jsx:
-// scanner | classifier | reviewer | viewer | admin
+// Portal role keys must match roleNav/roleAccent/tasks/panels:
+// operator | reviewer | viewer | admin
 //
 // Edit this table to match the group names configured in your Mayan instance.
 // First matching group wins; Mayan superusers always map to admin.
 export const ROLE_MAP = {
   Admin: 'admin',
-  Scanner: 'scanner',
-  Records: 'classifier',
+  Scanner: 'operator',
+  Records: 'operator',
   Reviewer: 'reviewer',
   Viewer: 'viewer'
 };

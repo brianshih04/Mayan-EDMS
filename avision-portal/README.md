@@ -17,7 +17,7 @@ Avision EDMS Portal 是建立在 Mayan-EDMS 之上的簡化前台。Mayan-EDMS �
 - `viewer`：文件搜尋、檢視、下載入口。
 - `admin`：使用者與角色、系統狀態、Mayan 後台入口。
 
-下一階段產品角色會收斂為 `operator` / `reviewer` / `viewer` / `admin`。其中 `operator` 會合併目前 scanner + records 的日常流程，包含掃描匯入、品質檢查、OCR 結果檢查 / 校正、metadata 補齊與送審；`reviewer` 審核時也可以複核與校正 OCR。
+目前產品角色已收斂為 `operator` / `reviewer` / `viewer` / `admin`。其中 `operator` 會合併目前 scanner + records 的日常流程，包含掃描匯入、品質檢查、OCR 結果檢查 / 校正、metadata 補齊與送審；`reviewer` 審核時也可以複核與校正 OCR。
 
 ## 預設測試帳號
 
@@ -25,8 +25,8 @@ Avision EDMS Portal 是建立在 Mayan-EDMS 之上的簡化前台。Mayan-EDMS �
 
 | 帳號 | 預設密碼 | 角色 |
 | --- | --- | --- |
-| `scanner` | `Avision-Portal-2026!` | 掃描人員 |
-| `records` | `Avision-Portal-2026!` | 分類人員 |
+| `scanner` | `Avision-Portal-2026!` | 文件處理人員 |
+| `records` | `Avision-Portal-2026!` | 文件處理人員 |
 | `reviewer` | `Avision-Portal-2026!` | 審核主管 |
 | `viewer` | `Avision-Portal-2026!` | 查閱使用者 |
 
