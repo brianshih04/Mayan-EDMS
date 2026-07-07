@@ -259,6 +259,80 @@ export async function changeDocumentType(token, documentId, documentTypeId) {
   return true;
 }
 
+// ---- OCR content (read + correct) ----
+// Mayan stores OCR text per document-version-page and exposes no bulk OCR
+// endpoint, so reading a document's OCR is one call per page (fine for typical
+// small documents). Corrections PATCH the per-page OCR content directly.
+
+export async function listDocumentVersions(token, documentId) {
+  const response = await mayanRequest(token, `/documents/${documentId}/versions/?page_size=50`);
+  const data = await parseJson(response);
+  if (!response.ok) {
+    throw buildError(response.status, data, 'Unable to load document versions.');
+  }
+  return (data?.results || []).map((entry) => ({
+    id: entry.id ?? entry.pk,
+    active: Boolean(entry.active),
+    completed: Boolean(entry.completed)
+  }));
+}
+
+export async function getDocumentOcrContent(token, documentId) {
+  const versions = await listDocumentVersions(token, documentId);
+  const version = versions.find((entry) => entry.active) || versions[0];
+  if (!version) {
+    return { documentId, versionId: null, pages: [] };
+  }
+
+  const pagesResponse = await mayanRequest(
+    token,
+    `/documents/${documentId}/versions/${version.id}/pages/?page_size=200`
+  );
+  const pagesData = await parseJson(pagesResponse);
+  if (!pagesResponse.ok) {
+    throw buildError(pagesResponse.status, pagesData, 'Unable to load document version pages.');
+  }
+
+  const versionPages = pagesData?.results || [];
+  const pages = [];
+  for (let index = 0; index < versionPages.length; index++) {
+    const entry = versionPages[index];
+    const pageId = entry.id ?? entry.pk;
+    const ocrResponse = await mayanRequest(
+      token,
+      `/documents/${documentId}/versions/${version.id}/pages/${pageId}/ocr/`
+    );
+    const ocrData = await parseJson(ocrResponse);
+    if (!ocrResponse.ok) {
+      throw buildError(ocrResponse.status, ocrData, 'Unable to load OCR content.');
+    }
+    pages.push({
+      pageId,
+      pageNumber: entry.page_number ?? index + 1,
+      content: ocrData?.content || ''
+    });
+  }
+
+  return { documentId, versionId: version.id, pages };
+}
+
+export async function updateDocumentVersionPageOcr(token, documentId, versionId, pageId, content) {
+  const response = await mayanRequest(
+    token,
+    `/documents/${documentId}/versions/${versionId}/pages/${pageId}/ocr/`,
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content })
+    }
+  );
+  const data = await parseJson(response);
+  if (!response.ok) {
+    throw buildError(response.status, data, 'Unable to save OCR content.');
+  }
+  return { content: data?.content || '' };
+}
+
 export async function listDocumentMetadata(token, documentId) {
   const response = await mayanRequest(token, `/documents/${documentId}/metadata/?page_size=200`);
   const data = await parseJson(response);

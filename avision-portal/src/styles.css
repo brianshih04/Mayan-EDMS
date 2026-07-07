@@ -1759,10 +1759,54 @@ button:disabled {
   resize: vertical;
 }
 
-.ocr-review-box textarea {
-  min-height: 180px;
+.ocr-editor {
+  display: grid;
+  gap: 10px;
+}
+
+.ocr-editor-label {
+  color: #5b6764;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.ocr-page-list {
+  display: grid;
+  gap: 12px;
+}
+
+.ocr-page-item {
+  display: grid;
+  gap: 6px;
+}
+
+.ocr-page-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #40504c;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.ocr-dirty {
+  color: var(--amber);
+  font-weight: 900;
+}
+
+.ocr-page-skeleton {
+  height: 140px;
+  border-radius: 8px;
+}
+
+.ocr-page-textarea {
+  min-height: 140px;
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 13px;
   line-height: 1.6;
+  resize: vertical;
 }
 
 .ocr-status-row {

@@ -12,6 +12,7 @@ import {
   createUser,
   changeDocumentType,
   ensureRoleGroups,
+  getDocumentOcrContent,
   getMayanBinary,
   listDocumentMetadata,
   listDocumentPages,
@@ -21,6 +22,7 @@ import {
   saveAvisionDocumentMetadata,
   setReviewWorkflowStatus,
   updateDocument,
+  updateDocumentVersionPageOcr,
   uploadDocument
 } from './lib/mayan.js';
 import { portalLogin, resolvePortalUserFromToken } from './lib/auth.js';
@@ -266,6 +268,34 @@ function createApiMiddleware() {
         if (!token) { sendJson(response, 401, { error: 'Not authenticated.' }); return; }
         if (!serviceToken) { sendJson(response, 500, { error: 'MAYAN_SERVICE_TOKEN not configured.' }); return; }
         const result = await listDocumentMetadata(serviceToken, documentMetadataMatch[1]);
+        sendJson(response, 200, result);
+        return;
+      }
+
+      const documentOcrMatch = path.match(/^\/api\/mayan\/documents\/(\d+)\/ocr$/);
+      if (request.method === 'GET' && documentOcrMatch) {
+        const token = readToken(request);
+        if (!token) { sendJson(response, 401, { error: 'Not authenticated.' }); return; }
+        if (!serviceToken) { sendJson(response, 500, { error: 'MAYAN_SERVICE_TOKEN not configured.' }); return; }
+        const result = await getDocumentOcrContent(serviceToken, documentOcrMatch[1]);
+        sendJson(response, 200, result);
+        return;
+      }
+
+      const ocrPageMatch = path.match(/^\/api\/mayan\/documents\/(\d+)\/versions\/(\d+)\/pages\/(\d+)\/ocr$/);
+      if (request.method === 'PATCH' && ocrPageMatch) {
+        const token = readToken(request);
+        if (!token) { sendJson(response, 401, { error: 'Not authenticated.' }); return; }
+        if (!serviceToken) { sendJson(response, 500, { error: 'MAYAN_SERVICE_TOKEN not configured.' }); return; }
+        const body = await readRequestBody(request);
+        const content = String(body.content ?? '');
+        const result = await updateDocumentVersionPageOcr(
+          serviceToken,
+          ocrPageMatch[1],
+          ocrPageMatch[2],
+          ocrPageMatch[3],
+          content
+        );
         sendJson(response, 200, result);
         return;
       }

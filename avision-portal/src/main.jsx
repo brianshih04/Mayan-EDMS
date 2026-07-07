@@ -710,8 +710,11 @@ function PrimaryWorkArea({ activeNav, session, t }) {
   const [documentPreviewError, setDocumentPreviewError] = useState('');
   const [selectedPreviewPageId, setSelectedPreviewPageId] = useState('');
   const [recordForm, setRecordForm] = useState({ label: '', description: '', documentTypeId: '', metadata: {} });
-  const [ocrText, setOcrText] = useState('');
-  const [ocrConfirmed, setOcrConfirmed] = useState(false);
+  const [ocrPages, setOcrPages] = useState([]);
+  const [ocrVersionId, setOcrVersionId] = useState(null);
+  const [ocrLoading, setOcrLoading] = useState(false);
+  const [ocrError, setOcrError] = useState('');
+  const [ocrSaving, setOcrSaving] = useState(false);
   const [recordSaving, setRecordSaving] = useState(false);
   const [reviews, setReviews] = useState({});
   const [reviewNote, setReviewNote] = useState('');
@@ -864,8 +867,9 @@ function PrimaryWorkArea({ activeNav, session, t }) {
       documentTypeId: document.documentTypeId ? String(document.documentTypeId) : '',
       metadata: {}
     });
-    setOcrText(document.ocrText || document.text || document.description || document.label || '');
-    setOcrConfirmed(false);
+    setOcrPages([]);
+    setOcrVersionId(null);
+    setOcrError('');
     setReviewNote(reviews[String(document.id)]?.note || '');
     setDocumentPreviewLoading(true);
     setDocumentPreviewError('');
@@ -889,11 +893,136 @@ function PrimaryWorkArea({ activeNav, session, t }) {
           setRecordForm((current) => ({ ...current, metadata: metadataPayload.values || {} }));
         }
       }
+      if (activeNav === 'ocrReview' || activeNav === 'approvals') {
+        loadDocumentOcr(document.id);
+      }
     } catch (error) {
       setDocumentPreviewError(error.message || t('documentsLoadError'));
     } finally {
       setDocumentPreviewLoading(false);
     }
+  }
+
+  async function loadDocumentOcr(documentId) {
+    setOcrLoading(true);
+    setOcrError('');
+    try {
+      const response = await fetch(`/api/mayan/documents/${documentId}/ocr`, {
+        headers: authHeaders(session)
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.error || t('ocrLoadError'));
+      setOcrVersionId(payload.versionId);
+      setOcrPages((payload.pages || []).map((page) => ({ ...page, dirty: false })));
+    } catch (error) {
+      setOcrPages([]);
+      setOcrVersionId(null);
+      setOcrError(error.message || t('ocrLoadError'));
+    } finally {
+      setOcrLoading(false);
+    }
+  }
+
+  function setOcrPageContent(pageId, content) {
+    setOcrPages((current) => current.map((page) => (
+      page.pageId === pageId ? { ...page, content, dirty: true } : page
+    )));
+  }
+
+  async function saveOcrEdits() {
+    if (!selectedMayanDocument || !ocrVersionId) return;
+    const dirtyPages = ocrPages.filter((page) => page.dirty);
+    if (!dirtyPages.length) {
+      setScannerNotice(t('ocrNoChanges'));
+      return;
+    }
+    setOcrSaving(true);
+    setOcrError('');
+    setScannerNotice('');
+    const documentId = selectedMayanDocument.id;
+    const results = await Promise.allSettled(dirtyPages.map((page) =>
+      fetch(`/api/mayan/documents/${documentId}/versions/${ocrVersionId}/pages/${page.pageId}/ocr`, {
+        method: 'PATCH',
+        headers: authHeaders(session, { 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ content: page.content })
+      })
+    ));
+    let errorMessage = '';
+    for (const result of results) {
+      if (result.status !== 'fulfilled') {
+        errorMessage = result.reason?.message || t('ocrLoadError');
+        break;
+      }
+      if (!result.value.ok) {
+        const payload = await result.value.json().catch(() => ({}));
+        errorMessage = payload.error || t('ocrLoadError');
+        break;
+      }
+    }
+    if (errorMessage) {
+      setOcrError(errorMessage);
+    } else {
+      setOcrPages((current) => current.map((page) => ({ ...page, dirty: false })));
+      setScannerNotice(t('ocrSavedAll'));
+    }
+    setOcrSaving(false);
+  }
+
+  function ocrEditor() {
+    const anyDirty = ocrPages.some((page) => page.dirty);
+    return (
+      <div aria-busy={ocrLoading || ocrSaving} className="ocr-editor wide">
+        <div className="ocr-status-row">
+          <span className="ocr-editor-label">{t('ocrText')}</span>
+          <span className={`review-chip ${anyDirty ? 'review-pending' : 'review-approved'}`}>
+            {anyDirty ? t('ocrNeedsCheck') : t('ocrSaved')}
+          </span>
+          {ocrPages.length ? (
+            <span className="chip">{fillTemplate(t('ocrPageCount'), { count: ocrPages.length })}</span>
+          ) : null}
+        </div>
+        {ocrLoading ? (
+          <div className="ocr-page-list" aria-label={t('ocrText')}>
+            {Array.from({ length: 2 }).map((_, index) => (
+              <div className="ocr-page-item" key={index}>
+                <div className="scanner-skeleton scanner-skeleton-line narrow" />
+                <div className="scanner-skeleton ocr-page-skeleton" />
+              </div>
+            ))}
+          </div>
+        ) : ocrError ? (
+          <p className="scanner-error" role="status">{ocrError}</p>
+        ) : ocrPages.length ? (
+          <>
+            <div className="ocr-page-list">
+              {ocrPages.map((page) => (
+                <label key={page.pageId} className="ocr-page-item">
+                  <span className="ocr-page-head">
+                    {fillTemplate(t('ocrPage'), { n: page.pageNumber })}
+                    {page.dirty ? <span aria-hidden="true" className="ocr-dirty">•</span> : null}
+                  </span>
+                  <textarea
+                    className="ocr-page-textarea"
+                    onChange={(event) => setOcrPageContent(page.pageId, event.target.value)}
+                    value={page.content}
+                  />
+                </label>
+              ))}
+            </div>
+            <button
+              className="strong-action"
+              disabled={ocrSaving || !anyDirty}
+              onClick={saveOcrEdits}
+              type="button"
+            >
+              {ocrSaving ? t('ocrSaving') : t('ocrSaveAll')}
+            </button>
+          </>
+        ) : (
+          <div className="scanner-empty">{t('ocrEmpty')}</div>
+        )}
+      </div>
+    );
   }
 
   useEffect(() => {
@@ -1540,31 +1669,7 @@ function PrimaryWorkArea({ activeNav, session, t }) {
                         />
                       </label>
                     ))}
-                    <label className="wide ocr-review-box">
-                      <span>{t('ocrText')}</span>
-                      <textarea
-                        onChange={(event) => {
-                          setOcrText(event.target.value);
-                          setOcrConfirmed(false);
-                        }}
-                        value={ocrText}
-                      />
-                    </label>
-                    <div className="wide ocr-status-row">
-                      <span className={`review-chip ${ocrConfirmed ? 'review-approved' : 'review-pending'}`}>
-                        {ocrConfirmed ? t('ocrConfirmed') : t('ocrNeedsCheck')}
-                      </span>
-                      <button
-                        className={ocrMode ? 'strong-action' : 'subtle-action'}
-                        onClick={() => {
-                          setOcrConfirmed(true);
-                          setScannerNotice(t('ocrSaved'));
-                        }}
-                        type="button"
-                      >
-                        {t('ocrConfirm')}
-                      </button>
-                    </div>
+                    {ocrMode ? ocrEditor() : null}
                     <button className="strong-action" disabled={recordSaving} onClick={saveRecordDocument} type="button">
                       {recordSaving ? t('scannerLoading') : t('recordsSave')}
                     </button>
@@ -1586,26 +1691,7 @@ function PrimaryWorkArea({ activeNav, session, t }) {
                 ) : null}
                 {reviewerMode ? (
                   <div className="record-editor">
-                    <label className="wide ocr-review-box">
-                      <span>{t('ocrText')}</span>
-                      <textarea
-                        onChange={(event) => setOcrText(event.target.value)}
-                        value={ocrText}
-                      />
-                    </label>
-                    <div className="wide ocr-status-row">
-                      <span className="review-chip review-pending">{t('ocrReviewerCanFix')}</span>
-                      <button
-                        className="subtle-action"
-                        onClick={() => {
-                          setOcrConfirmed(true);
-                          setScannerNotice(t('ocrSaved'));
-                        }}
-                        type="button"
-                      >
-                        {t('ocrConfirm')}
-                      </button>
-                    </div>
+                    {ocrEditor()}
                     <label className="wide">
                       <span>{t('reviewerNote')}</span>
                       <textarea onChange={(event) => setReviewNote(event.target.value)} value={reviewNote} />
