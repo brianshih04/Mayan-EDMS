@@ -886,7 +886,7 @@ function PrimaryWorkArea({ activeNav, session, t }) {
                 {info.status === 'imported' && info.mayanDocumentId ? (
                   <a
                     className="import-link"
-                    href={`${MAYAN_URL}/documents/${info.mayanDocumentId}/`}
+                    href={`${MAYAN_URL}/documents/${info.mayanDocumentId}/preview/`}
                     rel="noreferrer"
                     target="_blank"
                   >

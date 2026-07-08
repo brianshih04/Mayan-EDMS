@@ -246,7 +246,7 @@ function DocumentWorkbench({ activeNav, t, vm, documentTypes, session, scannerNo
                     <span className="review-chip review-pending">{t('reviewPending')}</span>
                   ) : null}
                 </button>
-                <a className="subtle-action" href={`${MAYAN_URL}/documents/${document.id}/`} target="_blank" rel="noreferrer">
+                <a className="subtle-action" href={`${MAYAN_URL}/documents/${document.id}/preview/`} target="_blank" rel="noreferrer">
                   {t('openDocument')}
                 </a>
               </article>
