@@ -500,6 +500,7 @@ function PrimaryWorkArea({ activeNav, session, t }) {
         t={t}
         vm={doc}
         documentTypes={documentTypes}
+        session={session}
         scannerNotice={scannerNotice}
         documentsError={documentsError}
       />

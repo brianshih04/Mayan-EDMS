@@ -1,8 +1,49 @@
+import { useEffect, useState } from 'react';
 import { Archive, Search } from 'lucide-react';
-import { MAYAN_URL, RECORD_METADATA_FIELDS } from '../lib/constants.js';
+import { MAYAN_URL, RECORD_METADATA_FIELDS, authHeaders } from '../lib/constants.js';
 import { capitalize, fillTemplate, formatDateTime } from '../lib/utils.js';
 
-function DocumentWorkbench({ activeNav, t, vm, documentTypes, scannerNotice, documentsError }) {
+function AuthenticatedImage({ alt, className = '', session, src }) {
+  const [objectUrl, setObjectUrl] = useState('');
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    if (!src || !session?.token) {
+      setObjectUrl('');
+      setFailed(false);
+      return undefined;
+    }
+
+    let cancelled = false;
+    let nextObjectUrl = '';
+    setFailed(false);
+    setObjectUrl('');
+
+    (async () => {
+      try {
+        const response = await fetch(src, { headers: authHeaders(session) });
+        if (!response.ok) throw new Error('Image request failed.');
+        const blob = await response.blob();
+        if (cancelled) return;
+        nextObjectUrl = URL.createObjectURL(blob);
+        setObjectUrl(nextObjectUrl);
+      } catch {
+        if (!cancelled) setFailed(true);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      if (nextObjectUrl) URL.revokeObjectURL(nextObjectUrl);
+    };
+  }, [src, session?.token]);
+
+  if (failed) return <div className="scanner-empty">{alt}</div>;
+  if (!objectUrl) return <div className="scanner-empty" aria-label={alt} />;
+  return <img alt={alt} className={className} src={objectUrl} />;
+}
+
+function DocumentWorkbench({ activeNav, t, vm, documentTypes, session, scannerNotice, documentsError }) {
   const {
     documentTypeFilterId, setDocumentTypeFilterId,
     documentQuery, setDocumentQuery,
@@ -25,6 +66,25 @@ function DocumentWorkbench({ activeNav, t, vm, documentTypes, scannerNotice, doc
   const visibleMayanDocuments = reviewerMode
     ? mayanDocuments.filter((document) => reviews[String(document.id)]?.status === 'pending')
     : mayanDocuments;
+
+  async function downloadAuthorizedFile(url, fileName) {
+    const response = await fetch(url, { headers: authHeaders(session) });
+    if (!response.ok) {
+      const payload = response.headers.get('content-type')?.includes('application/json')
+        ? await response.json().catch(() => ({}))
+        : {};
+      throw new Error(payload?.error || t('documentsLoadError'));
+    }
+    const blob = await response.blob();
+    const objectUrl = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = objectUrl;
+    link.download = fileName || selectedMayanDocument?.label || 'document';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(objectUrl);
+  }
 
   function ocrEditor() {
     const anyDirty = ocrPages.some((page) => page.dirty);
@@ -205,12 +265,16 @@ function DocumentWorkbench({ activeNav, t, vm, documentTypes, scannerNotice, doc
                   <h3>{selectedMayanDocument.label}</h3>
                 </div>
                 {documentPreview?.file?.id ? (
-                  <a
+                  <button
                     className="subtle-action"
-                    href={`/api/mayan/documents/${selectedMayanDocument.id}/files/${documentPreview.file.id}/download`}
+                    onClick={() => downloadAuthorizedFile(
+                      `/api/mayan/documents/${selectedMayanDocument.id}/files/${documentPreview.file.id}/download`,
+                      documentPreview.file.filename || selectedMayanDocument.label
+                    )}
+                    type="button"
                   >
                     {t('downloadOriginal')}
-                  </a>
+                  </button>
                 ) : null}
               </div>
               {documentPreviewLoading ? (
@@ -220,8 +284,9 @@ function DocumentWorkbench({ activeNav, t, vm, documentTypes, scannerNotice, doc
               ) : documentPreview?.pages?.length ? (
                 <>
                   <div className="document-page-stage">
-                    <img
+                    <AuthenticatedImage
                       alt={selectedMayanDocument.label}
+                      session={session}
                       src={documentPreview.pages.find((page) => String(page.id) === selectedPreviewPageId)?.imageUrl || documentPreview.pages[0].imageUrl}
                     />
                   </div>
