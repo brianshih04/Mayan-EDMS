@@ -1863,12 +1863,12 @@ function PrimaryWorkArea({ activeNav, session, t }) {
           </div>
         </div>
         <div className="permission-map">
-          {demoUsers.map((user) => (
-            <div className="permission-row" key={user.username}>
+          {['operator', 'reviewer', 'viewer', 'admin'].map((role) => (
+            <div className="permission-row" key={role}>
               <ShieldCheck size={20} aria-hidden="true" />
               <div>
-                <strong>{t(user.role)}</strong>
-                <span>{roleNav[user.role].map((item) => t(item)).join(' / ')}</span>
+                <strong>{t(role)}</strong>
+                <span>{roleNav[role].map((item) => t(item)).join(' / ')}</span>
               </div>
             </div>
           ))}
@@ -1958,7 +1958,7 @@ function PrimaryWorkArea({ activeNav, session, t }) {
                 </div>
               ))
             ) : (
-              <div className="scanner-empty">{t('documentsEmpty')}</div>
+              <div className="scanner-empty">{t('batchQueueEmpty')}</div>
             )}
           </div>
         </div>
