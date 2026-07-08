@@ -138,7 +138,7 @@ E:\Mayan-EDMS-Docker\data\portal\thumbnails
 - [x] 提供 operator 校正 OCR 文字的 UI。
 - [x] 提供 reviewer 複核與校正 OCR 文字的 UI。
 - [x] 送審前檢查 OCR 是否已確認，或由 operator 明確標記「無需 OCR」（submit-for-review 按鈕在此前停用）。
-- [ ] Viewer 搜尋使用已確認的 OCR / index 文字，但不提供修改。
+- [x] Viewer 搜尋使用已確認的 OCR / index 文字，但不提供修改（文件搜尋改用 Mayan 全文檢索，涵蓋 OCR；viewer 無編輯 UI）。
 - [x] Reviewer 可直接校正小型 OCR 錯誤；重大 OCR 問題可退回 operator 補正。
 
 ## 每次交付前檢查

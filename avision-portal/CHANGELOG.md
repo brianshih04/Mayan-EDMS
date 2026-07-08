@@ -8,6 +8,7 @@
 
 - OCR 校正功能正式接上 Mayan：新增 `server/lib/mayan.js` 的 `getDocumentOcrContent` / `updateDocumentVersionPageOcr`，以及路由 `GET /api/mayan/documents/:id/ocr`、`PATCH /api/mayan/documents/:id/versions/:vid/pages/:pid/ocr`。operator（OCR 校正步驟）與 reviewer（審核）可讀取真實 Tesseract OCR 文字、逐頁校正並寫回，不再只是本地 UI。
 - OCR 審查狀態與送審閘道：新增 `avision_ocr_status` metadata（待確認／已確認／無需 OCR），OCR 編輯器顯示狀態晶片與「標記已確認／無需 OCR」按鈕；operator 的「送審」按鈕在 OCR 未確認前停用並顯示提示。
+- 文件搜尋改用 Mayan 全文檢索：輸入關鍵字時走 `/search/documents.documentsearchresult/`（涵蓋 OCR 文字與所有索引欄位，所有角色適用），無關鍵字時仍為最近文件＋metadata 過濾。
 - 移除 operator 工作台的重複導覽（`quick-actions`）——同一組 5 個功能原本同時出現在側欄、5 步流程列、quick-actions 三處，現精簡為側欄 + 流程列；目前所在步驟加上 `aria-current="step"`。
 - 儀表板（待處理／今日完成／提醒）、通知鈴鐺與 QueuePanel 改接真實資料：新增 `server/lib/workbench.js` 與 `GET /api/workbench/summary`，依角色從 watch folder、batch 佇列、reviews、Mayan 文件即時計算（operator：待掃描 + 未送審 + 退回 ／ 今日批次 + 送審 ／ 匯入失敗 + 退回；reviewer：待審 ／ 今日決定）。原本寫死在 `portalConfig.js` 的 demo 數字與死掉的鈴鐺按鈕已移除；viewer/admin 不再顯示假統計。
 - Accessibility / 視覺整理：scanner 刪除確認改為可存取的 portal `<Modal>`（焦點 trap、Escape、focus 還原）、載入狀態改用骨架、登入頁移除外部 Unsplash 背照改用品牌漸層、admin 批次佇列狀態改為彩色 chip。

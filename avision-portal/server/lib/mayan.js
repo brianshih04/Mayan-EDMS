@@ -144,8 +144,40 @@ export async function createDocumentType(token, { label }) {
   };
 }
 
+// GET /search/documents.documentsearchresult/?q=... -> documents matching the
+// query across indexed fields, including OCR text. Used for text search; the
+// no-query path (recent docs + metadata filter) stays in listDocuments below.
+export async function searchDocuments(token, { query = '', pageSize = 50 } = {}) {
+  const size = Math.max(1, Math.min(Number(pageSize) || 50, 200));
+  const response = await mayanRequest(
+    token,
+    `/search/documents.documentsearchresult/?_match_all=false&page_size=${size}&q=${encodeURIComponent(query)}`
+  );
+  const data = await parseJson(response);
+  if (!response.ok) {
+    throw buildError(response.status, data, 'Unable to search documents.');
+  }
+  const results = (data?.results || []).map((entry) => ({
+    id: entry.id ?? entry.pk,
+    label: entry.label || `#${entry.id ?? entry.pk}`,
+    description: entry.description || '',
+    documentType: entry.document_type?.label || '',
+    documentTypeId: entry.document_type?.id ?? entry.document_type?.pk ?? '',
+    datetimeCreated: entry.datetime_created || '',
+    fileName: entry.file_latest?.filename || '',
+    url: entry.url
+  }));
+  return { count: data?.count ?? results.length, results };
+}
+
 // GET /documents/ -> recent documents, optionally filtered locally by query and metadata.
 export async function listDocuments(token, { query = '', pageSize = 50, documentTypeId = '', metadata = {} } = {}) {
+  // A text query delegates to Mayan's full-text search (covers OCR content);
+  // otherwise return recent docs with optional metadata filtering.
+  const trimmed = String(query || '').trim();
+  if (trimmed) {
+    return searchDocuments(token, { query: trimmed, pageSize });
+  }
   const size = Math.max(1, Math.min(Number(pageSize) || 50, 200));
   const response = await mayanRequest(token, `/documents/?page_size=${size}&_ordering=-datetime_created`);
   const data = await parseJson(response);
