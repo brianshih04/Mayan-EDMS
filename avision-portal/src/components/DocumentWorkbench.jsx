@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Archive, Search } from 'lucide-react';
-import { MAYAN_URL, RECORD_METADATA_FIELDS, authHeaders } from '../lib/constants.js';
+import { RECORD_METADATA_FIELDS, authHeaders } from '../lib/constants.js';
 import { capitalize, fillTemplate, formatDateTime } from '../lib/utils.js';
 
 function AuthenticatedImage({ alt, className = '', session, src }) {
@@ -246,9 +246,9 @@ function DocumentWorkbench({ activeNav, t, vm, documentTypes, session, scannerNo
                     <span className="review-chip review-pending">{t('reviewPending')}</span>
                   ) : null}
                 </button>
-                <a className="subtle-action" href={`${MAYAN_URL}/documents/${document.id}/preview/`} target="_blank" rel="noreferrer">
+                <button className="subtle-action" onClick={() => loadDocumentPreview(document)} type="button">
                   {t('openDocument')}
-                </a>
+                </button>
               </article>
             ))
           ) : (

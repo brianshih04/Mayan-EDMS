@@ -4,7 +4,7 @@ import {
   CheckCircle2,
   Trash2
 } from 'lucide-react';
-import { MAYAN_URL, DEMO_LOGIN, authHeaders } from '../lib/constants.js';
+import { DEMO_LOGIN, authHeaders } from '../lib/constants.js';
 import { capitalize, fillTemplate, formatBytes, formatDateTime } from '../lib/utils.js';
 import {
   scannerThumbnailSizes,
@@ -884,14 +884,9 @@ function PrimaryWorkArea({ activeNav, session, t }) {
               <li className={`import-row import-${info.status}`} key={name}>
                 <span className="import-name">{name}</span>
                 {info.status === 'imported' && info.mayanDocumentId ? (
-                  <a
-                    className="import-link"
-                    href={`${MAYAN_URL}/documents/${info.mayanDocumentId}/preview/`}
-                    rel="noreferrer"
-                    target="_blank"
-                  >
+                  <span className="import-link">
                     #{info.mayanDocumentId}
-                  </a>
+                  </span>
                 ) : null}
                 <span className={`import-status status-${info.status}`}>{t('import_' + info.status)}</span>
                 {info.deletedOriginal ? <span className="import-note">{t('scannerOriginalDeleted')}</span> : null}
