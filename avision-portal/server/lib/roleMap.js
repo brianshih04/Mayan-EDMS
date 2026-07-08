@@ -6,6 +6,7 @@
 // First matching group wins; Mayan superusers always map to admin.
 export const ROLE_MAP = {
   Admin: 'admin',
+  Operator: 'operator',
   Scanner: 'operator',
   Records: 'operator',
   Reviewer: 'reviewer',

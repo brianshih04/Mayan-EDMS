@@ -2,15 +2,9 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Archive,
   CheckCircle2,
-  ClipboardCheck,
-  Search,
-  Settings,
-  ShieldCheck,
-  SlidersHorizontal,
-  Trash2,
-  UsersRound
+  Trash2
 } from 'lucide-react';
-import { MAYAN_URL, DEMO_LOGIN, RECORD_METADATA_FIELDS, authHeaders } from '../lib/constants.js';
+import { MAYAN_URL, DEMO_LOGIN, authHeaders } from '../lib/constants.js';
 import { capitalize, fillTemplate, formatBytes, formatDateTime } from '../lib/utils.js';
 import {
   scannerThumbnailSizes,
@@ -26,7 +20,7 @@ import {
   loadPageQcStates,
   persistPageQcStates
 } from '../lib/scanner.js';
-import { roleNav, roleAccent, workflowContent } from '../portalConfig.js';
+import { roleAccent, workflowContent } from '../portalConfig.js';
 import Modal from './Modal.jsx';
 import AdminPanel from './AdminPanel.jsx';
 import DocumentWorkbench from './DocumentWorkbench.jsx';
@@ -245,9 +239,17 @@ function PrimaryWorkArea({ activeNav, session, t }) {
     }
   }
 
-  // Fetch document types for scanner import, records, viewer filters, and admin management.
+  // Fetch document types for scanner import, operator/reviewer filters, and admin management.
   useEffect(() => {
-    if (!(scannerMode || activeNav === 'userAdmin' || activeNav === 'searchDocs' || activeNav === 'classify' || activeNav === 'metadata') || DEMO_LOGIN) return;
+    if (!(
+      scannerMode ||
+      activeNav === 'userAdmin' ||
+      activeNav === 'searchDocs' ||
+      activeNav === 'classify' ||
+      activeNav === 'ocrReview' ||
+      activeNav === 'metadata' ||
+      activeNav === 'approvals'
+    ) || DEMO_LOGIN) return;
     let cancelled = false;
     (async () => {
       await loadDocumentTypes();

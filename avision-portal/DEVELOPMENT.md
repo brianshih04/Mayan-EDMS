@@ -94,6 +94,7 @@ npm run test:smoke
 
 既有 Mayan group 仍保留以維持相容性：
 
+- `Operator` group → Portal `operator`
 - `Scanner` group → Portal `operator`
 - `Records` group → Portal `operator`
 - `Reviewer` group → Portal `reviewer`

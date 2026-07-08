@@ -244,6 +244,11 @@ function createApiMiddleware() {
         const token = readToken(request);
         if (!token) { sendJson(response, 401, { error: 'Not authenticated.' }); return; }
         if (!serviceToken) { sendJson(response, 500, { error: 'MAYAN_SERVICE_TOKEN not configured.' }); return; }
+        const session = await resolvePortalUserFromToken(token);
+        if (!['operator', 'reviewer', 'admin'].includes(session.role)) {
+          sendJson(response, 403, { error: 'Operator, reviewer, or admin role is required.' });
+          return;
+        }
         const body = await readRequestBody(request);
         const documentTypeId = String(body.documentTypeId || '').trim();
         if (documentTypeId) {
@@ -298,6 +303,11 @@ function createApiMiddleware() {
         const token = readToken(request);
         if (!token) { sendJson(response, 401, { error: 'Not authenticated.' }); return; }
         if (!serviceToken) { sendJson(response, 500, { error: 'MAYAN_SERVICE_TOKEN not configured.' }); return; }
+        const session = await resolvePortalUserFromToken(token);
+        if (!['operator', 'reviewer', 'admin'].includes(session.role)) {
+          sendJson(response, 403, { error: 'Operator, reviewer, or admin role is required.' });
+          return;
+        }
         const body = await readRequestBody(request);
         const content = String(body.content ?? '');
         const result = await updateDocumentVersionPageOcr(
