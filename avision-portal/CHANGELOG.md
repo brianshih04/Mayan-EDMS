@@ -26,6 +26,10 @@
 
 - 將 Vite middleware 內的掃描 API 抽出到 `server/` 目錄（`router.js` + `lib/{config,http,watchFolder,batch,convert,mayan,auth,roleMap}.js`），`vite.config.js` 只剩 plugin 接線。
 
+### 前端拆檔（純重構，行為不變）
+
+- 將 2478 行的 `src/main.jsx` 拆成：`lib/`（constants / utils / scanner / nav）、`hooks/useTranslation`、`components/`（ErrorBoundary、Modal、QueuePanel、LoginScreen、Shell、PrimaryWorkArea），`main.jsx` 縮至 89 行（入口＋`App`）。PrimaryWorkArea 內部（Scanner / Document / Admin）尚待後續拆分。
+
 ### P0：Scanner 流程穩定化
 
 - Scanner 改為「先選取再送出」：可勾選單一檔案、全選可見、清除選取，批次只含選取的檔案。

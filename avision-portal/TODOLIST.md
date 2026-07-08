@@ -119,7 +119,7 @@ E:\Mayan-EDMS-Docker\data\portal\thumbnails
 
 ## P3：工程整理
 
-- [ ] 將 `src/main.jsx` 拆成多個 component。（下一階段大型重構）
+- [x] 將 `src/main.jsx` 拆成多個 component：`main.jsx` 縮至 89 行（入口＋`App`），抽出 `lib/`（constants/utils/scanner/nav）、`hooks/useTranslation`、`components/`（ErrorBoundary、Modal、QueuePanel、LoginScreen、Shell、PrimaryWorkArea）。PrimaryWorkArea 內部（Scanner/Document/Admin 三塊）再拆為後續。
 - [x] 將 locales 拆成 JSON。（目前先拆成 `src/locales.js`，避免一次改動過大；後續可再轉 JSON）
 - [x] 將 scanner API 從 `vite.config.js` 移到正式 backend。 （已集中於 `server/router.js` 與 `server/lib/*`）
 - [x] 增加 ESLint / Prettier。（已加入 ESLint；Prettier 待選定團隊格式規範）
