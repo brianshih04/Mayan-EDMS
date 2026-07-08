@@ -23,7 +23,7 @@ import {
 } from 'lucide-react';
 import './styles.css';
 import { locales, scannerStrings } from './locales.js';
-import { demoUsers, panels, roleAccent, roleNav, tasks, workflowContent } from './portalConfig.js';
+import { demoUsers, panels, roleAccent, roleNav, workflowContent } from './portalConfig.js';
 
 const MAYAN_URL = 'https://mayan-emds.avision-gb10.org';
 // When true, login uses the in-page demo users (offline fallback). When false
@@ -381,7 +381,6 @@ function LoginScreen({ language, onLanguageChange, onLogin, t }) {
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const previewUser = demoUsers.find((user) => user.username === username.trim()) || demoUsers[0];
-  const previewTasks = tasks[previewUser.role].slice(0, 2);
 
   async function submitLogin(event) {
     event.preventDefault();
@@ -510,17 +509,17 @@ function LoginScreen({ language, onLanguageChange, onLogin, t }) {
         </div>
         ) : null}
 
-        <div className={`role-preview ${roleAccent[previewUser.role]}`}>
-          <div>
-            <p className="eyebrow">{previewUser.name}</p>
-            <h3>{t(previewUser.role)}</h3>
+        {DEMO_LOGIN ? (
+          <div className={`role-preview ${roleAccent[previewUser.role]}`}>
+            <div>
+              <p className="eyebrow">{previewUser.name}</p>
+              <h3>{t(previewUser.role)}</h3>
+            </div>
+            <div className="preview-tasks">
+              <span>{t(`${previewUser.role}Intro`)}</span>
+            </div>
           </div>
-          <div className="preview-tasks">
-            {previewTasks.map((task) => (
-              <span key={task.id}>{task.id} · {task.label}</span>
-            ))}
-          </div>
-        </div>
+        ) : null}
       </section>
     </main>
   );
