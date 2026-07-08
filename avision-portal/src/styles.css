@@ -1829,6 +1829,18 @@ button:disabled {
   padding: 10px 0 2px;
 }
 
+.ocr-status-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding-bottom: 4px;
+}
+
+.review-not-needed {
+  background: #eef0ea;
+  color: #40504c;
+}
+
 .review-actions {
   display: flex;
   gap: 10px;

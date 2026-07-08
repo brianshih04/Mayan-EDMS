@@ -7,7 +7,8 @@ export const avisionMetadataFields = [
   { name: 'avision_case_id', label: 'Case ID' },
   { name: 'avision_document_date', label: 'Document date' },
   { name: 'avision_amount', label: 'Amount' },
-  { name: 'avision_tags', label: 'Tags' }
+  { name: 'avision_tags', label: 'Tags' },
+  { name: 'avision_ocr_status', label: 'OCR status' }
 ];
 
 // Thin Mayan REST (v4) client. All calls go server-side so the browser stays

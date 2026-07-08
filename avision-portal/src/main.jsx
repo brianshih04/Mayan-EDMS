@@ -913,7 +913,7 @@ function PrimaryWorkArea({ activeNav, session, t }) {
       if (!response.ok) throw new Error(payload.error || t('documentsLoadError'));
       setDocumentPreview(payload);
       setSelectedPreviewPageId(payload.pages?.[0] ? String(payload.pages[0].id) : '');
-      if (activeNav === 'classify' || activeNav === 'metadata' || activeNav === 'ocrReview') {
+      if (['classify', 'metadata', 'ocrReview', 'approvals'].includes(activeNav)) {
         const metadataResponse = await fetch(`/api/mayan/documents/${document.id}/metadata`, {
           headers: authHeaders(session)
         });
@@ -958,6 +958,31 @@ function PrimaryWorkArea({ activeNav, session, t }) {
     )));
   }
 
+  async function saveOcrStatus(status) {
+    if (!selectedMayanDocument) return;
+    setOcrSaving(true);
+    setOcrError('');
+    setScannerNotice('');
+    try {
+      const response = await fetch(`/api/mayan/documents/${selectedMayanDocument.id}`, {
+        method: 'PATCH',
+        headers: authHeaders(session, { 'Content-Type': 'application/json' }),
+        body: JSON.stringify({
+          metadata: { ...recordForm.metadata, avision_ocr_status: status },
+          metadataDocumentTypeId: recordForm.documentTypeId || selectedMayanDocument.documentTypeId
+        })
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.error || t('ocrLoadError'));
+      setRecordForm((current) => ({ ...current, metadata: { ...current.metadata, avision_ocr_status: status } }));
+      setScannerNotice(t('ocrSavedAll'));
+    } catch (error) {
+      setOcrError(error.message || t('ocrLoadError'));
+    } finally {
+      setOcrSaving(false);
+    }
+  }
+
   async function saveOcrEdits() {
     if (!selectedMayanDocument || !ocrVersionId) return;
     const dirtyPages = ocrPages.filter((page) => page.dirty);
@@ -999,17 +1024,45 @@ function PrimaryWorkArea({ activeNav, session, t }) {
 
   function ocrEditor() {
     const anyDirty = ocrPages.some((page) => page.dirty);
+    const ocrStatus = recordForm.metadata?.avision_ocr_status || '';
+    const ocrStatusChipClass = ocrStatus === 'confirmed' ? 'review-approved'
+      : ocrStatus === 'not_needed' ? 'review-not-needed'
+      : 'review-pending';
+    const ocrStatusLabel = ocrStatus === 'confirmed' ? t('ocrStatusConfirmed')
+      : ocrStatus === 'not_needed' ? t('ocrStatusNotNeeded')
+      : t('ocrStatusNeedsReview');
+    const canConfirm = ocrPages.length > 0 && !anyDirty;
     return (
       <div aria-busy={ocrLoading || ocrSaving} className="ocr-editor wide">
         <div className="ocr-status-row">
           <span className="ocr-editor-label">{t('ocrText')}</span>
-          <span className={`review-chip ${anyDirty ? 'review-pending' : 'review-approved'}`}>
-            {anyDirty ? t('ocrNeedsCheck') : t('ocrSaved')}
+          <span className={`review-chip ${ocrStatusChipClass}`}>
+            {ocrStatusLabel}
           </span>
           {ocrPages.length ? (
             <span className="chip">{fillTemplate(t('ocrPageCount'), { count: ocrPages.length })}</span>
           ) : null}
         </div>
+        {!ocrLoading && !ocrError ? (
+          <div className="ocr-status-actions">
+            <button
+              className="strong-action"
+              disabled={ocrSaving || !canConfirm || ocrStatus === 'confirmed'}
+              onClick={() => saveOcrStatus('confirmed')}
+              type="button"
+            >
+              {t('ocrMarkConfirmed')}
+            </button>
+            <button
+              className="subtle-action"
+              disabled={ocrSaving || ocrStatus === 'not_needed'}
+              onClick={() => saveOcrStatus('not_needed')}
+              type="button"
+            >
+              {t('ocrMarkNotNeeded')}
+            </button>
+          </div>
+        ) : null}
         {ocrLoading ? (
           <div className="ocr-page-list" aria-label={t('ocrText')}>
             {Array.from({ length: 2 }).map((_, index) => (
@@ -1523,6 +1576,8 @@ function PrimaryWorkArea({ activeNav, session, t }) {
     const recordsMode = activeNav === 'classify' || activeNav === 'ocrReview' || activeNav === 'metadata';
     const ocrMode = activeNav === 'ocrReview';
     const reviewerMode = activeNav === 'approvals';
+    const ocrStatus = recordForm.metadata?.avision_ocr_status || '';
+    const ocrReadyForReview = ocrStatus === 'confirmed' || ocrStatus === 'not_needed';
     const visibleMayanDocuments = reviewerMode
       ? mayanDocuments.filter((document) => reviews[String(document.id)]?.status === 'pending')
       : mayanDocuments;
@@ -1702,9 +1757,12 @@ function PrimaryWorkArea({ activeNav, session, t }) {
                     <button className="strong-action" disabled={recordSaving} onClick={saveRecordDocument} type="button">
                       {recordSaving ? t('scannerLoading') : t('recordsSave')}
                     </button>
-                    <button className="subtle-action" disabled={reviewSaving} onClick={() => submitReview('pending')} type="button">
+                    <button className="subtle-action" disabled={reviewSaving || !ocrReadyForReview} onClick={() => submitReview('pending')} type="button">
                       {reviewSaving ? t('scannerLoading') : t('recordsSendReview')}
                     </button>
+                    {!ocrReadyForReview ? (
+                      <p className="note">{t('ocrConfirmBeforeReview')}</p>
+                    ) : null}
                     {reviews[String(selectedMayanDocument.id)] ? (
                       <>
                         <span className={`review-chip review-${reviews[String(selectedMayanDocument.id)].status}`}>
