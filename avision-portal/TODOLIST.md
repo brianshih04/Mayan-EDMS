@@ -2,7 +2,7 @@
 
 本文件是交給後續 coding agent 的實作清單。請依優先順序逐步完成，每次修改後執行 `npm run build`，並確認 `https://mayan-portal.avision-gb10.org` 可正常開啟。
 
-> 狀態（2026-07-07）：**P0 / P1 / P2 主要項目完成**。P3 已補 `.env.example`、smoke test、session timeout、ESLint，並先完成語系/角色設定拆檔。P4 已完成 operator 角色收斂與 OCR 校正 UI；OCR 正式讀寫 Mayan API 仍待下一階段。詳見 CHANGELOG。
+> 狀態（2026-07-08）：**P0 / P1 / P2 主要項目完成**。P3 已補 `.env.example`、smoke test、session timeout、ESLint，並先完成語系/角色設定拆檔。P4 已完成 operator 角色收斂、OCR 校正 UI、OCR 正式串接 Mayan（逐頁讀寫），以及儀表板統計改接真實資料（`/api/workbench/summary`）。詳見 CHANGELOG。
 
 ## P0：穩定目前 Scanner 流程
 

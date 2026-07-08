@@ -4,6 +4,13 @@
 
 ## Unreleased
 
+### OCR 校正正式串接 + 儀表板真實數字
+
+- OCR 校正功能正式接上 Mayan：新增 `server/lib/mayan.js` 的 `getDocumentOcrContent` / `updateDocumentVersionPageOcr`，以及路由 `GET /api/mayan/documents/:id/ocr`、`PATCH /api/mayan/documents/:id/versions/:vid/pages/:pid/ocr`。operator（OCR 校正步驟）與 reviewer（審核）可讀取真實 Tesseract OCR 文字、逐頁校正並寫回，不再只是本地 UI。
+- 移除 operator 工作台的重複導覽（`quick-actions`）——同一組 5 個功能原本同時出現在側欄、5 步流程列、quick-actions 三處，現精簡為側欄 + 流程列；目前所在步驟加上 `aria-current="step"`。
+- 儀表板（待處理／今日完成／提醒）、通知鈴鐺與 QueuePanel 改接真實資料：新增 `server/lib/workbench.js` 與 `GET /api/workbench/summary`，依角色從 watch folder、batch 佇列、reviews、Mayan 文件即時計算（operator：待掃描 + 未送審 + 退回 ／ 今日批次 + 送審 ／ 匯入失敗 + 退回；reviewer：待審 ／ 今日決定）。原本寫死在 `portalConfig.js` 的 demo 數字與死掉的鈴鐺按鈕已移除；viewer/admin 不再顯示假統計。
+- Accessibility / 視覺整理：scanner 刪除確認改為可存取的 portal `<Modal>`（焦點 trap、Escape、focus 還原）、載入狀態改用骨架、登入頁移除外部 Unsplash 背照改用品牌漸層、admin 批次佇列狀態改為彩色 chip。
+
 ### 產品角色設計
 
 - 產品角色已收斂為 `operator` / `reviewer` / `viewer` / `admin`。
@@ -11,7 +18,7 @@
 - OCR 定位為資料品質工作，應由 operator 先完成；reviewer 審核時也可複核 / 校正 OCR，viewer 只負責查閱。
 - Operator UI 已重新設計為 5 步流程列：掃描匯入、文件分類、OCR 校正、資料欄位、文件搜尋。
 - Mayan `Scanner` 與 `Records` 群組現在都映射到 Portal `operator` role，既有 `scanner` / `records` 測試帳號會進同一個 operator 工作台。
-- Operator 與 reviewer 文件預覽區已加入 OCR 文字校正 UI 與 OCR 確認狀態；正式 OCR 寫回 Mayan API 仍待下一階段串接。
+- Operator 與 reviewer 文件預覽區已加入 OCR 文字校正 UI 與 OCR 確認狀態（已正式串接 Mayan OCR API，可逐頁讀取並寫回，詳見下方「OCR 校正正式串接 + 儀表板真實數字」）。
 
 ### 後端重構
 
